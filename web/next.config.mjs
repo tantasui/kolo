@@ -1,0 +1,12 @@
+import withSerwistInit from "@serwist/next";
+
+const withSerwist = withSerwistInit({
+  swSrc: "src/app/sw.ts",
+  swDest: "public/sw.js",
+  // A service worker in dev makes iterating on the app confusing.
+  disable: process.env.NODE_ENV === "development",
+});
+
+export default withSerwist({
+  reactStrictMode: true,
+});

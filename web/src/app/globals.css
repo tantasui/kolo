@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: #0a0a0c;
+  color: #f7f7f8;
+  -webkit-font-smoothing: antialiased;
+  /* No rubber-banding: this should feel like an app, not a page. */
+  overscroll-behavior-y: none;
+}
+
+/* Tap targets shouldn't flash blue on mobile. */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Numerals line up when a balance changes mid-animation. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Soft lime bloom behind the hero and success states. */
+.bloom::before {
+  content: "";
+  position: absolute;
+  inset: -30% -20% auto -20%;
+  height: 55%;
+  background: radial-gradient(60% 60% at 50% 0%, rgba(210, 255, 58, 0.16), transparent 70%);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

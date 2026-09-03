@@ -139,18 +139,14 @@ contract KoloPayTest is Test {
     function test_RevertWhen_AllowanceMissing() public {
         vm.startPrank(stranger);
         usd.faucet();
-        vm.expectRevert(
-            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(pay), 0, 1e6)
-        );
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(pay), 0, 1e6));
         pay.sendToHandle("tunde", address(usd), 1e6, "");
         vm.stopPrank();
     }
 
     function test_RevertWhen_BalanceInsufficient() public {
         vm.prank(amara);
-        vm.expectRevert(
-            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, amara, 100e6, 500e6)
-        );
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, amara, 100e6, 500e6));
         pay.sendToHandle("tunde", address(usd), 500e6, "");
     }
 
