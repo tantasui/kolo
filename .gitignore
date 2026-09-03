@@ -1,0 +1,21 @@
+# deps
+node_modules/
+# next
+.next/
+out/
+build/
+next-env.d.ts
+public/sw.js
+public/sw.js.map
+# env
+.env
+.env*.local
+# foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+contracts/lib/
+# misc
+.DS_Store
+*.log
+.vercel
