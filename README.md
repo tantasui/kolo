@@ -22,11 +22,9 @@ are shaped to grow into them, but none of that is built yet.
 | Contracts | Written, 45 tests passing, **deployed to Monad Testnet** |
 | Deployment | **Verified live**: handles registered and resolved, faucet minted, batched approve + send moved $10.00, `Sent` event decoded |
 | App | Builds and type-checks; every screen rendered and reviewed at a 390px viewport |
-| Sponsored transactions | Wired per the official template, **not yet exercised** — needs a Privy app ID and a Pimlico key |
-| End-to-end demo | Blocked on those two credentials |
-
-Add `NEXT_PUBLIC_PRIVY_APP_ID` and `NEXT_PUBLIC_PIMLICO_BUNDLER_URL` to
-`web/.env.local` and the demo script below should run start to finish.
+| Sponsored transactions | **Verified on Monad Testnet** — handle claim, faucet and a batched approve + send all sponsored, account balance 0 wei throughout (`npm run verify:sponsorship`) |
+| Sign-in | Privy SDK initialises against the configured app; the landing screen is live |
+| End-to-end demo | On-chain path proven; the browser half (email OTP → claim → send) is a manual run-through |
 
 ---
 
@@ -61,16 +59,24 @@ template: Privy provides email/passkey sign-in and an embedded signer, that
 signer owns a Kernel v0.3.1 smart account on EntryPoint v0.7, and a Pimlico
 paymaster sponsors every operation.
 
-**Which path is used:** the official template path, not the backend-relayer
-fallback. The account and sponsorship wiring in
-[`web/src/hooks/useSmartWallet.tsx`](web/src/hooks/useSmartWallet.tsx) follows
-the template as published, and the app builds and runs against it. It has not
-yet been exercised end to end with a live Pimlico key — that needs the two
-credentials below, and is the first thing to check when you add them. If
-sponsorship turns out to misbehave on Monad Testnet, the fallback is a Privy
-embedded EOA plus a small backend relayer; nothing above the
-`sendSponsored` helper in [`web/src/lib/sponsored.ts`](web/src/lib/sponsored.ts)
-would need to change.
+**Which path is used:** the official template path. The backend-relayer
+fallback was not needed — sponsorship works on Monad Testnet as documented.
+
+That is checked rather than assumed. `npm run verify:sponsorship` stands a
+throwaway local key in for Privy's signer (Privy's only job is to produce one)
+and drives a Kernel account through the exact calls the UI makes: claim a
+handle, add demo funds, then a batched `approve` + `sendToHandle`. The account
+starts and ends holding **0 wei**, so every operation was paid for by the
+paymaster:
+
+```
+account   : 0xC661f95D17711f6e5518C74cEC0094A4C48055DD
+gas held  : 0 wei (expected 0)
+[1/3] claiming @kolo_vn63rge …   ok
+[2/3] adding demo funds …        balance = $100.00
+[3/3] sending $10.00 …           balance $100.00 -> $90.00
+gas held after 3 operations: 0 wei
+```
 
 **Why a payment router.** `KoloPay.sendToHandle` resolves the recipient through
 the registry and emits a single `Sent` event carrying both handles, the amount
@@ -161,6 +167,12 @@ npm run dev                  # http://localhost:3000
 Only `NEXT_PUBLIC_PRIVY_APP_ID` and `NEXT_PUBLIC_PIMLICO_BUNDLER_URL` are
 required — the contract addresses already default to the live deployment. If
 either is missing the app says so on screen instead of failing silently.
+
+To confirm sponsorship is working before touching the UI:
+
+```sh
+npm run verify:sponsorship
+```
 
 ### Environment variables
 
