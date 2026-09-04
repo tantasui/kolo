@@ -68,7 +68,7 @@ function EmptyState() {
     <div className="rounded-2xl border border-dashed border-line px-6 py-10 text-center">
       <p className="text-[16px] font-semibold text-text">Nothing here yet</p>
       <p className="mx-auto mt-1.5 max-w-[15rem] text-[14px] leading-relaxed text-muted">
-        Add money to get started, then send some to a friend&apos;s @handle.
+        Add some demo funds, then send a little to a friend&apos;s @handle.
       </p>
     </div>
   );

@@ -15,6 +15,21 @@ are shaped to grow into them, but none of that is built yet.
 
 ---
 
+## Status
+
+| | |
+| --- | --- |
+| Contracts | Written, 45 tests passing, **deployed to Monad Testnet** |
+| Deployment | **Verified live**: handles registered and resolved, faucet minted, batched approve + send moved $10.00, `Sent` event decoded |
+| App | Builds and type-checks; every screen rendered and reviewed at a 390px viewport |
+| Sponsored transactions | Wired per the official template, **not yet exercised** — needs a Privy app ID and a Pimlico key |
+| End-to-end demo | Blocked on those two credentials |
+
+Add `NEXT_PUBLIC_PRIVY_APP_ID` and `NEXT_PUBLIC_PIMLICO_BUNDLER_URL` to
+`web/.env.local` and the demo script below should run start to finish.
+
+---
+
 ## What is here
 
 ```
@@ -44,9 +59,18 @@ scripts/deploy.sh   deploys and writes the addresses into web/.env.local
 [`next-serwist-privy-smart-wallet`](https://github.com/monad-developers/next-serwist-privy-smart-wallet)
 template: Privy provides email/passkey sign-in and an embedded signer, that
 signer owns a Kernel v0.3.1 smart account on EntryPoint v0.7, and a Pimlico
-paymaster sponsors every operation. **This is the path the app uses** — the
-template wiring worked against Monad Testnet as documented, so the backend
-relayer fallback was not needed.
+paymaster sponsors every operation.
+
+**Which path is used:** the official template path, not the backend-relayer
+fallback. The account and sponsorship wiring in
+[`web/src/hooks/useSmartWallet.tsx`](web/src/hooks/useSmartWallet.tsx) follows
+the template as published, and the app builds and runs against it. It has not
+yet been exercised end to end with a live Pimlico key — that needs the two
+credentials below, and is the first thing to check when you add them. If
+sponsorship turns out to misbehave on Monad Testnet, the fallback is a Privy
+embedded EOA plus a small backend relayer; nothing above the
+`sendSponsored` helper in [`web/src/lib/sponsored.ts`](web/src/lib/sponsored.ts)
+would need to change.
 
 **Why a payment router.** `KoloPay.sendToHandle` resolves the recipient through
 the registry and emits a single `Sent` event carrying both handles, the amount
@@ -92,6 +116,11 @@ comes from.
 cd contracts
 forge test          # 45 tests
 ```
+
+The contracts are already deployed (see the table at the end), and that
+deployment was checked against the live chain: two handles registered and
+resolved, the faucet minted, and a batched approve + `sendToHandle` moved
+$10.00 with the `Sent` event carrying both handles and the memo.
 
 To deploy, put a funded testnet key in `contracts/.env` (copy
 `contracts/.env.example`; generate one with `cast wallet new`), fund it from the
@@ -149,13 +178,13 @@ env files are gitignored.
 
 ## Demo script
 
-Two phones, or two browser profiles.
+Two phones, or two browser profiles. Needs the Privy and Pimlico values set.
 
 1. **Amara** opens Kolo, taps **Get started**, signs in with her email.
 2. She picks `@amara` — availability updates as she types — and taps
    **Claim @amara**. No confirmation, no fee.
 3. **Tunde** does the same on the second device and claims `@tunde`.
-4. Amara taps **Add money**. Her balance becomes **$100.00**.
+4. Amara taps **Add demo funds**. Her balance becomes **$100.00**.
 5. She taps **Send**, types `tunde`, and the recipient card appears with a check
    the moment the handle resolves.
 6. She keys in **10**, adds the note *lunch*, and reviews: *Send $10.00 to
@@ -176,8 +205,8 @@ itself on supported browsers). It runs standalone, with an offline fallback.
 
 ## Language rules
 
-The UI is held to a vocabulary. It says: Balance, Send, Add money, @handle, No
-fee, Note, Sending…. It never says wallet, gas, transaction, hash, blockchain,
+The UI is held to a vocabulary. It says: Balance, Send, Add demo funds,
+@handle, No fee, Note, Sending…. It never says wallet, gas, transaction, hash, blockchain,
 Monad, token, approve, sign, smart account, or wei. Failures say
 *"Something went wrong — try again"* and the real error goes to the console.
 

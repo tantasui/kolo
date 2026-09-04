@@ -17,6 +17,9 @@ export function Home() {
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
+  // A brand-new user has nothing to send, so lead with adding money instead.
+  const emptyPurse = balance === 0n;
+
   async function onAddMoney() {
     setAdding(true);
     setNotice(null);
@@ -26,7 +29,7 @@ export function Home() {
       console.error("[kolo] add money failed", error);
       setNotice(
         String(error).includes("FaucetCooldown")
-          ? "You've already added money this hour"
+          ? "You've already added funds this hour"
           : "Something went wrong — try again"
       );
     } finally {
@@ -80,10 +83,10 @@ export function Home() {
           <button
             type="button"
             onClick={() => setSendOpen(true)}
-            disabled={balance === null}
-            className="flex h-[54px] flex-1 items-center justify-center gap-2 rounded-pill bg-accent
-                       text-[17px] font-semibold text-ink transition active:scale-[0.98]
-                       disabled:opacity-40"
+            disabled={balance === null || emptyPurse}
+            className={`flex h-[54px] flex-1 items-center justify-center gap-2 rounded-pill
+                        text-[17px] font-semibold transition active:scale-[0.98] disabled:opacity-40
+                        ${emptyPurse ? "border border-line bg-raised text-text" : "bg-accent text-ink"}`}
           >
             <ArrowUpRight className="h-5 w-5" />
             Send
@@ -92,12 +95,12 @@ export function Home() {
             type="button"
             onClick={onAddMoney}
             disabled={adding}
-            className="flex h-[54px] flex-1 items-center justify-center gap-2 rounded-pill border
-                       border-line bg-raised text-[17px] font-semibold text-text transition
-                       active:scale-[0.98] disabled:opacity-60"
+            className={`flex h-[54px] flex-1 items-center justify-center gap-2 rounded-pill
+                        text-[17px] font-semibold transition active:scale-[0.98] disabled:opacity-60
+                        ${emptyPurse ? "bg-accent text-ink" : "border border-line bg-raised text-text"}`}
           >
             {adding ? <Spinner /> : <Plus className="h-5 w-5" />}
-            {adding ? "Adding…" : "Add money"}
+            {adding ? "Adding…" : "Add demo funds"}
           </button>
         </div>
 
