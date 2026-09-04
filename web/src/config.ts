@@ -15,12 +15,24 @@ const BUNDLER_URL = process.env.NEXT_PUBLIC_PIMLICO_BUNDLER_URL || "";
 const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID || "";
 const PRIVY_CLIENT_ID = process.env.NEXT_PUBLIC_PRIVY_CLIENT_ID || "";
 
-const REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_KOLO_REGISTRY_ADDRESS || "";
-const PAY_ADDRESS = process.env.NEXT_PUBLIC_KOLO_PAY_ADDRESS || "";
-const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TEST_USD_ADDRESS || "";
+/**
+ * The live Monad Testnet deployment. Recorded here so a fresh clone runs
+ * against real contracts with nothing to deploy; set the matching env vars
+ * to point at your own.
+ */
+const DEPLOYED = {
+  registry: "0xa4d9181bc7740d63df4783ff2c60ebb84f413212",
+  pay: "0x99278ba6c5b64c72862c678b38c25a3c7cf59547",
+  token: "0xeb7cc503d0ed16c90e26eaab301cd9d0912cec4f",
+  block: "59479502",
+};
+
+const REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_KOLO_REGISTRY_ADDRESS || DEPLOYED.registry;
+const PAY_ADDRESS = process.env.NEXT_PUBLIC_KOLO_PAY_ADDRESS || DEPLOYED.pay;
+const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TEST_USD_ADDRESS || DEPLOYED.token;
 
 /** Block the contracts were deployed at. Bounds how far back we ever scan. */
-const DEPLOY_BLOCK = process.env.NEXT_PUBLIC_KOLO_DEPLOY_BLOCK || "0";
+const DEPLOY_BLOCK = process.env.NEXT_PUBLIC_KOLO_DEPLOY_BLOCK || DEPLOYED.block;
 
 /** Monad Testnet, with the RPC endpoint overridable per environment. */
 export const chain = defineChain({

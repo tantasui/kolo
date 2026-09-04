@@ -122,9 +122,9 @@ npm install
 npm run dev                  # http://localhost:3000
 ```
 
-Fill in `NEXT_PUBLIC_PRIVY_APP_ID` and `NEXT_PUBLIC_PIMLICO_BUNDLER_URL`. If
-anything required is missing the app says so on screen instead of failing
-silently.
+Only `NEXT_PUBLIC_PRIVY_APP_ID` and `NEXT_PUBLIC_PIMLICO_BUNDLER_URL` are
+required — the contract addresses already default to the live deployment. If
+either is missing the app says so on screen instead of failing silently.
 
 ### Environment variables
 
@@ -137,10 +137,10 @@ All of these live in `web/.env.local` and are read in exactly one place,
 | `NEXT_PUBLIC_PRIVY_CLIENT_ID` | Optional; leave blank unless your Privy app needs one |
 | `NEXT_PUBLIC_PIMLICO_BUNDLER_URL` | Pimlico bundler + paymaster URL for Monad Testnet |
 | `NEXT_PUBLIC_MONAD_RPC_URL` | Defaults to `https://testnet-rpc.monad.xyz` |
-| `NEXT_PUBLIC_KOLO_REGISTRY_ADDRESS` | From the deploy |
-| `NEXT_PUBLIC_KOLO_PAY_ADDRESS` | From the deploy |
-| `NEXT_PUBLIC_TEST_USD_ADDRESS` | From the deploy |
-| `NEXT_PUBLIC_KOLO_DEPLOY_BLOCK` | From the deploy; bounds how far back the feed scans |
+| `NEXT_PUBLIC_KOLO_REGISTRY_ADDRESS` | Optional; defaults to the deployment below |
+| `NEXT_PUBLIC_KOLO_PAY_ADDRESS` | Optional; defaults to the deployment below |
+| `NEXT_PUBLIC_TEST_USD_ADDRESS` | Optional; defaults to the deployment below |
+| `NEXT_PUBLIC_KOLO_DEPLOY_BLOCK` | Optional; bounds how far back the feed scans |
 
 `contracts/.env` holds only `MONAD_RPC_URL` and the deployer `PRIVATE_KEY`. Both
 env files are gitignored.
@@ -189,8 +189,12 @@ Monad Testnet (chain ID `10143`):
 
 | Contract | Address |
 | --- | --- |
-| `KoloRegistry` | _not yet deployed_ |
-| `KoloPay` | _not yet deployed_ |
-| `TestUSD` | _not yet deployed_ |
+| `KoloRegistry` | `0xa4d9181bc7740d63df4783ff2c60ebb84f413212` |
+| `KoloPay` | `0x99278ba6c5b64c72862c678b38c25a3c7cf59547` |
+| `TestUSD` | `0xeb7cc503d0ed16c90e26eaab301cd9d0912cec4f` |
 
-Run `./scripts/deploy.sh` and paste the printed addresses here.
+Deployed at block `59479502`. These are the defaults in
+[`web/src/config.ts`](web/src/config.ts), so a fresh clone talks to them without
+deploying anything — you only need the Privy and Pimlico values. Set the
+`NEXT_PUBLIC_KOLO_*` / `NEXT_PUBLIC_TEST_USD_ADDRESS` env vars to point at your
+own deployment instead.

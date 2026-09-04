@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    // BigInt literals and Map iteration are used throughout the money code.
+    "target": "ES2022",
     "lib": ["dom", "dom.iterable", "esnext", "webworker"],
     "allowJs": true,
     "skipLibCheck": true,
