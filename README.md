@@ -147,9 +147,16 @@ Create an API key, select the **Monad Testnet** RPC, and copy the bundler URL.
 ```sh
 cd web
 cp .env.example .env.local   # if deploy.sh has not already made it
-npm install
+npm ci                       # prefer ci over install; see the note below
 npm run dev                  # http://localhost:3000
 ```
+
+> `npm ci` installs exactly what the lockfile pins. Prefer it here: a targeted
+> `npm install <pkg>@<version>` in this tree has been observed to drop `ox` (a
+> `viem` dependency that `permissionless` also peer-requires at a different
+> range) from the lockfile, which breaks the build with
+> `Module not found: Can't resolve 'ox'`. If that happens, delete
+> `node_modules` and `package-lock.json` and reinstall.
 
 Only `NEXT_PUBLIC_PRIVY_APP_ID` and `NEXT_PUBLIC_PIMLICO_BUNDLER_URL` are
 required — the contract addresses already default to the live deployment. If
