@@ -195,6 +195,32 @@ env files are gitignored.
 
 ---
 
+## Deploying
+
+A [`netlify.toml`](netlify.toml) is committed, so Netlify needs no manual build
+settings — it builds from `web/` with the Next.js runtime, on Node 20.
+
+1. Point Netlify at this repository and deploy.
+2. Set two build environment variables in **Site configuration → Environment
+   variables**:
+
+   | Variable | Value |
+   | --- | --- |
+   | `NEXT_PUBLIC_PRIVY_APP_ID` | your Privy app ID |
+   | `NEXT_PUBLIC_PIMLICO_BUNDLER_URL` | your Pimlico bundler URL |
+
+   These are `NEXT_PUBLIC_*`, so they are baked in at **build** time — set them
+   before the first build, and redeploy after changing either. The contract
+   addresses default to the live deployment, so nothing else is required.
+3. Add the resulting `https://<site>.netlify.app` origin to **Allowed origins**
+   in the Privy dashboard, or sign-in will be rejected.
+
+The HTTPS origin matters for more than Privy: service workers and passkeys
+only work in a secure context, so installing Kolo to a phone's home screen
+needs the deployed URL, not a `http://<lan-ip>:3000` address.
+
+---
+
 ## Demo script
 
 Two phones, or two browser profiles. Needs the Privy and Pimlico values set.

@@ -1,0 +1,15 @@
+# The app lives in web/, so Netlify builds from there.
+[build]
+  base = "web"
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  # Next 14 needs 18+; pin so builds don't drift with Netlify's default.
+  NODE_VERSION = "20"
+
+# Netlify's Next.js runtime handles routing, the app router and image
+# optimisation. The service worker is generated into web/public at build
+# time, so it is deliberately not committed.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
