@@ -107,6 +107,95 @@ comes from.
 
 ---
 
+## The dollar balance: AUSD is available and verified
+
+Phase 1 ships with `TestUSD`, our own 6-decimal stand-in. Phase 2 moves the app
+to [Agora AUSD](https://docs.agora.finance/developer). **AUSD is live on Monad
+Testnet**, and everything below was checked against the chain rather than read
+off a docs table.
+
+| | |
+| --- | --- |
+| Available on Monad Testnet | **Yes** |
+| Token | `0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC` |
+| `name()` / `symbol()` | `AUSD` / `AUSD` |
+| **`decimals()`** | **6 — identical to TestUSD** |
+| `totalSupply()` | ~302,010,000 AUSD |
+| Faucet | `0xd236c18D274E54FAccC3dd9DDA4b27965a73ee6C` |
+| Faucet is | an ERC-1967 proxy → implementation `0xba804df5c476e8eaef87bf8085f295300cce2a49` |
+| Faucet entry point | **`requestFunds(address recipient)`** |
+| Payout | 10,000 AUSD per request |
+| Rate limit | per address; an immediate repeat reverts `MaxFrequencyExceeded`; a fresh address can always claim |
+| Faucet reserve | ~830,000 AUSD when checked |
+
+The faucet is not verified on Sourcify and its selector is not in the public
+signature databases, so `requestFunds(address)` was recovered by reading the
+proxy's implementation slot and disassembling the implementation, then
+confirmed by calling it.
+
+### What was actually verified
+
+- Claimed 10,000 AUSD from the faucet to the deploy account.
+- A second immediate claim reverted with `MaxFrequencyExceeded`; a previously
+  unseen address passes the same check.
+- **The already-deployed `KoloPay` router moved 25.00 AUSD between two
+  registered handles with no contract change** — balances went 10,000 → 9,975
+  and 0 → 25, and the `Sent` event decoded normally. AUSD applies no transfer
+  restriction that affects the router's `transferFrom` path.
+
+That last point is what makes the migration cheap: the contracts are
+token-agnostic and already work with AUSD as deployed.
+
+### The swap
+
+Because AUSD is also 6 decimals, the token change really is one line in
+[`web/src/config.ts`](web/src/config.ts):
+
+```diff
+ const DEPLOYED = {
+   registry: "0xa4d9181bc7740d63df4783ff2c60ebb84f413212",
+   pay: "0x99278ba6c5b64c72862c678b38c25a3c7cf59547",
+-  token: "0xeb7cc503d0ed16c90e26eaab301cd9d0912cec4f", // TestUSD
++  token: "0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC", // Agora AUSD
+   block: "59479502",
+ };
+```
+
+No balance read, amount parse or format call needs touching, because
+`config.token.decimals` stays `6`.
+
+### The one thing that is not one line
+
+"Add demo funds" currently calls `TestUSD.faucet()`, which does not exist on
+AUSD. It has to point at Agora's faucet instead:
+
+```diff
+-  to: config.contracts.token,
+-  data: encodeFunctionData({ abi: testUsdAbi, functionName: "faucet" }),
++  to: config.contracts.ausdFaucet,
++  data: encodeFunctionData({
++    abi: ausdFaucetAbi,
++    functionName: "requestFunds",
++    args: [smartAccountAddress],
++  }),
+```
+
+`requestFunds` takes the recipient as a parameter rather than paying
+`msg.sender`, so it still works as a single sponsored call from the user's
+account — no relayer, and the "Add demo funds" tap stays one tap.
+
+Two consequences worth deciding on before the swap:
+
+- **The payout is 10,000 AUSD**, not 100. At the demo naira rate that reads as
+  ₦16,150,000, which looks absurd on screen. Either show a smaller figure by
+  sending part of it onward, or keep TestUSD's 100-unit faucet for demos and use
+  AUSD only for real sends.
+- **The rate limit is per address.** Every demo user gets a fresh smart account,
+  so a new user can always fund; only a repeat tap by the same user is refused,
+  and the existing "You've already added funds this hour" copy still fits.
+
+---
+
 ## Setup
 
 ### Prerequisites
