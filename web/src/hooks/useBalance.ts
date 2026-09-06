@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { encodeFunctionData } from "viem";
-import { testUsdAbi } from "@/abi/testUsd";
+import { erc20Abi } from "@/abi/erc20";
+import { koloFaucetAbi } from "@/abi/koloFaucet";
 import { config } from "@/config";
 import { sendSponsored } from "@/lib/sponsored";
 import { getPublicClient } from "./usePublicClient";
@@ -21,7 +22,7 @@ export function useBalance() {
     try {
       const value = await getPublicClient().readContract({
         address: config.contracts.token,
-        abi: testUsdAbi,
+        abi: erc20Abi,
         functionName: "balanceOf",
         args: [account],
       });
@@ -42,14 +43,26 @@ export function useBalance() {
     return () => clearInterval(timer);
   }, [ready, address, refresh]);
 
-  /** "Add demo funds" -- draws from the faucet, sponsored. */
+  /**
+   * "Add demo funds" -- one sponsored call to our faucet.
+   *
+   * `drip` takes the recipient as an argument rather than paying its caller,
+   * so the user's own account asks for its own opening balance and nothing
+   * needs a relayer.
+   */
   const addMoney = useCallback(async () => {
     if (!client) throw new Error("account not ready");
+    const account = addressRef.current;
+    if (!account) throw new Error("account not ready");
 
     await sendSponsored(client, [
       {
-        to: config.contracts.token,
-        data: encodeFunctionData({ abi: testUsdAbi, functionName: "faucet" }),
+        to: config.contracts.faucet,
+        data: encodeFunctionData({
+          abi: koloFaucetAbi,
+          functionName: "drip",
+          args: [account],
+        }),
       },
     ]);
 

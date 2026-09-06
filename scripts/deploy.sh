@@ -65,8 +65,10 @@ set_var() {
 
 set_var NEXT_PUBLIC_KOLO_REGISTRY_ADDRESS "$REGISTRY"
 set_var NEXT_PUBLIC_KOLO_PAY_ADDRESS "$PAY"
-set_var NEXT_PUBLIC_TEST_USD_ADDRESS "$TOKEN"
 set_var NEXT_PUBLIC_KOLO_DEPLOY_BLOCK "$BLOCK"
+# Deliberately not written: the app's dollar balance is Agora AUSD, not the
+# TestUSD deployed here. TestUSD stays as a local stand-in for tests and for
+# chains where AUSD is absent -- point NEXT_PUBLIC_TOKEN_ADDRESS at it to use it.
 
 cat <<EOF
 
@@ -74,8 +76,17 @@ Deployed to Monad Testnet, and written into web/.env.local:
 
   NEXT_PUBLIC_KOLO_REGISTRY_ADDRESS=$REGISTRY
   NEXT_PUBLIC_KOLO_PAY_ADDRESS=$PAY
-  NEXT_PUBLIC_TEST_USD_ADDRESS=$TOKEN
   NEXT_PUBLIC_KOLO_DEPLOY_BLOCK=$BLOCK
+
+TestUSD also deployed, at $TOKEN. The app does not use it: the dollar balance
+is Agora AUSD. Set NEXT_PUBLIC_TOKEN_ADDRESS to override that.
+
+Next, deploy and stock the demo faucet:
+
+  cd contracts && forge script script/DeployFaucet.s.sol:DeployFaucet \
+    --rpc-url "$RPC" --private-key "\$PRIVATE_KEY" --broadcast
+  # put the printed NEXT_PUBLIC_KOLO_FAUCET_ADDRESS in web/.env.local, then
+  ./scripts/fund-faucet.sh
 
 Still to fill in by hand: NEXT_PUBLIC_PRIVY_APP_ID and
 NEXT_PUBLIC_PIMLICO_BUNDLER_URL. See the README.

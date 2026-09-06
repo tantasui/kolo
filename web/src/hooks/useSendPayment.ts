@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { encodeFunctionData } from "viem";
 import { koloPayAbi } from "@/abi/koloPay";
-import { testUsdAbi } from "@/abi/testUsd";
+import { erc20Abi } from "@/abi/erc20";
 import { config } from "@/config";
 import { sendSponsored } from "@/lib/sponsored";
 import { useSmartWallet } from "./useSmartWallet";
@@ -29,7 +29,7 @@ export function useSendPayment() {
         {
           to: config.contracts.token,
           data: encodeFunctionData({
-            abi: testUsdAbi,
+            abi: erc20Abi,
             functionName: "approve",
             args: [config.contracts.pay, amount],
           }),

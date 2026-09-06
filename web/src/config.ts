@@ -23,13 +23,17 @@ const PRIVY_CLIENT_ID = process.env.NEXT_PUBLIC_PRIVY_CLIENT_ID || "";
 const DEPLOYED = {
   registry: "0xa4d9181bc7740d63df4783ff2c60ebb84f413212",
   pay: "0x99278ba6c5b64c72862c678b38c25a3c7cf59547",
-  token: "0xeb7cc503d0ed16c90e26eaab301cd9d0912cec4f",
+  /** Agora AUSD on Monad Testnet. */
+  token: "0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC",
+  /** Our own faucet, stocked with AUSD. See KoloFaucet.sol for why. */
+  faucet: "0xc656E6c73752C0e0bf57b1CD7822293c5E69570F",
   block: "59479502",
 };
 
 const REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_KOLO_REGISTRY_ADDRESS || DEPLOYED.registry;
 const PAY_ADDRESS = process.env.NEXT_PUBLIC_KOLO_PAY_ADDRESS || DEPLOYED.pay;
-const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TEST_USD_ADDRESS || DEPLOYED.token;
+const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TOKEN_ADDRESS || DEPLOYED.token;
+const FAUCET_ADDRESS = process.env.NEXT_PUBLIC_KOLO_FAUCET_ADDRESS || DEPLOYED.faucet;
 
 /** Block the contracts were deployed at. Bounds how far back we ever scan. */
 const DEPLOY_BLOCK = process.env.NEXT_PUBLIC_KOLO_DEPLOY_BLOCK || DEPLOYED.block;
@@ -58,17 +62,26 @@ export const config = {
   contracts: {
     registry: asAddress(REGISTRY_ADDRESS),
     pay: asAddress(PAY_ADDRESS),
-    /** The dollar balance users hold. Swap for Agora AUSD by changing this. */
+    /**
+     * The dollar balance users hold: Agora AUSD. Changing this one address is
+     * the whole token swap, as long as the new token's decimals match
+     * `token.decimals` below.
+     */
     token: asAddress(TOKEN_ADDRESS),
+    /** Hands demo users their opening balance. */
+    faucet: asAddress(FAUCET_ADDRESS),
   },
 
   /**
    * Internal token facts. The symbol is never rendered -- balances are shown
-   * as plain dollars -- but the decimals drive every amount conversion.
+   * as plain dollars -- but the decimals drive every amount conversion, so
+   * this must match the configured token's own `decimals()`.
+   * AUSD and TestUSD are both 6.
    */
   token: {
     decimals: 6,
-    symbol: "tUSD",
+    symbol: "AUSD",
+    displayName: "dollars",
   },
 
   deployBlock: BigInt(DEPLOY_BLOCK),
@@ -100,6 +113,7 @@ export function missingConfig(): string[] {
   if (!BUNDLER_URL) missing.push("NEXT_PUBLIC_PIMLICO_BUNDLER_URL");
   if (config.contracts.registry === "0x") missing.push("NEXT_PUBLIC_KOLO_REGISTRY_ADDRESS");
   if (config.contracts.pay === "0x") missing.push("NEXT_PUBLIC_KOLO_PAY_ADDRESS");
-  if (config.contracts.token === "0x") missing.push("NEXT_PUBLIC_TEST_USD_ADDRESS");
+  if (config.contracts.token === "0x") missing.push("NEXT_PUBLIC_TOKEN_ADDRESS");
+  if (config.contracts.faucet === "0x") missing.push("NEXT_PUBLIC_KOLO_FAUCET_ADDRESS");
   return missing;
 }

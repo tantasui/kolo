@@ -27,10 +27,13 @@ export function Home() {
       await addMoney();
     } catch (error) {
       console.error("[kolo] add money failed", error);
+      const reason = String(error);
       setNotice(
-        String(error).includes("FaucetCooldown")
+        reason.includes("CooldownActive")
           ? "You've already added funds this hour"
-          : "Something went wrong — try again"
+          : reason.includes("FaucetEmpty")
+            ? "Demo funds have run out for now"
+            : "Something went wrong — try again"
       );
     } finally {
       setAdding(false);

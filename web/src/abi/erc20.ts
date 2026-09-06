@@ -1,5 +1,6 @@
-/** Minimal ABI for the dollar balance token (TestUSD today, AUSD later). */
-export const testUsdAbi = [
+/** The parts of the ERC-20 standard the app uses, for whichever token is
+ *  configured as the dollar balance (Agora AUSD today). */
+export const erc20Abi = [
   {
     type: "function",
     name: "balanceOf",
@@ -29,17 +30,9 @@ export const testUsdAbi = [
   },
   {
     type: "function",
-    name: "faucet",
-    stateMutability: "nonpayable",
-    inputs: [],
-    outputs: [],
-  },
-  {
-    type: "function",
-    name: "faucetCooldownRemaining",
+    name: "decimals",
     stateMutability: "view",
-    inputs: [{ name: "account", type: "address" }],
-    outputs: [{ name: "", type: "uint256" }],
+    inputs: [],
+    outputs: [{ name: "", type: "uint8" }],
   },
-  { type: "error", name: "FaucetCooldown", inputs: [{ name: "availableAt", type: "uint256" }] },
 ] as const;

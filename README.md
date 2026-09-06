@@ -35,9 +35,11 @@ contracts/          Foundry project -- registry, payment router, demo dollar
   src/
     KoloRegistry.sol    handle -> account
     KoloPay.sol         payment router, emits the activity feed
-    TestUSD.sol         6-decimal demo dollar with an hourly faucet
-  test/                 45 tests, happy paths and reverts
-  script/Deploy.s.sol   deploys all three, prints addresses
+    KoloFaucet.sol      hands demo users $100 of AUSD at a time
+    TestUSD.sol         6-decimal stand-in, kept for tests and other chains
+  test/                 64 tests, happy paths and reverts
+  script/Deploy.s.sol        registry, router, TestUSD
+  script/DeployFaucet.s.sol  the demo faucet
 
 web/                Next.js PWA -- the entire user-facing app
   src/config.ts         every address, RPC and key, in one place
@@ -46,7 +48,8 @@ web/                Next.js PWA -- the entire user-facing app
   src/lib/activity/     the data layer the UI reads through
   src/components/       screens and UI primitives
 
-scripts/deploy.sh   deploys and writes the addresses into web/.env.local
+scripts/deploy.sh       deploys and writes the addresses into web/.env.local
+scripts/fund-faucet.sh  tops the demo faucet up from Agora's
 ```
 
 ---
@@ -107,12 +110,12 @@ comes from.
 
 ---
 
-## The dollar balance: AUSD is available and verified
+## The dollar balance: Agora AUSD
 
-Phase 1 ships with `TestUSD`, our own 6-decimal stand-in. Phase 2 moves the app
-to [Agora AUSD](https://docs.agora.finance/developer). **AUSD is live on Monad
-Testnet**, and everything below was checked against the chain rather than read
-off a docs table.
+The app's dollar balance is [Agora AUSD](https://docs.agora.finance/developer)
+on Monad Testnet. Phase 1 shipped with `TestUSD`, our own stand-in; that swap is
+now applied. Everything below was checked against the chain rather than read off
+a docs table.
 
 | | |
 | --- | --- |
@@ -143,12 +146,16 @@ confirmed by calling it.
   and 0 → 25, and the `Sent` event decoded normally. AUSD applies no transfer
   restriction that affects the router's `transferFrom` path.
 
-That last point is what makes the migration cheap: the contracts are
-token-agnostic and already work with AUSD as deployed.
+- After deploying, a fresh account drew exactly $100.00 from `KoloFaucet`, a
+  second attempt reverted `CooldownActive` with ~1 hour left, and the reserve
+  reported 197 remaining taps.
 
-### The swap
+The router point is what made the migration cheap: the contracts are
+token-agnostic and already worked with AUSD as deployed.
 
-Because AUSD is also 6 decimals, the token change really is one line in
+### The swap was one line
+
+Because AUSD is also 6 decimals, the token change was a single address in
 [`web/src/config.ts`](web/src/config.ts):
 
 ```diff
@@ -161,38 +168,31 @@ Because AUSD is also 6 decimals, the token change really is one line in
  };
 ```
 
-No balance read, amount parse or format call needs touching, because
-`config.token.decimals` stays `6`.
+No balance read, amount parse or format call changed, because
+`config.token.decimals` stays `6`. Point `NEXT_PUBLIC_TOKEN_ADDRESS` at any
+other 6-decimal token — TestUSD included — and the app follows.
 
-### The one thing that is not one line
+### We hand out the money ourselves
 
-"Add demo funds" currently calls `TestUSD.faucet()`, which does not exist on
-AUSD. It has to point at Agora's faucet instead:
+Agora's faucet pays **10,000 AUSD** per request. That is the right number for a
+developer stocking an account and the wrong number to show a person: at the demo
+naira rate it reads as ₦16,150,000, which looks broken rather than generous.
 
-```diff
--  to: config.contracts.token,
--  data: encodeFunctionData({ abi: testUsdAbi, functionName: "faucet" }),
-+  to: config.contracts.ausdFaucet,
-+  data: encodeFunctionData({
-+    abi: ausdFaucetAbi,
-+    functionName: "requestFunds",
-+    args: [smartAccountAddress],
-+  }),
+So [`KoloFaucet`](contracts/src/KoloFaucet.sol) sits in between. We top it up
+from Agora's faucet; it hands each user **$100** with a one-hour cooldown.
+
+```
+Agora faucet  --10,000 AUSD-->  deploy account  --->  KoloFaucet  --$100-->  user
 ```
 
-`requestFunds` takes the recipient as a parameter rather than paying
-`msg.sender`, so it still works as a single sponsored call from the user's
-account — no relayer, and the "Add demo funds" tap stays one tap.
+"Add demo funds" is one sponsored call to `drip(address)`. Like Agora's
+`requestFunds`, it pays the address passed in rather than its caller, so the
+user's own account asks for its own opening balance and nothing needs a relayer.
 
-Two consequences worth deciding on before the swap:
-
-- **The payout is 10,000 AUSD**, not 100. At the demo naira rate that reads as
-  ₦16,150,000, which looks absurd on screen. Either show a smaller figure by
-  sending part of it onward, or keep TestUSD's 100-unit faucet for demos and use
-  AUSD only for real sends.
-- **The rate limit is per address.** Every demo user gets a fresh smart account,
-  so a new user can always fund; only a repeat tap by the same user is refused,
-  and the existing "You've already added funds this hour" copy still fits.
+The cooldown is per recipient, and every new user gets a fresh account, so a
+first-time user is never refused. A repeat tap gets "You've already added funds
+this hour"; an empty reserve gets "Demo funds have run out for now", which is
+the cue to run `./scripts/fund-faucet.sh`.
 
 ---
 
@@ -225,8 +225,17 @@ To deploy, put a funded testnet key in `contracts/.env` (copy
 ./scripts/deploy.sh
 ```
 
-That deploys all three contracts and writes their addresses — plus the deploy
-block — straight into `web/.env.local`.
+That deploys the registry, router and TestUSD, and writes their addresses —
+plus the deploy block — straight into `web/.env.local`. Then deploy and stock
+the demo faucet:
+
+```sh
+cd contracts
+forge script script/DeployFaucet.s.sol:DeployFaucet \
+  --rpc-url https://testnet-rpc.monad.xyz --private-key $PRIVATE_KEY --broadcast
+# put the printed NEXT_PUBLIC_KOLO_FAUCET_ADDRESS into web/.env.local, then
+cd .. && ./scripts/fund-faucet.sh
+```
 
 ### 2. Privy
 
@@ -276,7 +285,8 @@ All of these live in `web/.env.local` and are read in exactly one place,
 | `NEXT_PUBLIC_MONAD_RPC_URL` | Defaults to `https://testnet-rpc.monad.xyz` |
 | `NEXT_PUBLIC_KOLO_REGISTRY_ADDRESS` | Optional; defaults to the deployment below |
 | `NEXT_PUBLIC_KOLO_PAY_ADDRESS` | Optional; defaults to the deployment below |
-| `NEXT_PUBLIC_TEST_USD_ADDRESS` | Optional; defaults to the deployment below |
+| `NEXT_PUBLIC_TOKEN_ADDRESS` | Optional; defaults to Agora AUSD. Any 6-decimal token works |
+| `NEXT_PUBLIC_KOLO_FAUCET_ADDRESS` | Optional; defaults to our demo faucet |
 | `NEXT_PUBLIC_KOLO_DEPLOY_BLOCK` | Optional; bounds how far back the feed scans |
 
 `contracts/.env` holds only `MONAD_RPC_URL` and the deployer `PRIVATE_KEY`. Both
@@ -318,7 +328,8 @@ Two phones, or two browser profiles. Needs the Privy and Pimlico values set.
 2. She picks `@amara` — availability updates as she types — and taps
    **Claim @amara**. No confirmation, no fee.
 3. **Tunde** does the same on the second device and claims `@tunde`.
-4. Amara taps **Add demo funds**. Her balance becomes **$100.00**.
+4. Amara taps **Add demo funds**. Her balance becomes **$100.00** — real
+   Agora AUSD, handed over by our faucet in one sponsored tap.
 5. She taps **Send**, types `tunde`, and the recipient card appears with a check
    the moment the handle resolves.
 6. She keys in **10**, adds the note *lunch*, and reviews: *Send $10.00 to
@@ -354,7 +365,9 @@ Monad Testnet (chain ID `10143`):
 | --- | --- |
 | `KoloRegistry` | `0xa4d9181bc7740d63df4783ff2c60ebb84f413212` |
 | `KoloPay` | `0x99278ba6c5b64c72862c678b38c25a3c7cf59547` |
-| `TestUSD` | `0xeb7cc503d0ed16c90e26eaab301cd9d0912cec4f` |
+| `KoloFaucet` | `0xc656E6c73752C0e0bf57b1CD7822293c5E69570F` |
+| Agora AUSD (not ours) | `0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC` |
+| `TestUSD` (unused by the app) | `0xeb7cc503d0ed16c90e26eaab301cd9d0912cec4f` |
 
 Deployed at block `59479502`. These are the defaults in
 [`web/src/config.ts`](web/src/config.ts), so a fresh clone talks to them without
