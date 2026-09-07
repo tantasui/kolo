@@ -42,6 +42,7 @@ contracts/          Foundry project -- registry, payment router, demo dollar
   script/DeployFaucet.s.sol  the demo faucet
 
 web/                Next.js PWA -- the entire user-facing app
+  DESIGN.md             the design system: colour, type, motion, language
   src/config.ts         every address, RPC and key, in one place
   src/abi/              contract ABIs
   src/hooks/            smart account, handle, balance, activity, send
@@ -354,6 +355,10 @@ The UI is held to a vocabulary. It says: Balance, Send, Add demo funds,
 @handle, No fee, Note, Sending…. It never says wallet, gas, transaction, hash, blockchain,
 Monad, token, approve, sign, smart account, or wei. Failures say
 *"Something went wrong — try again"* and the real error goes to the console.
+
+That rule, and the rest of the visual system — colour, type, shape, motion,
+state modelling — is written up in [`web/DESIGN.md`](web/DESIGN.md). Read it
+before adding a screen.
 
 ---
 
