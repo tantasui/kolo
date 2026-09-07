@@ -39,17 +39,29 @@ contract KoloLinks {
     error MemoTooLong();
     /// @notice Only the account that created a link may reclaim it.
     error NotSender();
+    /// @notice The link's claim window has closed; only the sender can recover it.
+    error LinkExpired();
     /// @notice Recipient must be a real address.
     error ZeroRecipient();
 
     /// @notice Cap on memo size, mirroring KoloPay.
     uint256 public constant MAX_MEMO_BYTES = 200;
 
+    /// @notice How long a link stays claimable.
+    /// @dev Fixed rather than per-link: the sender is choosing how to pay
+    ///      someone, not configuring an escrow, and one number keeps the copy
+    ///      honest ("expires in 7 days") without another decision in the flow.
+    ///      Expiry never destroys money -- it only closes claiming, after which
+    ///      `reclaim` is the sender's way to take it back.
+    uint256 public constant LINK_LIFETIME = 7 days;
+
     struct Link {
         address sender;
         address token;
         uint256 amount;
         uint64 createdAt;
+        /// @dev Claiming is refused from this timestamp on.
+        uint64 expiresAt;
     }
 
     /// @notice Handle registry, used to stamp the sender's handle on the event.
@@ -66,10 +78,13 @@ contract KoloLinks {
         string senderHandle,
         address token,
         uint256 amount,
-        string memo
+        string memo,
+        uint64 expiresAt
     );
     event LinkClaimed(bytes32 indexed secretHash, address indexed recipient, address token, uint256 amount);
-    event LinkReclaimed(bytes32 indexed secretHash, address indexed sender, uint256 amount);
+    /// @dev `afterExpiry` separates a sender cancelling a live link from one
+    ///      sweeping up a link nobody claimed. The feed words those differently.
+    event LinkReclaimed(bytes32 indexed secretHash, address indexed sender, uint256 amount, bool afterExpiry);
 
     constructor(KoloRegistry registry_) {
         registry = registry_;
@@ -84,12 +99,19 @@ contract KoloLinks {
         if (bytes(memo).length > MAX_MEMO_BYTES) revert MemoTooLong();
         if (_links[secretHash].amount != 0) revert LinkExists();
 
-        _links[secretHash] =
-            Link({sender: msg.sender, token: token, amount: amount, createdAt: uint64(block.timestamp)});
+        uint64 expiresAt = uint64(block.timestamp + LINK_LIFETIME);
+
+        _links[secretHash] = Link({
+            sender: msg.sender,
+            token: token,
+            amount: amount,
+            createdAt: uint64(block.timestamp),
+            expiresAt: expiresAt
+        });
 
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
 
-        emit LinkCreated(secretHash, msg.sender, registry.handleOf(msg.sender), token, amount, memo);
+        emit LinkCreated(secretHash, msg.sender, registry.handleOf(msg.sender), token, amount, memo, expiresAt);
     }
 
     /// @notice Hand a link's money to `recipient`, proving the secret.
@@ -101,6 +123,7 @@ contract KoloLinks {
         bytes32 secretHash = keccak256(abi.encodePacked(secret));
         Link memory link = _links[secretHash];
         if (link.amount == 0) revert LinkNotFound();
+        if (block.timestamp >= link.expiresAt) revert LinkExpired();
 
         // Cleared before the transfer: claiming twice is impossible even if the
         // token calls back into this contract.
@@ -112,6 +135,8 @@ contract KoloLinks {
     }
 
     /// @notice Take back an unclaimed link. Only the account that created it.
+    /// @dev Allowed at any time, before or after expiry: cancelling a link you
+    ///      just sent and sweeping up one nobody claimed are the same operation.
     function reclaim(bytes32 secretHash) external {
         Link memory link = _links[secretHash];
         if (link.amount == 0) revert LinkNotFound();
@@ -121,7 +146,7 @@ contract KoloLinks {
 
         IERC20(link.token).safeTransfer(link.sender, link.amount);
 
-        emit LinkReclaimed(secretHash, link.sender, link.amount);
+        emit LinkReclaimed(secretHash, link.sender, link.amount, block.timestamp >= link.expiresAt);
     }
 
     /// @notice The link behind `secretHash`, or a zeroed struct if none.
@@ -129,9 +154,17 @@ contract KoloLinks {
         return _links[secretHash];
     }
 
-    /// @notice True while a link is unclaimed and unreclaimed.
+    /// @notice True while a link exists -- claimed or reclaimed clears it.
+    ///         An expired link is still live: its money is still there, waiting
+    ///         for the sender to reclaim it.
     function isLive(bytes32 secretHash) external view returns (bool) {
         return _links[secretHash].amount != 0;
+    }
+
+    /// @notice True when a live link can still be claimed by a recipient.
+    function isClaimable(bytes32 secretHash) external view returns (bool) {
+        Link memory link = _links[secretHash];
+        return link.amount != 0 && block.timestamp < link.expiresAt;
     }
 
     /// @notice The hash a given secret parks money behind. Lets a client check

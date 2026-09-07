@@ -25,10 +25,11 @@ contract KoloLinksTest is Test {
         string senderHandle,
         address token,
         uint256 amount,
-        string memo
+        string memo,
+        uint64 expiresAt
     );
     event LinkClaimed(bytes32 indexed secretHash, address indexed recipient, address token, uint256 amount);
-    event LinkReclaimed(bytes32 indexed secretHash, address indexed sender, uint256 amount);
+    event LinkReclaimed(bytes32 indexed secretHash, address indexed sender, uint256 amount, bool afterExpiry);
 
     function setUp() public {
         vm.warp(1_700_000_000);
@@ -64,12 +65,16 @@ contract KoloLinksTest is Test {
         assertEq(link.token, address(usd));
         assertEq(link.amount, 25e6);
         assertEq(link.createdAt, uint64(block.timestamp));
+        assertEq(link.expiresAt, uint64(block.timestamp + links.LINK_LIFETIME()));
         assertTrue(links.isLive(secretHash));
+        assertTrue(links.isClaimable(secretHash));
     }
 
     function test_CreateEmitsLinkCreatedWithSenderHandle() public {
         vm.expectEmit(true, true, false, true);
-        emit LinkCreated(secretHash, amara, "amara", address(usd), 25e6, "lunch");
+        emit LinkCreated(
+            secretHash, amara, "amara", address(usd), 25e6, "lunch", uint64(block.timestamp + links.LINK_LIFETIME())
+        );
 
         vm.prank(amara);
         links.create(secretHash, address(usd), 25e6, "lunch");
@@ -81,7 +86,9 @@ contract KoloLinksTest is Test {
         usd.approve(address(links), type(uint256).max);
 
         vm.expectEmit(true, true, false, true);
-        emit LinkCreated(secretHash, stranger, "", address(usd), 5e6, "");
+        emit LinkCreated(
+            secretHash, stranger, "", address(usd), 5e6, "", uint64(block.timestamp + links.LINK_LIFETIME())
+        );
         links.create(secretHash, address(usd), 5e6, "");
         vm.stopPrank();
     }
@@ -257,7 +264,7 @@ contract KoloLinksTest is Test {
         links.create(secretHash, address(usd), 25e6, "");
 
         vm.expectEmit(true, true, false, true);
-        emit LinkReclaimed(secretHash, amara, 25e6);
+        emit LinkReclaimed(secretHash, amara, 25e6, false);
         links.reclaim(secretHash);
         vm.stopPrank();
     }
@@ -285,6 +292,70 @@ contract KoloLinksTest is Test {
         vm.prank(amara);
         vm.expectRevert(KoloLinks.LinkNotFound.selector);
         links.reclaim(keccak256("never used"));
+    }
+
+    // --- expiry ---
+
+    function test_ClaimableUpToTheInstantBeforeExpiry() public {
+        vm.prank(amara);
+        links.create(secretHash, address(usd), 25e6, "");
+
+        vm.warp(block.timestamp + links.LINK_LIFETIME() - 1);
+        assertTrue(links.isClaimable(secretHash));
+
+        links.claim(SECRET, tunde);
+        assertEq(usd.balanceOf(tunde), 25e6);
+    }
+
+    function test_RevertWhen_ClaimingExactlyAtExpiry() public {
+        vm.prank(amara);
+        links.create(secretHash, address(usd), 25e6, "");
+
+        vm.warp(block.timestamp + links.LINK_LIFETIME());
+
+        vm.expectRevert(KoloLinks.LinkExpired.selector);
+        links.claim(SECRET, tunde);
+    }
+
+    function test_RevertWhen_ClaimingLongAfterExpiry() public {
+        vm.prank(amara);
+        links.create(secretHash, address(usd), 25e6, "");
+
+        vm.warp(block.timestamp + 365 days);
+
+        vm.expectRevert(KoloLinks.LinkExpired.selector);
+        links.claim(SECRET, tunde);
+    }
+
+    /// Expiry closes claiming; it never destroys the money.
+    function test_ExpiredLinkIsStillLiveAndStillReclaimable() public {
+        vm.prank(amara);
+        links.create(secretHash, address(usd), 25e6, "");
+
+        vm.warp(block.timestamp + links.LINK_LIFETIME());
+
+        assertTrue(links.isLive(secretHash), "money is still parked");
+        assertFalse(links.isClaimable(secretHash), "but nobody can claim it");
+
+        vm.prank(amara);
+        links.reclaim(secretHash);
+        assertEq(usd.balanceOf(amara), 100e6);
+    }
+
+    function test_ReclaimAfterExpiryFlagsItInTheEvent() public {
+        vm.prank(amara);
+        links.create(secretHash, address(usd), 25e6, "");
+
+        vm.warp(block.timestamp + links.LINK_LIFETIME());
+
+        vm.expectEmit(true, true, false, true);
+        emit LinkReclaimed(secretHash, amara, 25e6, true);
+        vm.prank(amara);
+        links.reclaim(secretHash);
+    }
+
+    function test_UnknownHashIsNotClaimable() public view {
+        assertFalse(links.isClaimable(keccak256("never used")));
     }
 
     // --- the batched approve+create the app actually performs ---

@@ -5,7 +5,7 @@ import { encodeFunctionData, type Hex } from "viem";
 import { erc20Abi } from "@/abi/erc20";
 import { koloLinksAbi } from "@/abi/koloLinks";
 import { config } from "@/config";
-import { buildClaimUrl, createSecret } from "@/lib/claimLink";
+import { buildClaimUrl, createSecret, hashSecret } from "@/lib/claimLink";
 import { sendSponsored } from "@/lib/sponsored";
 import { getPublicClient } from "./usePublicClient";
 import { useSmartWallet } from "./useSmartWallet";
@@ -16,6 +16,39 @@ export interface CreatedLink {
   secret: Hex;
   secretHash: Hex;
   amount: bigint;
+}
+
+/** What the claim page found behind a link's secret. */
+export type LinkLookup =
+  | { kind: "loading" }
+  | { kind: "invalid" }
+  | { kind: "gone" }
+  | { kind: "expired"; amount: bigint }
+  | { kind: "ready"; amount: bigint; secret: Hex; expiresAt: number };
+
+/** Read a link without spending anything. Works signed out. */
+export async function lookUpLink(secret: Hex): Promise<LinkLookup> {
+  if (!config.features.claimLinks) return { kind: "invalid" };
+
+  const secretHash = hashSecret(secret);
+  const client = getPublicClient();
+
+  const link = await client.readContract({
+    address: config.contracts.links,
+    abi: koloLinksAbi,
+    functionName: "linkOf",
+    args: [secretHash],
+  });
+
+  // A cleared row means it was claimed or the sender took it back. Both look
+  // the same on chain, and to the person holding the link they mean the same
+  // thing: there is nothing here for you.
+  if (link.amount === 0n) return { kind: "gone" };
+
+  const expiresAt = Number(link.expiresAt);
+  if (Date.now() / 1000 >= expiresAt) return { kind: "expired", amount: link.amount };
+
+  return { kind: "ready", amount: link.amount, secret, expiresAt };
 }
 
 export function useCreateClaimLink() {
@@ -73,4 +106,54 @@ export function useCreateClaimLink() {
   );
 
   return { create };
+}
+
+/** Claim a link into the signed-in account, sponsored. */
+export function useClaimLink() {
+  const { client, address } = useSmartWallet();
+
+  const claim = useCallback(
+    async (secret: Hex) => {
+      if (!client || !address) throw new Error("account not ready");
+
+      await sendSponsored(client, [
+        {
+          to: config.contracts.links,
+          data: encodeFunctionData({
+            abi: koloLinksAbi,
+            functionName: "claim",
+            args: [secret, address],
+          }),
+        },
+      ]);
+    },
+    [client, address]
+  );
+
+  return { claim };
+}
+
+/** Cancel a link you created and take the money back, sponsored. */
+export function useCancelLink() {
+  const { client } = useSmartWallet();
+
+  const cancel = useCallback(
+    async (secretHash: Hex) => {
+      if (!client) throw new Error("account not ready");
+
+      await sendSponsored(client, [
+        {
+          to: config.contracts.links,
+          data: encodeFunctionData({
+            abi: koloLinksAbi,
+            functionName: "reclaim",
+            args: [secretHash],
+          }),
+        },
+      ]);
+    },
+    [client]
+  );
+
+  return { cancel };
 }

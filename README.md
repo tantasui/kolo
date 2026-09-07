@@ -38,7 +38,7 @@ contracts/          Foundry project -- registry, payment router, demo dollar
     KoloFaucet.sol      hands demo users $100 of AUSD at a time
     KoloLinks.sol       money parked behind a secret, for claim links
     TestUSD.sol         6-decimal stand-in, kept for tests and other chains
-  test/                 93 tests, happy paths and reverts
+  test/                 99 tests, happy paths and reverts
   script/Deploy.s.sol        registry, router, TestUSD
   script/DeployFaucet.s.sol  the demo faucet
   script/DeployLinks.s.sol   the claim-link contract
@@ -49,6 +49,7 @@ web/                Next.js PWA -- the entire user-facing app
   src/abi/              contract ABIs
   src/hooks/            smart account, handle, balance, activity, send
   src/lib/activity/     the data layer the UI reads through
+  src/app/claim/        where a claim link opens
   src/components/       screens and UI primitives
 
 scripts/deploy.sh       deploys and writes the addresses into web/.env.local
