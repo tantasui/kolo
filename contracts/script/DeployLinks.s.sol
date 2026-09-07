@@ -10,7 +10,7 @@ import {KoloRegistry} from "../src/KoloRegistry.sol";
 ///      deployed and must not be replaced.
 contract DeployLinks is Script {
     /// The KoloRegistry already live on Monad Testnet.
-    address constant DEFAULT_REGISTRY = 0xA4d9181Bc7740D63dF4783fF2c60EBB84F413212;
+    address constant DEFAULT_REGISTRY = 0xA4D9181Bc7740d63df4783fF2C60EbB84F413212;
 
     function run() external returns (KoloLinks links) {
         address registry = vm.envOr("KOLO_REGISTRY", DEFAULT_REGISTRY);

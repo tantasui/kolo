@@ -7,6 +7,7 @@ import { koloLinksAbi } from "@/abi/koloLinks";
 import { config } from "@/config";
 import { buildClaimUrl, createSecret } from "@/lib/claimLink";
 import { sendSponsored } from "@/lib/sponsored";
+import { getPublicClient } from "./usePublicClient";
 import { useSmartWallet } from "./useSmartWallet";
 
 export interface CreatedLink {
@@ -52,6 +53,19 @@ export function useCreateClaimLink() {
           }),
         },
       ]);
+
+      // A call to an address holding no code succeeds silently on the EVM, so a
+      // wrong or stale NEXT_PUBLIC_KOLO_LINKS_ADDRESS would produce a user
+      // operation that "worked" while parking nothing -- and we would hand over
+      // a link with no money behind it. Read the link back before believing it.
+      const live = await getPublicClient().readContract({
+        address: config.contracts.links,
+        abi: koloLinksAbi,
+        functionName: "isLive",
+        args: [secretHash],
+      });
+
+      if (!live) throw new Error("link was not created on chain");
 
       return { url: buildClaimUrl(secret), secret, secretHash, amount };
     },
