@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { formatMoney } from "@/lib/format";
+import { formatApprox, formatMoney } from "@/lib/format";
 import { ActivityList } from "../ActivityList";
 import { useKolo } from "../kolo-provider";
 import { SendSheet } from "../send/SendSheet";
@@ -93,6 +93,11 @@ export function Home() {
               formatMoney(balance, currency)
             )}
           </p>
+          {balance !== null && formatApprox(balance, currency) && (
+            <p className="tabular mt-1.5 text-[15px] text-muted">
+              {formatApprox(balance, currency)}
+            </p>
+          )}
         </section>
 
         <div className="mt-8 flex gap-3">

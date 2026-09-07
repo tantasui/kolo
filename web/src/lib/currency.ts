@@ -6,9 +6,17 @@ import { getRate } from "@/config";
  */
 export type Currency = "USD" | "NGN";
 
-export const CURRENCIES: Record<Currency, { symbol: string; label: string; blurb: string }> = {
-  USD: { symbol: "$", label: "Dollars", blurb: "Show balances in dollars" },
-  NGN: { symbol: "₦", label: "Naira", blurb: "Converted at a fixed demo rate" },
+export const CURRENCIES: Record<
+  Currency,
+  { symbol: string; label: string; blurb: string; decimals: 0 | 2 }
+> = {
+  /** Dollars are what the chain holds, so they are shown to the cent. */
+  USD: { symbol: "$", label: "Dollars", blurb: "Show balances in dollars", decimals: 2 },
+  /**
+   * Naira is shown whole. Kobo are not used in practice, and at ~₦1,615 to the
+   * dollar two decimal places are noise on every realistic amount.
+   */
+  NGN: { symbol: "₦", label: "Naira", blurb: "Converted at a fixed demo rate", decimals: 0 },
 };
 
 export const DEFAULT_CURRENCY: Currency = "USD";

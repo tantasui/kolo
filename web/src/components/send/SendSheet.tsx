@@ -3,8 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { config } from "@/config";
 import { resolveHandle } from "@/hooks/useHandle";
-import { formatEntry, formatMoney, handleProblem, normaliseHandle, parseAmount } from "@/lib/format";
-import type { Currency } from "@/lib/currency";
+import {
+  formatApprox,
+  formatEntry,
+  formatMoney,
+  handleProblem,
+  normaliseHandle,
+  parseAmount,
+} from "@/lib/format";
+import { CURRENCIES, type Currency } from "@/lib/currency";
 import { useKolo } from "../kolo-provider";
 import { Avatar } from "../ui/Avatar";
 import { Button } from "../ui/Button";
@@ -295,7 +302,7 @@ function AmountStep({
         </p>
       </div>
 
-      <Keypad value={entry} onChange={onEntry} />
+      <Keypad value={entry} onChange={onEntry} decimals={CURRENCIES[currency].decimals} />
 
       <Button full className="mt-4" disabled={amount === 0n || tooMuch} onClick={onNext}>
         Continue
@@ -334,6 +341,9 @@ function ReviewStep({
         <p className="tabular mt-2 text-[52px] font-bold leading-none tracking-tight">
           {formatMoney(amount, currency)}
         </p>
+        {formatApprox(amount, currency) && (
+          <p className="tabular mt-2 text-[15px] text-muted">{formatApprox(amount, currency)}</p>
+        )}
       </div>
 
       <div className="mt-8 rounded-2xl border border-line bg-surface">

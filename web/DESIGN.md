@@ -81,6 +81,24 @@ This includes the keypad. A screen that shows a naira balance next to a dollar
 entry field is a bug, not a partial feature. The rate is display-only and comes
 from `getRate()` in [`src/config.ts`](src/config.ts) — never inline it.
 
+The two currencies are shaped differently, and both shapes are deliberate:
+
+| | Dollars | Naira |
+| --- | --- | --- |
+| Decimals | 2 | **0** — kobo are noise at ₦1,615 to $1 |
+| Rounding | to the nearest cent | **always down** |
+| Secondary line | none | muted `≈ $100.00` |
+| Keypad `.` key | shown | **refused**, cell left blank |
+
+Naira floors rather than rounds because it is a *view* onto a dollar balance:
+flooring means the figure on screen never overstates what is held, so the whole
+displayed balance is always spendable. Round it to nearest and a user can be
+shown ₦1,615, type ₦1,615, and be told it is more than their balance.
+
+Naira never appears alone where the amount matters. The balance and the send
+review both carry `formatApprox()`'s muted dollar line beneath, so the converted
+figure and the real one are always legible together.
+
 ---
 
 ## Shape and size
