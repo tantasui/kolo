@@ -96,6 +96,20 @@ export const config = {
   /** Bound on memo length, mirroring KoloPay.MAX_MEMO_BYTES. */
   maxNoteBytes: 200,
 
+  /**
+   * Display-only FX. The balance is always dollars on chain; naira is a
+   * presentation choice the user makes in Settings.
+   *
+   * Static on purpose: a demo should not depend on a rate feed being up, and
+   * a fixed rate makes the conversion exactly reversible (see lib/currency.ts).
+   * Read it through `getRate()` rather than reaching in here, so swapping in a
+   * live feed later is one function body.
+   */
+  fx: {
+    /** Naira per dollar. Matches the rate quoted in the README. */
+    ngnPerUsd: 1615,
+  },
+
   activity: {
     /** Monad's public RPC caps eth_getLogs at a 100-block span. */
     maxLogRange: 100n,
@@ -105,6 +119,16 @@ export const config = {
     maxBackfillWindows: 20,
   },
 } as const;
+
+/**
+ * Naira per dollar, for display conversion only.
+ *
+ * The single accessor for the rate: everything that converts money goes
+ * through here, so a live feed later means changing this body alone.
+ */
+export function getRate(): number {
+  return config.fx.ngnPerUsd;
+}
 
 /** Env vars that must be set for the app to function, with friendly labels. */
 export function missingConfig(): string[] {

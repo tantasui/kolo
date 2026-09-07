@@ -1,18 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { formatUsd } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import { ActivityList } from "../ActivityList";
 import { useKolo } from "../kolo-provider";
 import { SendSheet } from "../send/SendSheet";
+import { Settings } from "./Settings";
 import { Avatar } from "../ui/Avatar";
-import { ArrowUpRight, Check, Copy, Plus, Warning } from "../ui/Icons";
+import { ArrowUpRight, Check, Copy, Gear, Plus, Warning } from "../ui/Icons";
 import { Spinner } from "../ui/Spinner";
 
 export function Home() {
-  const { handle, balance, activity, addMoney } = useKolo();
+  const { handle, balance, activity, addMoney, currency } = useKolo();
 
   const [sendOpen, setSendOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [adding, setAdding] = useState(false);
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -69,6 +71,17 @@ export function Home() {
               <Copy className="h-4 w-4 text-muted transition group-hover:text-text" />
             )}
           </button>
+
+          <div className="flex-1" />
+
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Settings"
+            className="-mr-2 flex h-10 w-10 items-center justify-center rounded-full text-muted transition active:scale-95"
+          >
+            <Gear className="h-[22px] w-[22px]" />
+          </button>
         </header>
 
         <section className="mt-10">
@@ -77,7 +90,7 @@ export function Home() {
             {balance === null ? (
               <span className="inline-block h-[52px] w-48 animate-pulse rounded-2xl bg-raised align-middle" />
             ) : (
-              formatUsd(balance)
+              formatMoney(balance, currency)
             )}
           </p>
         </section>
@@ -121,6 +134,7 @@ export function Home() {
       </div>
 
       {sendOpen && <SendSheet onClose={() => setSendOpen(false)} />}
+      {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
     </>
   );
 }

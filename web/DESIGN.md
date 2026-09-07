@@ -64,6 +64,23 @@ Any numeral that can change carries the **`.tabular`** class
 (`font-variant-numeric: tabular-nums`), so digits don't jitter when a balance
 updates mid-animation.
 
+### Never render an amount without a currency
+
+The chain always holds 6-decimal dollars. What the user *sees* is their choice
+in Settings — dollars or naira — so every amount goes through the currency-aware
+helpers in [`src/lib/format.ts`](src/lib/format.ts):
+
+```tsx
+const { currency } = useKolo();
+formatMoney(balance, currency)      // raw units -> "$100.00" / "₦161,500.00"
+parseAmount(entry, currency)        // typed entry -> raw units
+formatEntry(entry, currency)        // in-progress keypad entry
+```
+
+This includes the keypad. A screen that shows a naira balance next to a dollar
+entry field is a bug, not a partial feature. The rate is display-only and comes
+from `getRate()` in [`src/config.ts`](src/config.ts) — never inline it.
+
 ---
 
 ## Shape and size
@@ -239,4 +256,5 @@ Failure copy reassures about money first — the send failure screen leads with
 3. Give the screen exactly one accent action.
 4. Model its states as a union, and switch exhaustively over them.
 5. Give every tappable thing an `active:scale-*` and an accessible name.
-6. Write the copy as if for a consumer banking app with nothing underneath it.
+6. Render every amount through `formatMoney(units, currency)` — never bare.
+7. Write the copy as if for a consumer banking app with nothing underneath it.
