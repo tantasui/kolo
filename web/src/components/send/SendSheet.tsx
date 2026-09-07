@@ -16,12 +16,20 @@ import { useKolo } from "../kolo-provider";
 import { Avatar } from "../ui/Avatar";
 import { Button } from "../ui/Button";
 import { Confetti } from "../ui/Confetti";
-import { Check, Warning } from "../ui/Icons";
+import { Check, LinkIcon, Warning } from "../ui/Icons";
 import { Keypad } from "../ui/Keypad";
 import { SheetHeader } from "../ui/SheetHeader";
 import { Spinner } from "../ui/Spinner";
+import { useCreateClaimLink, type CreatedLink } from "@/hooks/useClaimLink";
+import { ShareLink } from "./ShareLink";
 
 type Step = "to" | "amount" | "review" | "sending" | "done" | "failed";
+
+/**
+ * Two ways to send: to a handle, or onto a link anyone can claim. The link
+ * mode exists for the person who is not on Kolo yet.
+ */
+type Mode = "handle" | "link";
 
 interface Recipient {
   handle: string;
@@ -38,9 +46,12 @@ export function SendSheet({ onClose }: { onClose: () => void }) {
     refreshActivity,
     currency,
   } = useKolo();
+  const { create: createLink } = useCreateClaimLink();
 
   const [step, setStep] = useState<Step>("to");
+  const [mode, setMode] = useState<Mode>("handle");
   const [recipient, setRecipient] = useState<Recipient | null>(null);
+  const [link, setLink] = useState<CreatedLink | null>(null);
   const [entry, setEntry] = useState("");
   const [note, setNote] = useState("");
 
@@ -49,18 +60,26 @@ export function SendSheet({ onClose }: { onClose: () => void }) {
   const tooMuch = amount > available;
 
   async function confirm() {
-    if (!recipient) return;
+    if (mode === "handle" && !recipient) return;
     setStep("sending");
 
     try {
-      await send({ handle: recipient.handle, amount, note });
+      if (mode === "link") {
+        // Nothing goes in the feed yet: the money is parked, not delivered.
+        setLink(await createLink({ amount, note }));
+        await refreshBalance();
+        setStep("done");
+        return;
+      }
+
+      await send({ handle: recipient!.handle, amount, note });
 
       // Show it in the feed straight away; the next sweep replaces this with
       // the confirmed row.
       addPendingActivity({
         direction: "out",
-        counterpartyHandle: recipient.handle,
-        counterpartyAddress: recipient.address,
+        counterpartyHandle: recipient!.handle,
+        counterpartyAddress: recipient!.address,
         amount,
         memo: note,
       });
@@ -68,7 +87,7 @@ export function SendSheet({ onClose }: { onClose: () => void }) {
       await Promise.all([refreshBalance(), refreshActivity()]);
       setStep("done");
     } catch (error) {
-      console.error("[kolo] send failed", error);
+      console.error(`[kolo] ${mode === "link" ? "link creation" : "send"} failed`, error);
       setStep("failed");
     }
   }
@@ -81,13 +100,19 @@ export function SendSheet({ onClose }: { onClose: () => void }) {
             myHandle={myHandle}
             onClose={onClose}
             onPick={(picked) => {
+              setMode("handle");
               setRecipient(picked);
+              setStep("amount");
+            }}
+            onChooseLink={() => {
+              setMode("link");
+              setRecipient(null);
               setStep("amount");
             }}
           />
         )}
 
-        {step === "amount" && recipient && (
+        {step === "amount" && (
           <AmountStep
             recipient={recipient}
             entry={entry}
@@ -101,7 +126,7 @@ export function SendSheet({ onClose }: { onClose: () => void }) {
           />
         )}
 
-        {step === "review" && recipient && (
+        {step === "review" && (
           <ReviewStep
             recipient={recipient}
             amount={amount}
@@ -114,9 +139,13 @@ export function SendSheet({ onClose }: { onClose: () => void }) {
           />
         )}
 
-        {step === "sending" && <SendingStep />}
+        {step === "sending" && <SendingStep mode={mode} />}
 
-        {step === "done" && recipient && (
+        {step === "done" && mode === "link" && link && (
+          <ShareLink url={link.url} amount={link.amount} currency={currency} onDone={onClose} />
+        )}
+
+        {step === "done" && mode === "handle" && recipient && (
           <DoneStep recipient={recipient} amount={amount} currency={currency} onDone={onClose} />
         )}
 
@@ -143,10 +172,12 @@ function ToStep({
   myHandle,
   onClose,
   onPick,
+  onChooseLink,
 }: {
   myHandle: string | null;
   onClose: () => void;
   onPick: (recipient: Recipient) => void;
+  onChooseLink: () => void;
 }) {
   const [input, setInput] = useState("");
   const [lookup, setLookup] = useState<Lookup>({ kind: "empty" });
@@ -213,6 +244,25 @@ function ToStep({
 
       <div className="flex-1" />
 
+      {config.features.claimLinks && (
+        <button
+          type="button"
+          onClick={onChooseLink}
+          className="mb-4 flex w-full items-center gap-3 rounded-2xl border border-line bg-surface
+                     px-4 py-3.5 text-left transition active:scale-[0.99]"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-raised text-muted">
+            <LinkIcon className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[16px] font-semibold text-text">Send a link instead</span>
+            <span className="block text-[13px] text-muted">
+              For someone who isn&apos;t on Kolo yet
+            </span>
+          </span>
+        </button>
+      )}
+
       <Button
         full
         disabled={lookup.kind !== "found"}
@@ -273,7 +323,7 @@ function AmountStep({
   onClose,
   onNext,
 }: {
-  recipient: Recipient;
+  recipient: Recipient | null;
   entry: string;
   onEntry: (next: string) => void;
   available: bigint;
@@ -287,7 +337,11 @@ function AmountStep({
 
   return (
     <>
-      <SheetHeader title={`To @${recipient.handle}`} onBack={onBack} onClose={onClose} />
+      <SheetHeader
+        title={recipient ? `To @${recipient.handle}` : "Amount for the link"}
+        onBack={onBack}
+        onClose={onClose}
+      />
 
       <div className="flex flex-1 flex-col items-center justify-center">
         <p
@@ -323,7 +377,7 @@ function ReviewStep({
   onClose,
   onConfirm,
 }: {
-  recipient: Recipient;
+  recipient: Recipient | null;
   amount: bigint;
   currency: Currency;
   note: string;
@@ -348,11 +402,25 @@ function ReviewStep({
 
       <div className="mt-8 rounded-2xl border border-line bg-surface">
         <div className="flex items-center gap-3 px-4 py-4">
-          <Avatar handle={recipient.handle} size={40} />
-          <div className="flex-1">
-            <p className="text-[13px] text-muted">To</p>
-            <p className="text-[17px] font-semibold">@{recipient.handle}</p>
-          </div>
+          {recipient ? (
+            <>
+              <Avatar handle={recipient.handle} size={40} />
+              <div className="flex-1">
+                <p className="text-[13px] text-muted">To</p>
+                <p className="text-[17px] font-semibold">@{recipient.handle}</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-raised text-muted">
+                <LinkIcon className="h-5 w-5" />
+              </span>
+              <div className="flex-1">
+                <p className="text-[13px] text-muted">To</p>
+                <p className="text-[17px] font-semibold">Anyone with the link</p>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="border-t border-line px-4 py-4">
@@ -378,7 +446,7 @@ function ReviewStep({
       <div className="flex-1" />
 
       <Button full onClick={onConfirm}>
-        Send {formatMoney(amount, currency)}
+        {recipient ? `Send ${formatMoney(amount, currency)}` : `Create a link for ${formatMoney(amount, currency)}`}
       </Button>
     </>
   );
@@ -386,11 +454,13 @@ function ReviewStep({
 
 /* ---------- step 4: in flight ---------- */
 
-function SendingStep() {
+function SendingStep({ mode }: { mode: Mode }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-5">
       <Spinner className="h-10 w-10 text-accent" />
-      <p className="text-[18px] font-medium text-muted">Sending…</p>
+      <p className="text-[18px] font-medium text-muted">
+        {mode === "link" ? "Making your link…" : "Sending…"}
+      </p>
     </div>
   );
 }

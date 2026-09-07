@@ -92,3 +92,32 @@ export const SignOut = ({ className }: IconProps) => (
     <path d="M10 12h11m0 0-3-3m3 3-3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
+
+export const Share = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <path d="M12 16V4m0 0L8 8m4-4 4 4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M5 14v4.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+  </svg>
+);
+
+export const WhatsApp = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <path
+      d="M3.5 20.5 4.8 16a8 8 0 1 1 3.2 3.2l-4.5 1.3Z"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M9.2 8.4c.2-.5.4-.5.6-.5h.5c.2 0 .4 0 .6.5l.6 1.4c.1.2 0 .4-.1.5l-.4.5c-.1.2-.2.3 0 .6a6 6 0 0 0 2.6 2.2c.3.1.4 0 .6-.1l.5-.6c.2-.2.3-.1.5 0l1.3.7c.2.1.4.2.4.4v.4c-.1.5-.6 1.1-1.3 1.2-.6.1-1.3.2-3.2-.7a9 9 0 0 1-3.6-3.5c-.7-1.2-.6-2 .4-2.9Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+export const LinkIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <path d="M10 14a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 0 0-5.7-5.7l-1.3 1.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <path d="M14 10a4 4 0 0 0-5.7 0L5.5 12.8a4 4 0 0 0 5.7 5.7l1.3-1.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
