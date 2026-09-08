@@ -375,6 +375,7 @@ Monad Testnet (chain ID `10143`):
 | `KoloRegistry` | `0xa4d9181bc7740d63df4783ff2c60ebb84f413212` |
 | `KoloPay` | `0x99278ba6c5b64c72862c678b38c25a3c7cf59547` |
 | `KoloFaucet` | `0xc656E6c73752C0e0bf57b1CD7822293c5E69570F` |
+| `KoloLinks` | `0xf4bde27146E8937aCEa9a39501E891Ed4a3C956D` |
 | Agora AUSD (not ours) | `0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC` |
 | `TestUSD` (unused by the app) | `0xeb7cc503d0ed16c90e26eaab301cd9d0912cec4f` |
 
