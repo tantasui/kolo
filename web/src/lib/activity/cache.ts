@@ -21,6 +21,7 @@ function keyFor(account: Address): string {
 
 interface StoredItem {
   id: string;
+  kind?: "payment" | "link";
   direction: "in" | "out";
   counterpartyHandle: string;
   counterpartyAddress: string;
@@ -30,6 +31,9 @@ interface StoredItem {
   timestamp: number | null;
   blockNumber: string | null;
   txHash: string | null;
+  secretHash?: string;
+  linkState?: "pending" | "claimed" | "expired" | "cancelled";
+  expiresAt?: number;
 }
 
 export function loadCachedActivity(account: Address): ActivityCache {
@@ -45,6 +49,8 @@ export function loadCachedActivity(account: Address): ActivityCache {
     return {
       items: (parsed.items ?? []).map((item) => ({
         id: item.id,
+        // Rows cached before links existed are payments.
+        kind: item.kind ?? "payment",
         direction: item.direction,
         counterpartyHandle: item.counterpartyHandle,
         counterpartyAddress: item.counterpartyAddress as Address,
@@ -54,6 +60,9 @@ export function loadCachedActivity(account: Address): ActivityCache {
         timestamp: item.timestamp,
         blockNumber: item.blockNumber === null ? null : BigInt(item.blockNumber),
         txHash: (item.txHash as Hex | null) ?? null,
+        secretHash: item.secretHash as Hex | undefined,
+        linkState: item.linkState,
+        expiresAt: item.expiresAt,
       })),
       lastSyncedBlock:
         parsed.lastSyncedBlock === null || parsed.lastSyncedBlock === undefined
@@ -78,6 +87,7 @@ export function saveCachedActivity(account: Address, cache: ActivityCache): void
         .filter((item) => item.status === "confirmed")
         .map((item): StoredItem => ({
           id: item.id,
+          kind: item.kind,
           direction: item.direction,
           counterpartyHandle: item.counterpartyHandle,
           counterpartyAddress: item.counterpartyAddress,
@@ -87,6 +97,9 @@ export function saveCachedActivity(account: Address, cache: ActivityCache): void
           timestamp: item.timestamp,
           blockNumber: item.blockNumber === null ? null : item.blockNumber.toString(),
           txHash: item.txHash,
+          secretHash: item.secretHash,
+          linkState: item.linkState,
+          expiresAt: item.expiresAt,
         })),
       lastSyncedBlock: cache.lastSyncedBlock === null ? null : cache.lastSyncedBlock.toString(),
     };

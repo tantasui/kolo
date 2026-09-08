@@ -36,10 +36,12 @@ contracts/          Foundry project -- registry, payment router, demo dollar
     KoloRegistry.sol    handle -> account
     KoloPay.sol         payment router, emits the activity feed
     KoloFaucet.sol      hands demo users $100 of AUSD at a time
+    KoloLinks.sol       money parked behind a secret, for claim links
     TestUSD.sol         6-decimal stand-in, kept for tests and other chains
-  test/                 64 tests, happy paths and reverts
+  test/                 99 tests, happy paths and reverts
   script/Deploy.s.sol        registry, router, TestUSD
   script/DeployFaucet.s.sol  the demo faucet
+  script/DeployLinks.s.sol   the claim-link contract
 
 web/                Next.js PWA -- the entire user-facing app
   DESIGN.md             the design system: colour, type, motion, language
@@ -47,6 +49,7 @@ web/                Next.js PWA -- the entire user-facing app
   src/abi/              contract ABIs
   src/hooks/            smart account, handle, balance, activity, send
   src/lib/activity/     the data layer the UI reads through
+  src/app/claim/        where a claim link opens
   src/components/       screens and UI primitives
 
 scripts/deploy.sh       deploys and writes the addresses into web/.env.local
@@ -288,6 +291,7 @@ All of these live in `web/.env.local` and are read in exactly one place,
 | `NEXT_PUBLIC_KOLO_PAY_ADDRESS` | Optional; defaults to the deployment below |
 | `NEXT_PUBLIC_TOKEN_ADDRESS` | Optional; defaults to Agora AUSD. Any 6-decimal token works |
 | `NEXT_PUBLIC_KOLO_FAUCET_ADDRESS` | Optional; defaults to our demo faucet |
+| `NEXT_PUBLIC_KOLO_LINKS_ADDRESS` | Optional; no default. Set it to enable claim links |
 | `NEXT_PUBLIC_KOLO_DEPLOY_BLOCK` | Optional; bounds how far back the feed scans |
 
 `contracts/.env` holds only `MONAD_RPC_URL` and the deployer `PRIVATE_KEY`. Both

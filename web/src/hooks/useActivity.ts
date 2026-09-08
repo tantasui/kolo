@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Address } from "viem";
 import { config } from "@/config";
+import type { Hex } from "viem";
 import {
   createRpcActivitySource,
   loadCachedActivity,
@@ -13,6 +14,33 @@ import {
 } from "@/lib/activity";
 import { getPublicClient } from "./usePublicClient";
 import { useSmartWallet } from "./useSmartWallet";
+
+/**
+ * Fold an incoming row onto what we already hold.
+ *
+ * Payments arrive once and replace outright. A link arrives repeatedly -- once
+ * when created, again when claimed or cancelled -- and the later events carry
+ * only status, so they are merged over the creation row rather than replacing
+ * it, or the amount, memo and expiry would be lost.
+ */
+export function foldLink(existing: ActivityItem | undefined, incoming: ActivityItem): ActivityItem {
+  if (!existing || existing.kind !== "link" || incoming.kind !== "link") return incoming;
+
+  const settled = incoming.linkState === "claimed" || incoming.linkState === "cancelled";
+
+  return {
+    ...existing,
+    ...incoming,
+    // A settled state is final; never let a late-arriving creation log undo it.
+    linkState: settled ? incoming.linkState : (existing.linkState ?? incoming.linkState),
+    amount: incoming.amount === 0n ? existing.amount : incoming.amount,
+    memo: incoming.memo || existing.memo,
+    expiresAt: incoming.expiresAt ?? existing.expiresAt,
+    // Keep the creation moment as the row's time, so it holds its place.
+    timestamp: existing.timestamp ?? incoming.timestamp,
+    blockNumber: existing.blockNumber ?? incoming.blockNumber,
+  };
+}
 
 /** A confirmed row supersedes the optimistic one written when we submitted. */
 function matchesPending(pending: ActivityItem, confirmed: ActivityItem): boolean {
@@ -51,8 +79,9 @@ export function useActivity() {
 
   /** Show a payment in the feed the moment it is submitted. */
   const addPending = useCallback(
-    (item: Omit<ActivityItem, "id" | "status" | "timestamp" | "blockNumber" | "txHash">) => {
+    (item: Omit<ActivityItem, "id" | "kind" | "status" | "timestamp" | "blockNumber" | "txHash">) => {
       const pending: ActivityItem = {
+        kind: "payment",
         ...item,
         id: `local:${Date.now()}:${Math.random().toString(36).slice(2)}`,
         status: "pending",
@@ -87,10 +116,39 @@ export function useActivity() {
       if (from < 0n) from = 0n;
       if (from > head) return;
 
+      // Claims are indexed by secret hash, so the source needs to know which
+      // links are ours to tell them from everybody else's.
+      //
+      // This set grows as the sweep goes: a catch-up spans many windows, and a
+      // link created in an early window is routinely claimed in a later one.
+      // Seeding it once from what we already hold would drop that claim, and
+      // since the watermark then moves past those blocks no later sweep would
+      // ever look again -- the row would sit on "pending" and go on to read as
+      // expired for money that was in fact collected.
+      const knownLinkHashes = new Set<Hex>(
+        [...byIdRef.current.values()]
+          .map((item) => item.secretHash)
+          .filter((hash): hash is Hex => hash !== undefined)
+      );
+
       const fetched: ActivityItem[] = [];
       for (let start = from; start <= head; start += span) {
         const end = start + span - 1n > head ? head : start + span - 1n;
-        fetched.push(...(await source.fetch({ account, fromBlock: start, toBlock: end })));
+        const batch = await source.fetch({
+          account,
+          fromBlock: start,
+          toBlock: end,
+          knownLinkHashes: [...knownLinkHashes],
+        });
+
+        // Windows are walked in ascending block order and a link is always
+        // created before it is claimed, so recording each window's links makes
+        // them recognisable to every window after it.
+        for (const item of batch) {
+          if (item.secretHash) knownLinkHashes.add(item.secretHash);
+        }
+
+        fetched.push(...batch);
       }
 
       lastSyncedRef.current = head;
@@ -102,7 +160,7 @@ export function useActivity() {
       }
 
       for (const confirmed of fetched) {
-        byIdRef.current.set(confirmed.id, confirmed);
+        byIdRef.current.set(confirmed.id, foldLink(byIdRef.current.get(confirmed.id), confirmed));
 
         for (const [id, existing] of byIdRef.current) {
           if (existing.status === "pending" && matchesPending(existing, confirmed)) {

@@ -1,10 +1,12 @@
 export type {
   ActivityDirection,
   ActivityItem,
+  ActivityKind,
   ActivityQuery,
   ActivitySource,
   ActivityStatus,
+  LinkState,
 } from "./types";
-export { sortActivity } from "./types";
+export { sortActivity, linkStateOf, isRecoverable } from "./types";
 export { createRpcActivitySource } from "./rpcSource";
 export { loadCachedActivity, saveCachedActivity, type ActivityCache } from "./cache";

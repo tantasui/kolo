@@ -34,6 +34,9 @@ const REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_KOLO_REGISTRY_ADDRESS || DEPLOY
 const PAY_ADDRESS = process.env.NEXT_PUBLIC_KOLO_PAY_ADDRESS || DEPLOYED.pay;
 const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TOKEN_ADDRESS || DEPLOYED.token;
 const FAUCET_ADDRESS = process.env.NEXT_PUBLIC_KOLO_FAUCET_ADDRESS || DEPLOYED.faucet;
+/** Claim links. No default: KoloLinks is not deployed yet, and the flow hides
+ *  itself until an address is configured. */
+const LINKS_ADDRESS = process.env.NEXT_PUBLIC_KOLO_LINKS_ADDRESS || "";
 
 /** Block the contracts were deployed at. Bounds how far back we ever scan. */
 const DEPLOY_BLOCK = process.env.NEXT_PUBLIC_KOLO_DEPLOY_BLOCK || DEPLOYED.block;
@@ -70,6 +73,17 @@ export const config = {
     token: asAddress(TOKEN_ADDRESS),
     /** Hands demo users their opening balance. */
     faucet: asAddress(FAUCET_ADDRESS),
+    /** Parks money behind a secret, for claim links. "0x" when unconfigured. */
+    links: asAddress(LINKS_ADDRESS),
+  },
+
+  /**
+   * Flags for work that needs a contract we have not deployed everywhere.
+   * The UI reads these rather than testing addresses at a call site.
+   */
+  features: {
+    /** Claim links appear in the send flow only once KoloLinks is configured. */
+    claimLinks: asAddress(LINKS_ADDRESS) !== "0x",
   },
 
   /**
