@@ -118,16 +118,37 @@ export function useActivity() {
 
       // Claims are indexed by secret hash, so the source needs to know which
       // links are ours to tell them from everybody else's.
-      const knownLinkHashes = [...byIdRef.current.values()]
-        .map((item) => item.secretHash)
-        .filter((hash): hash is Hex => hash !== undefined);
+      //
+      // This set grows as the sweep goes: a catch-up spans many windows, and a
+      // link created in an early window is routinely claimed in a later one.
+      // Seeding it once from what we already hold would drop that claim, and
+      // since the watermark then moves past those blocks no later sweep would
+      // ever look again -- the row would sit on "pending" and go on to read as
+      // expired for money that was in fact collected.
+      const knownLinkHashes = new Set<Hex>(
+        [...byIdRef.current.values()]
+          .map((item) => item.secretHash)
+          .filter((hash): hash is Hex => hash !== undefined)
+      );
 
       const fetched: ActivityItem[] = [];
       for (let start = from; start <= head; start += span) {
         const end = start + span - 1n > head ? head : start + span - 1n;
-        fetched.push(
-          ...(await source.fetch({ account, fromBlock: start, toBlock: end, knownLinkHashes }))
-        );
+        const batch = await source.fetch({
+          account,
+          fromBlock: start,
+          toBlock: end,
+          knownLinkHashes: [...knownLinkHashes],
+        });
+
+        // Windows are walked in ascending block order and a link is always
+        // created before it is claimed, so recording each window's links makes
+        // them recognisable to every window after it.
+        for (const item of batch) {
+          if (item.secretHash) knownLinkHashes.add(item.secretHash);
+        }
+
+        fetched.push(...batch);
       }
 
       lastSyncedRef.current = head;

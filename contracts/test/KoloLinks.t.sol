@@ -406,4 +406,12 @@ contract KoloLinksTest is Test {
             out = string.concat(out, ch);
         }
     }
+
+    function test_RevertWhen_SecretHashIsZero() public {
+        // keccak256 never returns zero, so a link keyed on zero could never be
+        // claimed -- refuse it at creation rather than stranding the money.
+        vm.prank(amara);
+        vm.expectRevert(KoloLinks.InvalidSecretHash.selector);
+        links.create(bytes32(0), address(usd), 10e6, "");
+    }
 }
