@@ -3,13 +3,22 @@
 import { useEffect, useRef, useState } from "react";
 import { config } from "@/config";
 import { resolveHandle } from "@/hooks/useHandle";
-import { formatEntry, formatUsd, handleProblem, normaliseHandle, parseUsd } from "@/lib/format";
+import {
+  formatApprox,
+  formatEntry,
+  formatMoney,
+  handleProblem,
+  normaliseHandle,
+  parseAmount,
+} from "@/lib/format";
+import { CURRENCIES, type Currency } from "@/lib/currency";
 import { useKolo } from "../kolo-provider";
 import { Avatar } from "../ui/Avatar";
 import { Button } from "../ui/Button";
 import { Confetti } from "../ui/Confetti";
-import { Check, ChevronLeft, Close, Warning } from "../ui/Icons";
+import { Check, Warning } from "../ui/Icons";
 import { Keypad } from "../ui/Keypad";
+import { SheetHeader } from "../ui/SheetHeader";
 import { Spinner } from "../ui/Spinner";
 
 type Step = "to" | "amount" | "review" | "sending" | "done" | "failed";
@@ -20,15 +29,22 @@ interface Recipient {
 }
 
 export function SendSheet({ onClose }: { onClose: () => void }) {
-  const { balance, handle: myHandle, send, addPendingActivity, refreshBalance, refreshActivity } =
-    useKolo();
+  const {
+    balance,
+    handle: myHandle,
+    send,
+    addPendingActivity,
+    refreshBalance,
+    refreshActivity,
+    currency,
+  } = useKolo();
 
   const [step, setStep] = useState<Step>("to");
   const [recipient, setRecipient] = useState<Recipient | null>(null);
   const [entry, setEntry] = useState("");
   const [note, setNote] = useState("");
 
-  const amount = parseUsd(entry) ?? 0n;
+  const amount = parseAmount(entry, currency) ?? 0n;
   const available = balance ?? 0n;
   const tooMuch = amount > available;
 
@@ -78,6 +94,7 @@ export function SendSheet({ onClose }: { onClose: () => void }) {
             onEntry={setEntry}
             available={available}
             tooMuch={tooMuch}
+            currency={currency}
             onBack={() => setStep("to")}
             onClose={onClose}
             onNext={() => setStep("review")}
@@ -88,6 +105,7 @@ export function SendSheet({ onClose }: { onClose: () => void }) {
           <ReviewStep
             recipient={recipient}
             amount={amount}
+            currency={currency}
             note={note}
             onNote={setNote}
             onBack={() => setStep("amount")}
@@ -99,7 +117,7 @@ export function SendSheet({ onClose }: { onClose: () => void }) {
         {step === "sending" && <SendingStep />}
 
         {step === "done" && recipient && (
-          <DoneStep recipient={recipient} amount={amount} onDone={onClose} />
+          <DoneStep recipient={recipient} amount={amount} currency={currency} onDone={onClose} />
         )}
 
         {step === "failed" && (
@@ -250,6 +268,7 @@ function AmountStep({
   onEntry,
   available,
   tooMuch,
+  currency,
   onBack,
   onClose,
   onNext,
@@ -259,11 +278,12 @@ function AmountStep({
   onEntry: (next: string) => void;
   available: bigint;
   tooMuch: boolean;
+  currency: Currency;
   onBack: () => void;
   onClose: () => void;
   onNext: () => void;
 }) {
-  const amount = parseUsd(entry) ?? 0n;
+  const amount = parseAmount(entry, currency) ?? 0n;
 
   return (
     <>
@@ -275,14 +295,14 @@ function AmountStep({
             entry === "" ? "text-muted/40" : tooMuch ? "text-danger" : "text-text"
           }`}
         >
-          {formatEntry(entry)}
+          {formatEntry(entry, currency)}
         </p>
         <p className={`mt-4 text-[15px] ${tooMuch ? "text-danger" : "text-muted"}`}>
-          {tooMuch ? "More than your balance" : `${formatUsd(available)} available`}
+          {tooMuch ? "More than your balance" : `${formatMoney(available, currency)} available`}
         </p>
       </div>
 
-      <Keypad value={entry} onChange={onEntry} />
+      <Keypad value={entry} onChange={onEntry} decimals={CURRENCIES[currency].decimals} />
 
       <Button full className="mt-4" disabled={amount === 0n || tooMuch} onClick={onNext}>
         Continue
@@ -296,6 +316,7 @@ function AmountStep({
 function ReviewStep({
   recipient,
   amount,
+  currency,
   note,
   onNote,
   onBack,
@@ -304,6 +325,7 @@ function ReviewStep({
 }: {
   recipient: Recipient;
   amount: bigint;
+  currency: Currency;
   note: string;
   onNote: (next: string) => void;
   onBack: () => void;
@@ -317,8 +339,11 @@ function ReviewStep({
       <div className="mt-10 text-center">
         <p className="text-[15px] text-muted">You&apos;re sending</p>
         <p className="tabular mt-2 text-[52px] font-bold leading-none tracking-tight">
-          {formatUsd(amount)}
+          {formatMoney(amount, currency)}
         </p>
+        {formatApprox(amount, currency) && (
+          <p className="tabular mt-2 text-[15px] text-muted">{formatApprox(amount, currency)}</p>
+        )}
       </div>
 
       <div className="mt-8 rounded-2xl border border-line bg-surface">
@@ -353,7 +378,7 @@ function ReviewStep({
       <div className="flex-1" />
 
       <Button full onClick={onConfirm}>
-        Send {formatUsd(amount)}
+        Send {formatMoney(amount, currency)}
       </Button>
     </>
   );
@@ -375,10 +400,12 @@ function SendingStep() {
 function DoneStep({
   recipient,
   amount,
+  currency,
   onDone,
 }: {
   recipient: Recipient;
   amount: bigint;
+  currency: Currency;
   onDone: () => void;
 }) {
   return (
@@ -400,7 +427,7 @@ function DoneStep({
           </svg>
         </span>
 
-        <p className="tabular mt-7 text-[34px] font-bold tracking-tight">{formatUsd(amount)}</p>
+        <p className="tabular mt-7 text-[34px] font-bold tracking-tight">{formatMoney(amount, currency)}</p>
         <p className="mt-1.5 text-[17px] text-muted">sent to @{recipient.handle}</p>
       </div>
 
@@ -433,45 +460,5 @@ function FailedStep({ onRetry, onClose }: { onRetry: () => void; onClose: () => 
         </Button>
       </div>
     </>
-  );
-}
-
-/* ---------- shared ---------- */
-
-function SheetHeader({
-  title,
-  onBack,
-  onClose,
-}: {
-  title: string;
-  onBack?: () => void;
-  onClose: () => void;
-}) {
-  return (
-    <header className="flex items-center gap-2">
-      {onBack ? (
-        <button
-          type="button"
-          onClick={onBack}
-          aria-label="Back"
-          className="-ml-2 flex h-10 w-10 items-center justify-center rounded-full text-muted transition active:scale-95"
-        >
-          <ChevronLeft className="h-6 w-6" />
-        </button>
-      ) : (
-        <span className="w-2" />
-      )}
-
-      <h1 className="flex-1 truncate text-[17px] font-semibold">{title}</h1>
-
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label="Close"
-        className="-mr-2 flex h-10 w-10 items-center justify-center rounded-full text-muted transition active:scale-95"
-      >
-        <Close className="h-5 w-5" />
-      </button>
-    </header>
   );
 }

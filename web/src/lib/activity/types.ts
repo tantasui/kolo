@@ -16,7 +16,7 @@ export interface ActivityItem {
   /** The other party's handle. Falls back to "" for unregistered senders. */
   counterpartyHandle: string;
   counterpartyAddress: Address;
-  /** Raw token units; format with formatUsd. */
+  /** Raw token units; format with formatMoney. */
   amount: bigint;
   memo: string;
   status: ActivityStatus;

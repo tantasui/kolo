@@ -3,7 +3,9 @@
 import { createContext, useContext } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import type { ActivityItem } from "@/lib/activity";
+import type { Currency } from "@/lib/currency";
 import { useActivity } from "@/hooks/useActivity";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useBalance } from "@/hooks/useBalance";
 import { useHandle, type HandleStatus } from "@/hooks/useHandle";
 import { useSendPayment, type SendRequest } from "@/hooks/useSendPayment";
@@ -17,6 +19,10 @@ interface KoloValue {
   handle: string | null;
   handleStatus: HandleStatus;
   claimHandle: (handle: string) => Promise<void>;
+
+  /** How money is displayed. Purely presentational; the chain holds dollars. */
+  currency: Currency;
+  setCurrency: (next: Currency) => void;
 
   balance: bigint | null;
   refreshBalance: () => Promise<void>;
@@ -39,6 +45,7 @@ export function KoloProvider({ children }: { children: React.ReactNode }) {
   const { authenticated } = usePrivy();
   const { address, ready } = useSmartWallet();
   const { handle, status: handleStatus, claim } = useHandle();
+  const { currency, setCurrency } = useCurrency();
   const { balance, refresh: refreshBalance, addMoney } = useBalance();
   const { items, addPending, refresh: refreshActivity } = useActivity();
   const { send } = useSendPayment();
@@ -52,6 +59,8 @@ export function KoloProvider({ children }: { children: React.ReactNode }) {
         handle,
         handleStatus,
         claimHandle: claim,
+        currency,
+        setCurrency,
         balance,
         refreshBalance,
         addMoney,

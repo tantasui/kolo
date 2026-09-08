@@ -1,7 +1,8 @@
 "use client";
 
 import type { ActivityItem } from "@/lib/activity";
-import { formatUsd, formatWhen } from "@/lib/format";
+import { formatMoney, formatWhen } from "@/lib/format";
+import { useKolo } from "./kolo-provider";
 import { Avatar } from "./ui/Avatar";
 import { ArrowDownLeft, ArrowUpRight } from "./ui/Icons";
 
@@ -18,6 +19,7 @@ export function ActivityList({ items }: { items: ActivityItem[] }) {
 }
 
 function ActivityRow({ item }: { item: ActivityItem }) {
+  const { currency } = useKolo();
   const incoming = item.direction === "in";
   const name = item.counterpartyHandle ? `@${item.counterpartyHandle}` : "Someone";
 
@@ -53,7 +55,7 @@ function ActivityRow({ item }: { item: ActivityItem }) {
           className={`tabular text-[16px] font-semibold ${incoming ? "text-inbound" : "text-text"}`}
         >
           {incoming ? "+" : "−"}
-          {formatUsd(item.amount)}
+          {formatMoney(item.amount, currency)}
         </p>
         <p className="text-[13px] text-muted">
           {item.status === "pending" ? "Now" : formatWhen(item.timestamp)}

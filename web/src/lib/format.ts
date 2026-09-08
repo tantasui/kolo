@@ -1,41 +1,79 @@
 import { config } from "@/config";
+import {
+  CURRENCIES,
+  DEFAULT_CURRENCY,
+  fromDisplayUnits,
+  toDisplayUnits,
+  type Currency,
+} from "./currency";
 
 const DECIMALS = BigInt(10) ** BigInt(config.token.decimals);
 
+const group = (value: bigint) => value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
 /**
- * Render a raw token amount as a dollar string: 1234560000n -> "$1,234.56".
- * Users only ever see this form -- no symbols, no raw units.
+ * Render a raw token amount in the user's chosen currency:
+ * 1234560000n -> "$1,234.56", or "₦1,993,814" in naira.
+ * Users only ever see this form -- no raw units.
+ *
+ * Dollars round to the cent. Naira is shown whole and **rounded down**: it is
+ * a view onto an underlying dollar balance, and flooring means the figure on
+ * screen never overstates what is held, so the whole displayed balance is
+ * always spendable. See the round-trip note in lib/currency.ts.
  */
-export function formatUsd(amount: bigint, opts: { sign?: "always" | "never" } = {}): string {
-  const negative = amount < 0n;
-  const abs = negative ? -amount : amount;
+export function formatMoney(
+  amount: bigint,
+  currency: Currency = DEFAULT_CURRENCY,
+  opts: { sign?: "always" | "never" } = {}
+): string {
+  const converted = toDisplayUnits(amount, currency);
+  const negative = converted < 0n;
+  const abs = negative ? -converted : converted;
+  const symbol = CURRENCIES[currency].symbol;
 
   const whole = abs / DECIMALS;
   const fraction = abs % DECIMALS;
 
-  // Round to cents (half-up) rather than truncating.
-  const centsScale = DECIMALS / 100n;
-  let cents = fraction / centsScale;
-  if (fraction % centsScale >= centsScale / 2n) cents += 1n;
+  let body: string;
 
-  let dollars = whole;
-  if (cents === 100n) {
-    dollars += 1n;
-    cents = 0n;
+  if (CURRENCIES[currency].decimals === 0) {
+    body = `${symbol}${group(whole)}`;
+  } else {
+    // Round to cents (half-up) rather than truncating.
+    const centsScale = DECIMALS / 100n;
+    let cents = fraction / centsScale;
+    if (fraction % centsScale >= centsScale / 2n) cents += 1n;
+
+    let dollars = whole;
+    if (cents === 100n) {
+      dollars += 1n;
+      cents = 0n;
+    }
+
+    body = `${symbol}${group(dollars)}.${cents.toString().padStart(2, "0")}`;
   }
-
-  const grouped = dollars.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  const body = `$${grouped}.${cents.toString().padStart(2, "0")}`;
 
   if (opts.sign === "always") return `${negative ? "-" : "+"}${body}`;
   return negative ? `-${body}` : body;
 }
 
 /**
- * Convert a typed amount string ("25", "25.4", "25.40") to raw units.
- * Returns null when the input is not a well-formed amount.
+ * The same amount in the other currency, for the muted secondary line shown
+ * under a naira figure. Naira is a converted view, so the dollars it stands
+ * for are always kept visible next to it.
  */
-export function parseUsd(input: string): bigint | null {
+export function formatApprox(amount: bigint, currency: Currency): string | null {
+  return currency === "NGN" ? `≈ ${formatMoney(amount, "USD")}` : null;
+}
+
+/**
+ * Convert a typed amount string ("25", "25.4", "25.40") to raw token units,
+ * reading the input as `currency`. Returns null when it is not well-formed.
+ *
+ * The keypad shows whichever currency the user picked, so a naira entry is
+ * divided back down to the dollars actually held on chain.
+ */
+export function parseAmount(input: string, currency: Currency = DEFAULT_CURRENCY): bigint | null {
   const trimmed = input.trim();
   if (!/^\d*(\.\d*)?$/.test(trimmed) || trimmed === "" || trimmed === ".") return null;
 
@@ -43,15 +81,21 @@ export function parseUsd(input: string): bigint | null {
   if (fraction.length > config.token.decimals) return null;
 
   const padded = fraction.padEnd(config.token.decimals, "0");
-  return BigInt(whole || "0") * DECIMALS + BigInt(padded || "0");
+  const displayUnits = BigInt(whole || "0") * DECIMALS + BigInt(padded || "0");
+
+  return fromDisplayUnits(displayUnits, currency);
 }
 
-/** Display form for an in-progress keypad entry: "25.4" -> "$25.4". */
-export function formatEntry(entry: string): string {
-  if (entry === "") return "$0";
+/**
+ * Display form for an in-progress keypad entry: "25.4" -> "$25.4".
+ * Naira takes no decimals, so the keypad never produces a fractional entry.
+ */
+export function formatEntry(entry: string, currency: Currency = DEFAULT_CURRENCY): string {
+  const symbol = CURRENCIES[currency].symbol;
+  if (entry === "") return `${symbol}0`;
   const [whole, fraction] = entry.split(".");
-  const grouped = (whole || "0").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  return entry.includes(".") ? `$${grouped}.${fraction}` : `$${grouped}`;
+  const grouped = group(BigInt(whole || "0"));
+  return entry.includes(".") ? `${symbol}${grouped}.${fraction}` : `${symbol}${grouped}`;
 }
 
 /** "2m ago", "Yesterday", "3 Sep" -- never a raw timestamp. */
