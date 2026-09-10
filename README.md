@@ -39,7 +39,7 @@ contracts/          Foundry project -- registry, payment router, demo dollar
     KoloLinks.sol       money parked behind a secret, for claim links
     KoloCircle.sol      ajo circles: rounds, deposits, rotation
     TestUSD.sol         6-decimal stand-in, kept for tests and other chains
-  test/                 127 tests, happy paths and reverts
+  test/                 128 tests, happy paths and reverts
   script/Deploy.s.sol        registry, router, TestUSD
   script/DeployFaucet.s.sol  the demo faucet
   script/DeployLinks.s.sol   the claim-link contract
