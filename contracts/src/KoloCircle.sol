@@ -92,6 +92,13 @@ contract KoloCircle {
         ///         Non-zero means Behind.
         uint256 depositDrawn;
         bool received;
+        /// @notice Which round paid them. Only meaningful once `received`.
+        /// @dev Payouts happen one per round, but a Behind member is passed
+        ///      over, so position order is not payout order. Recording the
+        ///      round is the only way to say who took which pot without
+        ///      replaying every log -- and the feed cannot, because the public
+        ///      RPC only serves a 100-block window.
+        uint8 paidInRound;
     }
 
     KoloRegistry public immutable registry;
@@ -183,7 +190,14 @@ contract KoloCircle {
         uint256 deposit = depositFor(circle.size, position, circle.contribution);
 
         _members[circleId].push(
-            Member({account: msg.sender, position: position, deposit: deposit, depositDrawn: 0, received: false})
+            Member({
+                account: msg.sender,
+                position: position,
+                deposit: deposit,
+                depositDrawn: 0,
+                received: false,
+                paidInRound: 0
+            })
         );
         _indexOf[circleId][msg.sender] = position;
         _isMember[circleId][msg.sender] = true;
@@ -276,6 +290,7 @@ contract KoloCircle {
         uint256 pot = _collected[circleId][round];
         Member storage paid = members[recipient];
         paid.received = true;
+        paid.paidInRound = round;
         circle.paidOut += 1;
 
         IERC20(circle.token).safeTransfer(paid.account, pot);

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { formatApprox, formatMoney } from "@/lib/format";
 import { ActivityList } from "../ActivityList";
 import { DueBanner } from "../DueBanner";
-import { CircleSheet } from "../circles/CircleSheet";
+import { CircleDetail } from "../circles/CircleDetail";
 import { useKolo } from "../kolo-provider";
 import { SendSheet } from "../send/SendSheet";
 import { Settings } from "./Settings";
@@ -145,7 +145,7 @@ export function Home() {
 
       {sendOpen && <SendSheet onClose={() => setSendOpen(false)} />}
       {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
-      {openCircle && <CircleSheet circle={openCircle} onClose={() => setOpenCircle(null)} />}
+      {openCircle && <CircleDetail circle={openCircle} onClose={() => setOpenCircle(null)} />}
     </>
   );
 }

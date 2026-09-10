@@ -207,6 +207,41 @@ contract KoloCircleTest is Test {
         circles.contribute(id);
     }
 
+    /// Position order is not payout order once anybody is passed over, so the
+    /// round that paid each member is recorded rather than inferred.
+    function test_PayoutRecordsWhichRoundPaidEachMember() public {
+        vm.prank(amara);
+        uint256 id = circles.create("Rent", address(usd), C, 3, ROUND);
+        vm.prank(tunde);
+        circles.join(id);
+        vm.prank(chidi);
+        circles.join(id);
+
+        // Round 0: amara misses, so tunde is paid first.
+        vm.prank(tunde);
+        circles.contribute(id);
+        vm.prank(chidi);
+        circles.contribute(id);
+        vm.warp(block.timestamp + ROUND);
+        circles.payout(id);
+
+        // Round 1: amara cures and everybody is in, so amara is paid.
+        vm.prank(amara);
+        circles.cure(id);
+        vm.prank(amara);
+        circles.contribute(id);
+        vm.prank(tunde);
+        circles.contribute(id);
+        vm.prank(chidi);
+        circles.contribute(id);
+        circles.payout(id);
+
+        KoloCircle.Member[] memory members = circles.membersOf(id);
+        assertEq(members[1].paidInRound, 0, "tunde took the first pot");
+        assertEq(members[0].paidInRound, 1, "amara took the second, after curing");
+        assertFalse(members[2].received, "chidi is still to come");
+    }
+
     function test_RoundAdvancesAfterPayout() public {
         uint256 id = _twoPersonCircle();
         _bothContribute(id);

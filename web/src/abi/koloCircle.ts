@@ -65,6 +65,7 @@ export const koloCircleAbi = [
           { name: "deposit", type: "uint256" },
           { name: "depositDrawn", type: "uint256" },
           { name: "received", type: "bool" },
+          { name: "paidInRound", type: "uint8" },
         ],
       },
     ],
