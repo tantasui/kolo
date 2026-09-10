@@ -17,6 +17,8 @@ export const koloCircleAbi = [
   { type: "function", name: "contribute", stateMutability: "nonpayable", inputs: [{ name: "circleId", type: "uint256" }], outputs: [] },
   { type: "function", name: "payout", stateMutability: "nonpayable", inputs: [{ name: "circleId", type: "uint256" }], outputs: [] },
   { type: "function", name: "cure", stateMutability: "nonpayable", inputs: [{ name: "circleId", type: "uint256" }], outputs: [] },
+  { type: "function", name: "cancel", stateMutability: "nonpayable", inputs: [{ name: "circleId", type: "uint256" }], outputs: [] },
+  { type: "function", name: "withdrawCredit", stateMutability: "nonpayable", inputs: [{ name: "token", type: "address" }], outputs: [] },
   {
     type: "function",
     name: "depositFor",
@@ -45,6 +47,7 @@ export const koloCircleAbi = [
           { name: "paidOut", type: "uint8" },
           { name: "roundEndsAt", type: "uint64" },
           { name: "roundDuration", type: "uint64" },
+          { name: "createdAt", type: "uint64" },
           { name: "status", type: "uint8" },
           { name: "name", type: "string" },
         ],
@@ -75,6 +78,7 @@ export const koloCircleAbi = [
   { type: "function", name: "hasContributed", stateMutability: "view", inputs: [{ name: "circleId", type: "uint256" }, { name: "account", type: "address" }], outputs: [{ name: "", type: "bool" }] },
   { type: "function", name: "amountToCure", stateMutability: "view", inputs: [{ name: "circleId", type: "uint256" }, { name: "account", type: "address" }], outputs: [{ name: "", type: "uint256" }] },
   { type: "function", name: "collectedThisRound", stateMutability: "view", inputs: [{ name: "circleId", type: "uint256" }], outputs: [{ name: "", type: "uint256" }] },
+  { type: "function", name: "creditOf", stateMutability: "view", inputs: [{ name: "token", type: "address" }, { name: "account", type: "address" }], outputs: [{ name: "", type: "uint256" }] },
   {
     type: "event",
     name: "CircleCreated",
@@ -140,6 +144,29 @@ export const koloCircleAbi = [
       { name: "restored", type: "uint256", indexed: false },
     ],
   },
+  {
+    type: "event",
+    name: "CircleCancelled",
+    inputs: [{ name: "circleId", type: "uint256", indexed: true }],
+  },
+  {
+    type: "event",
+    name: "Credited",
+    inputs: [
+      { name: "token", type: "address", indexed: true },
+      { name: "account", type: "address", indexed: true },
+      { name: "amount", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "CreditWithdrawn",
+    inputs: [
+      { name: "token", type: "address", indexed: true },
+      { name: "account", type: "address", indexed: true },
+      { name: "amount", type: "uint256", indexed: false },
+    ],
+  },
   { type: "error", name: "AlreadyContributed", inputs: [] },
   { type: "error", name: "CircleFull", inputs: [] },
   { type: "error", name: "CircleNotForming", inputs: [] },
@@ -148,4 +175,6 @@ export const koloCircleAbi = [
   { type: "error", name: "NothingToCure", inputs: [] },
   { type: "error", name: "RoundStillOpen", inputs: [] },
   { type: "error", name: "NoEligibleRecipient", inputs: [] },
+  { type: "error", name: "TooEarlyToCancel", inputs: [] },
+  { type: "error", name: "NothingToWithdraw", inputs: [] },
 ] as const;

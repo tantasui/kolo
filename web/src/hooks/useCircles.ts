@@ -10,9 +10,9 @@ import { getPublicClient } from "./usePublicClient";
 import { useSmartWallet } from "./useSmartWallet";
 
 /** Status values mirror KoloCircle.Status. */
-export type CircleStatus = "forming" | "running" | "complete";
+export type CircleStatus = "forming" | "running" | "complete" | "cancelled";
 
-const STATUS: CircleStatus[] = ["forming", "running", "complete"];
+const STATUS: CircleStatus[] = ["forming", "running", "complete", "cancelled"];
 
 export interface CircleSummary {
   id: bigint;

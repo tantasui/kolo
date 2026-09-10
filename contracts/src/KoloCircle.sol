@@ -37,6 +37,13 @@ import {KoloRegistry} from "./KoloRegistry.sol";
 ///      which is the whole point, since their deposit no longer covers what
 ///      they owe. `cure()` puts the deposit back and returns them to the
 ///      rotation. There is no expulsion and no forfeiture anywhere in here.
+///
+///      **Money out never reverts the caller.** `payout`, deposit returns, and
+///      `cancel` all move funds through `_send`, which credits the recipient
+///      instead of reverting when the transfer fails -- a frozen or
+///      blacklisted address is the practical case. `withdrawCredit` lets them
+///      pull it once the transfer would succeed again, so one such address
+///      can never brick the round for everybody else.
 contract KoloCircle {
     using SafeERC20 for IERC20;
 
@@ -55,6 +62,8 @@ contract KoloCircle {
     error InvalidToken();
     error InvalidDuration();
     error NameTooLong();
+    error TooEarlyToCancel();
+    error NothingToWithdraw();
 
     /// @notice Most people a circle can hold.
     /// @dev Payout scans members linearly, so the cap keeps that bounded. Eight
@@ -62,11 +71,17 @@ contract KoloCircle {
     uint8 public constant MAX_MEMBERS = 8;
     uint8 public constant MIN_MEMBERS = 2;
     uint256 public constant MAX_NAME_BYTES = 40;
+    /// @notice Shortest a round may run. Real circles run weekly or monthly;
+    ///         this only exists so the 5-minute demo mode has a floor under it.
+    uint64 public constant MIN_PERIOD = 5 minutes;
+    /// @notice How long a circle may sit unfilled before anyone can wind it down.
+    uint64 public constant CANCEL_AFTER = 7 days;
 
     enum Status {
         Forming,
         Running,
-        Complete
+        Complete,
+        Cancelled
     }
 
     struct Circle {
@@ -79,6 +94,7 @@ contract KoloCircle {
         uint8 paidOut;
         uint64 roundEndsAt;
         uint64 roundDuration;
+        uint64 createdAt;
         Status status;
         string name;
     }
@@ -113,6 +129,8 @@ contract KoloCircle {
     mapping(uint256 => mapping(uint8 => mapping(address => bool))) internal _contributed;
     /// @dev circle => round => what was actually collected.
     mapping(uint256 => mapping(uint8 => uint256)) internal _collected;
+    /// @notice token => account => balance a failed transfer left behind.
+    mapping(address => mapping(address => uint256)) public creditOf;
 
     event CircleCreated(
         uint256 indexed circleId,
@@ -134,6 +152,9 @@ contract KoloCircle {
     event Cured(uint256 indexed circleId, address indexed account, uint256 restored);
     event CircleCompleted(uint256 indexed circleId);
     event DepositReturned(uint256 indexed circleId, address indexed account, uint256 amount);
+    event CircleCancelled(uint256 indexed circleId);
+    event Credited(address indexed token, address indexed account, uint256 amount);
+    event CreditWithdrawn(address indexed token, address indexed account, uint256 amount);
 
     constructor(KoloRegistry registry_) {
         registry = registry_;
@@ -154,7 +175,7 @@ contract KoloCircle {
         if (size < MIN_MEMBERS || size > MAX_MEMBERS) revert InvalidSize();
         if (contribution == 0) revert AmountZero();
         if (token == address(0)) revert InvalidToken();
-        if (roundDuration == 0) revert InvalidDuration();
+        if (roundDuration < MIN_PERIOD) revert InvalidDuration();
         if (bytes(name).length > MAX_NAME_BYTES) revert NameTooLong();
 
         circleId = ++circleCount;
@@ -164,6 +185,7 @@ contract KoloCircle {
         circle.contribution = contribution;
         circle.size = size;
         circle.roundDuration = roundDuration;
+        circle.createdAt = uint64(block.timestamp);
         circle.status = Status.Forming;
         circle.name = name;
 
@@ -293,7 +315,7 @@ contract KoloCircle {
         paid.paidInRound = round;
         circle.paidOut += 1;
 
-        IERC20(circle.token).safeTransfer(paid.account, pot);
+        _send(circle.token, paid.account, pot);
         emit PaidOut(circleId, paid.account, registry.handleOf(paid.account), round, pot);
 
         if (circle.paidOut == circle.size) {
@@ -333,9 +355,60 @@ contract KoloCircle {
             if (left == 0) continue;
 
             member.depositDrawn = member.deposit;
-            IERC20(circle.token).safeTransfer(member.account, left);
+            _send(circle.token, member.account, left);
             emit DepositReturned(circleId, member.account, left);
         }
+    }
+
+    /// @notice Wind down a circle that never filled, returning what each
+    ///         member has posted. Anyone may call once it has sat open a
+    ///         week -- nobody should have money stuck in a circle that never
+    ///         starts, and there is no coordinator to decide when to give up.
+    function cancel(uint256 circleId) external {
+        Circle storage circle = _circles[circleId];
+        if (circle.size == 0) revert CircleNotFound();
+        if (circle.status != Status.Forming) revert CircleNotForming();
+        if (block.timestamp < circle.createdAt + CANCEL_AFTER) revert TooEarlyToCancel();
+
+        circle.status = Status.Cancelled;
+
+        Member[] storage members = _members[circleId];
+        for (uint256 i; i < members.length; ++i) {
+            Member storage member = members[i];
+            uint256 amount = member.deposit;
+            if (amount == 0) continue;
+
+            member.deposit = 0;
+            _send(circle.token, member.account, amount);
+        }
+
+        emit CircleCancelled(circleId);
+    }
+
+    /// @dev Pays `to` and, if the transfer fails, credits it instead of
+    ///      reverting -- so a frozen or blacklisted recipient can never brick
+    ///      a payout, a deposit return, or a cancellation for everyone else.
+    function _send(address token, address to, uint256 amount) internal {
+        if (amount == 0) return;
+
+        (bool ok, bytes memory data) = token.call(abi.encodeCall(IERC20.transfer, (to, amount)));
+        bool success = ok && (data.length == 0 || abi.decode(data, (bool)));
+
+        if (success) return;
+
+        creditOf[token][to] += amount;
+        emit Credited(token, to, amount);
+    }
+
+    /// @notice Pull a balance a transfer once failed to deliver to you.
+    function withdrawCredit(address token) external {
+        uint256 amount = creditOf[token][msg.sender];
+        if (amount == 0) revert NothingToWithdraw();
+
+        creditOf[token][msg.sender] = 0;
+        IERC20(token).safeTransfer(msg.sender, amount);
+
+        emit CreditWithdrawn(token, msg.sender, amount);
     }
 
     /* ---------- reading ---------- */

@@ -25,6 +25,9 @@ contract KoloCircleTest is Test {
     event Cured(uint256 indexed circleId, address indexed account, uint256 restored);
     event CircleStarted(uint256 indexed circleId, uint64 roundEndsAt);
     event CircleCompleted(uint256 indexed circleId);
+    event CircleCancelled(uint256 indexed circleId);
+    event Credited(address indexed token, address indexed account, uint256 amount);
+    event CreditWithdrawn(address indexed token, address indexed account, uint256 amount);
 
     function setUp() public {
         vm.warp(1_700_000_000);
@@ -443,5 +446,100 @@ contract KoloCircleTest is Test {
         circles.contribute(id);
         vm.prank(tunde);
         circles.contribute(id);
+    }
+
+    /* ---------- the minimum round period ---------- */
+
+    function test_RevertWhen_RoundDurationBelowMinimum() public {
+        uint64 tooShort = circles.MIN_PERIOD() - 1;
+        vm.prank(amara);
+        vm.expectRevert(KoloCircle.InvalidDuration.selector);
+        circles.create("x", address(usd), C, 2, tooShort);
+    }
+
+    function test_MinimumRoundDurationIsAccepted() public {
+        uint64 minPeriod = circles.MIN_PERIOD();
+        vm.prank(amara);
+        uint256 id = circles.create("x", address(usd), C, 2, minPeriod);
+        assertEq(circles.circleOf(id).roundDuration, minPeriod);
+    }
+
+    /* ---------- cancelling a circle that never filled ---------- */
+
+    function test_RevertWhen_CancellingBeforeAWeek() public {
+        vm.prank(amara);
+        uint256 id = circles.create("Rent", address(usd), C, 3, ROUND);
+
+        vm.warp(block.timestamp + circles.CANCEL_AFTER() - 1);
+        vm.expectRevert(KoloCircle.TooEarlyToCancel.selector);
+        circles.cancel(id);
+    }
+
+    function test_AnyoneCanCancelAnOpenCircleAfterAWeek() public {
+        vm.prank(amara);
+        uint256 id = circles.create("Rent", address(usd), C, 3, ROUND);
+        uint256 amaraDeposit = circles.membersOf(id)[0].deposit;
+        uint256 before = usd.balanceOf(amara);
+
+        vm.warp(block.timestamp + circles.CANCEL_AFTER());
+
+        vm.expectEmit(true, false, false, true);
+        emit CircleCancelled(id);
+        vm.prank(stranger);
+        circles.cancel(id);
+
+        assertTrue(circles.circleOf(id).status == KoloCircle.Status.Cancelled);
+        assertEq(usd.balanceOf(amara) - before, amaraDeposit, "amara gets what she posted back");
+    }
+
+    function test_RevertWhen_CancellingARunningCircle() public {
+        uint256 id = _twoPersonCircle();
+        vm.warp(block.timestamp + circles.CANCEL_AFTER());
+        vm.expectRevert(KoloCircle.CircleNotForming.selector);
+        circles.cancel(id);
+    }
+
+    function test_RevertWhen_CancellingAnUnknownCircle() public {
+        vm.warp(block.timestamp + circles.CANCEL_AFTER());
+        vm.expectRevert(KoloCircle.CircleNotFound.selector);
+        circles.cancel(999);
+    }
+
+    /* ---------- credit-on-failed-transfer ---------- */
+
+    /// A frozen or blacklisted recipient must not be able to brick a payout
+    /// for everyone else: the pot is credited instead, and they can pull it
+    /// once a transfer to them would succeed again.
+    function test_PayoutCreditsInsteadOfRevertingWhenTransferFails() public {
+        uint256 id = _twoPersonCircle();
+        _bothContribute(id);
+
+        uint256 pot = 2 * C;
+        vm.mockCallRevert(address(usd), abi.encodeWithSelector(usd.transfer.selector, amara, pot), "frozen");
+
+        uint256 before = usd.balanceOf(amara);
+
+        vm.expectEmit(true, true, false, true);
+        emit Credited(address(usd), amara, pot);
+        circles.payout(id);
+
+        assertEq(usd.balanceOf(amara), before, "the transfer failed, so nothing moved");
+        assertEq(circles.creditOf(address(usd), amara), pot, "credited instead of reverting");
+        assertTrue(circles.circleOf(id).round == 1, "the round still closed for everyone else");
+
+        vm.clearMockedCalls();
+
+        vm.expectEmit(true, true, false, true);
+        emit CreditWithdrawn(address(usd), amara, pot);
+        vm.prank(amara);
+        circles.withdrawCredit(address(usd));
+
+        assertEq(usd.balanceOf(amara) - before, pot, "she can pull it once the transfer would succeed");
+        assertEq(circles.creditOf(address(usd), amara), 0);
+    }
+
+    function test_RevertWhen_WithdrawingCreditWithNothingOwed() public {
+        vm.expectRevert(KoloCircle.NothingToWithdraw.selector);
+        circles.withdrawCredit(address(usd));
     }
 }

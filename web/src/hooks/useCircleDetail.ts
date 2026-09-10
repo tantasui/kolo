@@ -48,7 +48,7 @@ export interface CircleDetail {
   you?: Seat;
 }
 
-const STATUS: CircleStatus[] = ["forming", "running", "complete"];
+const STATUS: CircleStatus[] = ["forming", "running", "complete", "cancelled"];
 
 /**
  * Everything one circle's screen shows.
