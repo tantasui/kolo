@@ -2,6 +2,7 @@ export type {
   ActivityDirection,
   ActivityItem,
   ActivityKind,
+  CircleEvent,
   ActivityQuery,
   ActivitySource,
   ActivityStatus,

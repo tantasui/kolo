@@ -6,7 +6,7 @@ import { formatMoney, formatWhen } from "@/lib/format";
 import { useKolo } from "./kolo-provider";
 import { CancelLink } from "./send/CancelLink";
 import { Avatar } from "./ui/Avatar";
-import { ArrowDownLeft, ArrowUpRight, Check, Close, LinkIcon } from "./ui/Icons";
+import { ArrowDownLeft, ArrowUpRight, Check, Circle, Close, LinkIcon, Warning } from "./ui/Icons";
 
 export function ActivityList({ items }: { items: ActivityItem[] }) {
   const [cancelling, setCancelling] = useState<ActivityItem | null>(null);
@@ -19,6 +19,8 @@ export function ActivityList({ items }: { items: ActivityItem[] }) {
         {items.map((item) =>
           item.kind === "link" ? (
             <LinkRow key={item.id} item={item} onCancel={() => setCancelling(item)} />
+          ) : item.kind === "circle" ? (
+            <CircleRow key={item.id} item={item} />
           ) : (
             <PaymentRow key={item.id} item={item} />
           )
@@ -139,6 +141,65 @@ function LinkRow({ item, onCancel }: { item: ActivityItem; onCancel: () => void 
     >
       {body}
     </button>
+  );
+}
+
+/* ---------- circles ---------- */
+
+/**
+ * One thing that happened in a circle.
+ *
+ * A missed round is worded as the deposit doing its job rather than as a
+ * failure: nobody is thrown out of a circle, and the round was covered.
+ */
+const CIRCLE_COPY: Record<
+  NonNullable<ActivityItem["circleEvent"]>,
+  { title: string; withRound: boolean; tone: string }
+> = {
+  joined: { title: "Joined a circle", withRound: false, tone: "text-muted" },
+  contributed: { title: "Circle contribution", withRound: true, tone: "text-muted" },
+  // The fact that matters goes in the title, which never truncates: a member
+  // reading this row needs to know the round was covered, not that it was missed.
+  missed: { title: "Covered by your deposit", withRound: true, tone: "text-danger" },
+  paid: { title: "Your turn came round", withRound: true, tone: "text-inbound" },
+  cured: { title: "Deposit topped up", withRound: false, tone: "text-muted" },
+};
+
+function CircleRow({ item }: { item: ActivityItem }) {
+  const { currency } = useKolo();
+  const event = item.circleEvent ?? "contributed";
+  const { title, withRound, tone } = CIRCLE_COPY[event];
+  const incoming = item.direction === "in";
+
+  const where = item.circleName || "Circle";
+  const subtitle =
+    withRound && item.round !== undefined ? `${where} · Round ${item.round + 1}` : where;
+
+  return (
+    <Row
+      badge={
+        <span
+          className={`flex h-11 w-11 items-center justify-center rounded-full ${
+            incoming
+              ? "bg-inbound/15 text-inbound"
+              : event === "missed"
+                ? "bg-danger/15 text-danger"
+                : "bg-raised text-muted"
+          }`}
+        >
+          {event === "missed" ? <Warning className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
+        </span>
+      }
+      title={title}
+      subtitle={subtitle}
+      subtitleTone={tone}
+      amount={
+        <span className={`tabular text-[16px] font-semibold ${incoming ? "text-inbound" : "text-text"}`}>
+          {incoming ? "+" : "−"}&#8202;{formatMoney(item.amount, currency)}
+        </span>
+      }
+      when={formatWhen(item.timestamp)}
+    />
   );
 }
 

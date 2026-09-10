@@ -2,8 +2,14 @@ import type { Address, Hex } from "viem";
 
 export type ActivityDirection = "in" | "out";
 
-/** A payment went straight to a handle; a link parked money behind a secret. */
-export type ActivityKind = "payment" | "link";
+/**
+ * A payment went straight to a handle; a link parked money behind a secret;
+ * a circle row is one thing that happened in an ajo you are part of.
+ */
+export type ActivityKind = "payment" | "link" | "circle";
+
+/** What happened in a circle. */
+export type CircleEvent = "joined" | "contributed" | "missed" | "paid" | "cured";
 
 /**
  * Where a claim link stands, from the sender's side.
@@ -47,6 +53,13 @@ export interface ActivityItem {
   linkState?: LinkState;
   /** Unix seconds after which the link can no longer be claimed. */
   expiresAt?: number;
+
+  /** Circles only. */
+  circleId?: bigint;
+  circleName?: string;
+  circleEvent?: CircleEvent;
+  /** Which round this happened in. */
+  round?: number;
 }
 
 /**

@@ -37,11 +37,13 @@ contracts/          Foundry project -- registry, payment router, demo dollar
     KoloPay.sol         payment router, emits the activity feed
     KoloFaucet.sol      hands demo users $100 of AUSD at a time
     KoloLinks.sol       money parked behind a secret, for claim links
+    KoloCircle.sol      ajo circles: rounds, deposits, rotation
     TestUSD.sol         6-decimal stand-in, kept for tests and other chains
-  test/                 99 tests, happy paths and reverts
+  test/                 126 tests, happy paths and reverts
   script/Deploy.s.sol        registry, router, TestUSD
   script/DeployFaucet.s.sol  the demo faucet
   script/DeployLinks.s.sol   the claim-link contract
+  script/DeployCircle.s.sol  the circle contract
 
 web/                Next.js PWA -- the entire user-facing app
   DESIGN.md             the design system: colour, type, motion, language
@@ -292,6 +294,7 @@ All of these live in `web/.env.local` and are read in exactly one place,
 | `NEXT_PUBLIC_TOKEN_ADDRESS` | Optional; defaults to Agora AUSD. Any 6-decimal token works |
 | `NEXT_PUBLIC_KOLO_FAUCET_ADDRESS` | Optional; defaults to our demo faucet |
 | `NEXT_PUBLIC_KOLO_LINKS_ADDRESS` | Optional; no default. Set it to enable claim links |
+| `NEXT_PUBLIC_KOLO_CIRCLE_ADDRESS` | Optional; no default. Set it to enable circles |
 | `NEXT_PUBLIC_KOLO_DEPLOY_BLOCK` | Optional; bounds how far back the feed scans |
 
 `contracts/.env` holds only `MONAD_RPC_URL` and the deployer `PRIVATE_KEY`. Both

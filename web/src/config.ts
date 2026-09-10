@@ -37,6 +37,8 @@ const FAUCET_ADDRESS = process.env.NEXT_PUBLIC_KOLO_FAUCET_ADDRESS || DEPLOYED.f
 /** Claim links. No default: KoloLinks is not deployed yet, and the flow hides
  *  itself until an address is configured. */
 const LINKS_ADDRESS = process.env.NEXT_PUBLIC_KOLO_LINKS_ADDRESS || "";
+/** Circles. No default: KoloCircle is not deployed yet. */
+const CIRCLE_ADDRESS = process.env.NEXT_PUBLIC_KOLO_CIRCLE_ADDRESS || "";
 
 /** Block the contracts were deployed at. Bounds how far back we ever scan. */
 const DEPLOY_BLOCK = process.env.NEXT_PUBLIC_KOLO_DEPLOY_BLOCK || DEPLOYED.block;
@@ -75,6 +77,8 @@ export const config = {
     faucet: asAddress(FAUCET_ADDRESS),
     /** Parks money behind a secret, for claim links. "0x" when unconfigured. */
     links: asAddress(LINKS_ADDRESS),
+    /** Runs ajo circles. "0x" when unconfigured. */
+    circle: asAddress(CIRCLE_ADDRESS),
   },
 
   /**
@@ -84,6 +88,8 @@ export const config = {
   features: {
     /** Claim links appear in the send flow only once KoloLinks is configured. */
     claimLinks: asAddress(LINKS_ADDRESS) !== "0x",
+    /** Circles appear only once KoloCircle is configured. */
+    circles: asAddress(CIRCLE_ADDRESS) !== "0x",
   },
 
   /**
@@ -122,6 +128,16 @@ export const config = {
   fx: {
     /** Naira per dollar. Matches the rate quoted in the README. */
     ngnPerUsd: 1615,
+  },
+
+  circles: {
+    /** Mirrors KoloCircle.MAX_MEMBERS. */
+    maxMembers: 8,
+    minMembers: 2,
+    /** Mirrors KoloCircle.MAX_NAME_BYTES. */
+    maxNameBytes: 40,
+    /** How close a deadline has to be before the app says something. */
+    dueSoonSeconds: 24 * 60 * 60,
   },
 
   activity: {

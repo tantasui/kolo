@@ -35,6 +35,20 @@ async function timestampOf(client: PublicClient, blockNumber: bigint): Promise<n
   }
 }
 
+const circleEvents = [
+  parseAbiItem(
+    "event MemberJoined(uint256 indexed circleId, address indexed account, string handle, uint8 position, uint256 deposit)"
+  ),
+  parseAbiItem(
+    "event Contributed(uint256 indexed circleId, address indexed account, uint8 round, uint256 amount, bool fromDeposit)"
+  ),
+  parseAbiItem(
+    "event PaidOut(uint256 indexed circleId, address indexed recipient, string handle, uint8 round, uint256 amount)"
+  ),
+  parseAbiItem("event FellBehind(uint256 indexed circleId, address indexed account, uint256 drawn)"),
+  parseAbiItem("event Cured(uint256 indexed circleId, address indexed account, uint256 restored)"),
+] as const;
+
 /** Every event about one link lands on one row. */
 const linkId = (secretHash: Hex) => `link:${secretHash.toLowerCase()}`;
 
@@ -103,9 +117,22 @@ export function createRpcActivitySource(client: PublicClient): ActivitySource {
           ])
         : Promise.resolve([[], [], []] as const);
 
-      const [[outgoing, incoming], [created, claimed, reclaimed]] = await Promise.all([
+      // One query for every circle event rather than five: they all live on
+      // one contract, the volume in a 100-block window is tiny, and the feed
+      // already pages within that cap. Filtering happens below.
+      const circleLogs = config.features.circles
+        ? client.getLogs({
+            address: config.contracts.circle,
+            events: circleEvents,
+            fromBlock,
+            toBlock,
+          })
+        : Promise.resolve([]);
+
+      const [[outgoing, incoming], [created, claimed, reclaimed], circleRaw] = await Promise.all([
         paymentLogs,
         linkLogs,
+        circleLogs,
       ]);
 
       const items: ActivityItem[] = [];
@@ -216,7 +243,58 @@ export function createRpcActivitySource(client: PublicClient): ActivitySource {
         });
       }
 
+      for (const log of circleRaw) {
+        const item = circleItemFrom(log, account);
+        if (!item) continue;
+        item.timestamp = log.blockNumber == null ? null : await timestampOf(client, log.blockNumber);
+        items.push(item);
+      }
+
       return items;
     },
+  };
+}
+
+/**
+ * One circle log into a feed row, or null when it is not about this account.
+ *
+ * Every circle event carries the member as its second indexed topic, so the
+ * whole set can be fetched in one query and sorted out here rather than in
+ * five filtered ones.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function circleItemFrom(log: any, account: string): ActivityItem | null {
+  const args = log.args ?? {};
+  const who: string | undefined = args.account ?? args.recipient;
+  if (!who || who.toLowerCase() !== account.toLowerCase()) return null;
+  if (args.circleId === undefined) return null;
+
+  const shape: Record<string, { event: ActivityItem["circleEvent"]; direction: "in" | "out"; amount: bigint }> = {
+    MemberJoined: { event: "joined", direction: "out", amount: args.deposit ?? 0n },
+    Contributed: { event: args.fromDeposit ? "missed" : "contributed", direction: "out", amount: args.amount ?? 0n },
+    PaidOut: { event: "paid", direction: "in", amount: args.amount ?? 0n },
+    Cured: { event: "cured", direction: "out", amount: args.restored ?? 0n },
+  };
+
+  // FellBehind always accompanies a Contributed(fromDeposit) for the same
+  // member and round, so it would only ever duplicate that row.
+  const found = shape[log.eventName];
+  if (!found) return null;
+
+  return {
+    id: `${log.transactionHash}:${log.logIndex}`,
+    kind: "circle",
+    direction: found.direction,
+    counterpartyHandle: "",
+    counterpartyAddress: config.contracts.circle,
+    amount: found.amount,
+    memo: "",
+    status: "confirmed",
+    timestamp: null,
+    blockNumber: log.blockNumber ?? null,
+    txHash: log.transactionHash ?? null,
+    circleId: args.circleId,
+    circleEvent: found.event,
+    round: args.round === undefined ? undefined : Number(args.round),
   };
 }
