@@ -43,6 +43,8 @@ contract KoloLinks {
     error LinkExpired();
     /// @notice Recipient must be a real address.
     error ZeroRecipient();
+    /// @notice Secret hash must be non-zero.
+    error InvalidSecretHash();
 
     /// @notice Cap on memo size, mirroring KoloPay.
     uint256 public constant MAX_MEMO_BYTES = 200;
@@ -94,6 +96,9 @@ contract KoloLinks {
     /// @dev Caller must have approved this contract. Smart accounts batch that
     ///      approval with this call in one sponsored user operation.
     function create(bytes32 secretHash, address token, uint256 amount, string calldata memo) external {
+        // No secret hashes to zero, so a client that forgot to generate one
+        // cannot park money behind a hash that nothing can ever claim.
+        if (secretHash == bytes32(0)) revert InvalidSecretHash();
         if (amount == 0) revert AmountZero();
         if (token == address(0)) revert InvalidToken();
         if (bytes(memo).length > MAX_MEMO_BYTES) revert MemoTooLong();
@@ -102,11 +107,7 @@ contract KoloLinks {
         uint64 expiresAt = uint64(block.timestamp + LINK_LIFETIME);
 
         _links[secretHash] = Link({
-            sender: msg.sender,
-            token: token,
-            amount: amount,
-            createdAt: uint64(block.timestamp),
-            expiresAt: expiresAt
+            sender: msg.sender, token: token, amount: amount, createdAt: uint64(block.timestamp), expiresAt: expiresAt
         });
 
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);

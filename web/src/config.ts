@@ -27,6 +27,8 @@ const DEPLOYED = {
   token: "0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC",
   /** Our own faucet, stocked with AUSD. See KoloFaucet.sol for why. */
   faucet: "0xc656E6c73752C0e0bf57b1CD7822293c5E69570F",
+  /** Escrow behind claim links. */
+  links: "0xf4bde27146E8937aCEa9a39501E891Ed4a3C956D",
   block: "59479502",
 };
 
@@ -34,10 +36,9 @@ const REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_KOLO_REGISTRY_ADDRESS || DEPLOY
 const PAY_ADDRESS = process.env.NEXT_PUBLIC_KOLO_PAY_ADDRESS || DEPLOYED.pay;
 const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TOKEN_ADDRESS || DEPLOYED.token;
 const FAUCET_ADDRESS = process.env.NEXT_PUBLIC_KOLO_FAUCET_ADDRESS || DEPLOYED.faucet;
-/** Claim links. No default: KoloLinks is not deployed yet, and the flow hides
+const LINKS_ADDRESS = process.env.NEXT_PUBLIC_KOLO_LINKS_ADDRESS || DEPLOYED.links;
+/** Circles. No default: KoloCircle is not deployed yet, and the flow hides
  *  itself until an address is configured. */
-const LINKS_ADDRESS = process.env.NEXT_PUBLIC_KOLO_LINKS_ADDRESS || "";
-/** Circles. No default: KoloCircle is not deployed yet. */
 const CIRCLE_ADDRESS = process.env.NEXT_PUBLIC_KOLO_CIRCLE_ADDRESS || "";
 
 /** Block the contracts were deployed at. Bounds how far back we ever scan. */
