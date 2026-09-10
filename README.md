@@ -52,6 +52,7 @@ web/                Next.js PWA -- the entire user-facing app
   src/hooks/            smart account, handle, balance, activity, send
   src/lib/activity/     the data layer the UI reads through
   src/app/claim/        where a claim link opens
+  src/app/circle/join/  where a circle invitation opens
   src/components/       screens and UI primitives
 
 scripts/deploy.sh       deploys and writes the addresses into web/.env.local

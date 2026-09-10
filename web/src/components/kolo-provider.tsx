@@ -6,7 +6,7 @@ import type { ActivityItem } from "@/lib/activity";
 import type { Currency } from "@/lib/currency";
 import { useActivity } from "@/hooks/useActivity";
 import { useCurrency } from "@/hooks/useCurrency";
-import { useCircles, type CircleSummary } from "@/hooks/useCircles";
+import { useCircles, type CircleInvite, type CircleSummary } from "@/hooks/useCircles";
 import { useBalance } from "@/hooks/useBalance";
 import { useHandle, type HandleStatus } from "@/hooks/useHandle";
 import { useSendPayment, type SendRequest } from "@/hooks/useSendPayment";
@@ -40,6 +40,7 @@ interface KoloValue {
   refreshCircles: () => Promise<void>;
   contributeToCircle: (circle: CircleSummary) => Promise<void>;
   cureCircle: (circle: CircleSummary) => Promise<void>;
+  joinCircle: (invite: CircleInvite) => Promise<void>;
 }
 
 const KoloContext = createContext<KoloValue | null>(null);
@@ -61,6 +62,7 @@ export function KoloProvider({ children }: { children: React.ReactNode }) {
     refresh: refreshCircles,
     contribute: contributeToCircle,
     cure: cureCircle,
+    join: joinCircle,
   } = useCircles();
 
   return (
@@ -85,6 +87,7 @@ export function KoloProvider({ children }: { children: React.ReactNode }) {
         refreshCircles,
         contributeToCircle,
         cureCircle,
+        joinCircle,
       }}
     >
       {children}

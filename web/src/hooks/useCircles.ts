@@ -52,6 +52,60 @@ export function dueLabel(seconds: number): string {
   return `in ${Math.round(seconds / 86400)} days`;
 }
 
+/** What an invite shows before anyone signs in. */
+export interface CircleInvite {
+  id: bigint;
+  name: string;
+  contribution: bigint;
+  size: number;
+  joined: number;
+  roundDuration: number;
+  status: CircleStatus;
+  /** The position the next person to join takes, 0-based. */
+  nextPosition: number;
+  /** What that position must post today. */
+  deposit: bigint;
+}
+
+/**
+ * Read a circle from its invite code. Works signed out on purpose: someone
+ * deciding whether to join needs the numbers before they have an account, and
+ * must be able to walk away without making one.
+ */
+export async function lookUpInvite(circleId: bigint): Promise<CircleInvite | null> {
+  if (!config.features.circles) return null;
+
+  const publicClient = getPublicClient();
+  const circle = await publicClient.readContract({
+    address: config.contracts.circle,
+    abi: koloCircleAbi,
+    functionName: "circleOf",
+    args: [circleId],
+  });
+
+  if (circle.size === 0) return null;
+
+  const nextPosition = circle.joined;
+  const deposit = await publicClient.readContract({
+    address: config.contracts.circle,
+    abi: koloCircleAbi,
+    functionName: "depositFor",
+    args: [circle.size, nextPosition, circle.contribution],
+  });
+
+  return {
+    id: circleId,
+    name: circle.name,
+    contribution: circle.contribution,
+    size: circle.size,
+    joined: circle.joined,
+    roundDuration: Number(circle.roundDuration),
+    status: STATUS[circle.status] ?? "forming",
+    nextPosition,
+    deposit: deposit as bigint,
+  };
+}
+
 /**
  * The circles this account belongs to.
  *
@@ -197,5 +251,34 @@ export function useCircles() {
     [client, refresh]
   );
 
-  return { circles, refresh, contribute, cure };
+  /** Take the next free position, deposit batched with it so it is one tap. */
+  const join = useCallback(
+    async (invite: CircleInvite) => {
+      if (!client) throw new Error("account not ready");
+
+      await sendSponsored(client, [
+        {
+          to: config.contracts.token,
+          data: encodeFunctionData({
+            abi: erc20Abi,
+            functionName: "approve",
+            args: [config.contracts.circle, invite.deposit],
+          }),
+        },
+        {
+          to: config.contracts.circle,
+          data: encodeFunctionData({
+            abi: koloCircleAbi,
+            functionName: "join",
+            args: [invite.id],
+          }),
+        },
+      ]);
+
+      await refresh();
+    },
+    [client, refresh]
+  );
+
+  return { circles, refresh, contribute, cure, join };
 }

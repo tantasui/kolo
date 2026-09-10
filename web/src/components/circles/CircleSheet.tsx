@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { dueLabel, secondsUntilDue, type CircleSummary } from "@/hooks/useCircles";
+import { buildInviteUrl } from "@/lib/circleInvite";
 import { formatApprox, formatMoney } from "@/lib/format";
 import { useKolo } from "../kolo-provider";
 import { Button } from "../ui/Button";
-import { Check, Warning } from "../ui/Icons";
+import { Check, Copy, Share, Warning } from "../ui/Icons";
 import { SheetHeader } from "../ui/SheetHeader";
 
 /**
@@ -21,6 +22,7 @@ export function CircleSheet({ circle, onClose }: { circle: CircleSummary; onClos
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const behind = circle.toCure > 0n;
   const seconds = secondsUntilDue(circle);
@@ -44,6 +46,36 @@ export function CircleSheet({ circle, onClose }: { circle: CircleSummary; onClos
     }
   }
 
+  const inviteUrl = buildInviteUrl(circle.id);
+  const places = circle.size - circle.joined;
+
+  async function copyInvite() {
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (cause) {
+      console.error("[kolo] copy failed", cause);
+    }
+  }
+
+  async function shareInvite() {
+    if (typeof navigator.share !== "function") {
+      await copyInvite();
+      return;
+    }
+    try {
+      await navigator.share({
+        title: "Kolo",
+        text: `Join my circle on Kolo: ${circle.name}. ${inviteUrl}`,
+      });
+    } catch (cause) {
+      if ((cause as Error)?.name === "AbortError") return;
+      console.error("[kolo] share failed", cause);
+      await copyInvite();
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 animate-sheet-up bg-ink">
       <div className="mx-auto flex h-[100dvh] max-w-md flex-col overflow-y-auto px-5 pb-8 pt-6">
@@ -63,6 +95,39 @@ export function CircleSheet({ circle, onClose }: { circle: CircleSummary; onClos
             last
           />
         </section>
+
+        {circle.status === "forming" && (
+          <section className="mt-4 rounded-2xl border border-line bg-surface px-4 py-4">
+            <p className="text-[15px] font-semibold text-text">
+              {places} {places === 1 ? "place" : "places"} left
+            </p>
+            <p className="mt-1 text-[13px] leading-relaxed text-muted">
+              Share the invitation. Whoever joins sees their position and deposit before they
+              commit to anything.
+            </p>
+
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={shareInvite}
+                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-pill bg-accent
+                           text-[15px] font-semibold text-ink transition active:scale-[0.98]"
+              >
+                <Share className="h-4 w-4" />
+                Invite
+              </button>
+              <button
+                type="button"
+                onClick={copyInvite}
+                aria-label={copied ? "Invitation copied" : "Copy invitation"}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border
+                           border-line bg-raised text-text transition active:scale-95"
+              >
+                {copied ? <Check className="h-5 w-5 text-accent" /> : <Copy className="h-5 w-5" />}
+              </button>
+            </div>
+          </section>
+        )}
 
         <div className="flex flex-1 flex-col items-center justify-center text-center">
           {behind ? (
