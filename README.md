@@ -37,11 +37,13 @@ contracts/          Foundry project -- registry, payment router, demo dollar
     KoloPay.sol         payment router, emits the activity feed
     KoloFaucet.sol      hands demo users $100 of AUSD at a time
     KoloLinks.sol       money parked behind a secret, for claim links
+    KoloCircle.sol      ajo circles: rounds, deposits, rotation
     TestUSD.sol         6-decimal stand-in, kept for tests and other chains
-  test/                 99 tests, happy paths and reverts
+  test/                 128 tests, happy paths and reverts
   script/Deploy.s.sol        registry, router, TestUSD
   script/DeployFaucet.s.sol  the demo faucet
   script/DeployLinks.s.sol   the claim-link contract
+  script/DeployCircle.s.sol  the circle contract
 
 web/                Next.js PWA -- the entire user-facing app
   DESIGN.md             the design system: colour, type, motion, language
@@ -50,6 +52,7 @@ web/                Next.js PWA -- the entire user-facing app
   src/hooks/            smart account, handle, balance, activity, send
   src/lib/activity/     the data layer the UI reads through
   src/app/claim/        where a claim link opens
+  src/app/circle/join/  where a circle invitation opens
   src/components/       screens and UI primitives
 
 scripts/deploy.sh       deploys and writes the addresses into web/.env.local
@@ -200,6 +203,53 @@ the cue to run `./scripts/fund-faucet.sh`.
 
 ---
 
+## Circles, and who closes the rounds
+
+A circle is ajo: everyone puts in a fixed amount each round, one member takes
+the whole pot, rotating until everyone has been paid. The contract is the
+coordinator — it decides nothing, but it is the reason nobody has to be
+trusted.
+
+**Deposits are sized by position.** Whoever is paid first has the most left to
+owe, so they post the most: `deposit(p) = max(1, N-1-p) x contribution`. At the
+moment a member holds the pot, what they have put in plus what is left of their
+deposit is exactly the pot — so nobody can ever walk away ahead. That is
+checked by a fuzz run over a live circle, asserting no member's balance rises
+above what they started with.
+
+**Nobody is thrown out.** A missed round is drawn from that member's deposit,
+so the recipient is still paid in full and on time. They are passed over when
+their own turn comes while they are short, and `cure()` puts the deposit back
+and returns them to the rotation. There is no expulsion and no forfeiture.
+
+### The crank, not an upkeep
+
+`payout` is callable by anyone once the deadline passes, or as soon as everyone
+has contributed. [`web/scripts/keeper.mjs`](web/scripts/keeper.mjs) is a small
+process that does it on a timer:
+
+```sh
+cd web && npm run keeper           # sweeps every 30s
+cd web && npm run keeper -- --once # one sweep
+```
+
+**This is the design, not a fallback.** Chainlink Automation was the obvious
+home for it and is not available: it has never supported Monad — the testnet
+list is Arbitrum Sepolia, Avalanche Fuji, Base Sepolia, BNB, Ethereum Sepolia,
+Gnosis Chiado, OP Sepolia, Polygon Amoy, Scroll Sepolia and zkSync Sepolia —
+and the product itself sunset in mid-2026 (v1.x on 30 June, v2.1 on 31 July) in
+favour of CRE, which covers the same chains. Of Chainlink's stack only CCIP is
+live on Monad Testnet, and it does not close rounds.
+
+Writing to a retired interface to claim an integration would have been the
+worse call. A permissionless crank is also simply better here: no registry, no
+LINK balance to keep topped up, no upkeep to lapse mid-demo, and because any
+member can move a circle along from the app, a circle can never be stuck
+waiting on infrastructure. The keeper holds no privilege — losing it costs
+punctuality, not money.
+
+---
+
 ## Setup
 
 ### Prerequisites
@@ -292,6 +342,7 @@ All of these live in `web/.env.local` and are read in exactly one place,
 | `NEXT_PUBLIC_TOKEN_ADDRESS` | Optional; defaults to Agora AUSD. Any 6-decimal token works |
 | `NEXT_PUBLIC_KOLO_FAUCET_ADDRESS` | Optional; defaults to our demo faucet |
 | `NEXT_PUBLIC_KOLO_LINKS_ADDRESS` | Optional; no default. Set it to enable claim links |
+| `NEXT_PUBLIC_KOLO_CIRCLE_ADDRESS` | Optional; no default. Set it to enable circles |
 | `NEXT_PUBLIC_KOLO_DEPLOY_BLOCK` | Optional; bounds how far back the feed scans |
 
 `contracts/.env` holds only `MONAD_RPC_URL` and the deployer `PRIVATE_KEY`. Both
@@ -376,6 +427,7 @@ Monad Testnet (chain ID `10143`):
 | `KoloPay` | `0x99278ba6c5b64c72862c678b38c25a3c7cf59547` |
 | `KoloFaucet` | `0xc656E6c73752C0e0bf57b1CD7822293c5E69570F` |
 | `KoloLinks` | `0xf4bde27146E8937aCEa9a39501E891Ed4a3C956D` |
+| `KoloCircle` | `0xCCABe852918A81d909dbE303Ee18F09Ad31111AD` |
 | Agora AUSD (not ours) | `0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC` |
 | `TestUSD` (unused by the app) | `0xeb7cc503d0ed16c90e26eaab301cd9d0912cec4f` |
 

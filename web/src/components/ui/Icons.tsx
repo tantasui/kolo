@@ -121,3 +121,10 @@ export const LinkIcon = ({ className }: IconProps) => (
     <path d="M14 10a4 4 0 0 0-5.7 0L5.5 12.8a4 4 0 0 0 5.7 5.7l1.3-1.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
   </svg>
 );
+
+export const Circle = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <circle cx="12" cy="12" r="8.2" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M12 3.8v3M20.2 12h-3M12 20.2v-3M3.8 12h3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);

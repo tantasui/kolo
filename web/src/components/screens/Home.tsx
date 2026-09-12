@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { formatApprox, formatMoney } from "@/lib/format";
 import { ActivityList } from "../ActivityList";
+import { DueBanner } from "../DueBanner";
+import { CircleDetail } from "../circles/CircleDetail";
 import { useKolo } from "../kolo-provider";
 import { SendSheet } from "../send/SendSheet";
 import { Settings } from "./Settings";
@@ -11,10 +13,11 @@ import { ArrowUpRight, Check, Copy, Gear, Plus, Warning } from "../ui/Icons";
 import { Spinner } from "../ui/Spinner";
 
 export function Home() {
-  const { handle, balance, activity, addMoney, currency } = useKolo();
+  const { handle, balance, activity, addMoney, currency, circles } = useKolo();
 
   const [sendOpen, setSendOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [openCircle, setOpenCircle] = useState<(typeof circles)[number] | null>(null);
   const [adding, setAdding] = useState(false);
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -132,6 +135,8 @@ export function Home() {
           </p>
         )}
 
+        <DueBanner circles={circles} onOpen={setOpenCircle} />
+
         <section className="mt-10 flex-1">
           <h2 className="mb-2 px-2 text-[14px] font-medium text-muted">Activity</h2>
           <ActivityList items={activity} />
@@ -140,6 +145,7 @@ export function Home() {
 
       {sendOpen && <SendSheet onClose={() => setSendOpen(false)} />}
       {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
+      {openCircle && <CircleDetail circle={openCircle} onClose={() => setOpenCircle(null)} />}
     </>
   );
 }

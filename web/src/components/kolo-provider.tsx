@@ -6,6 +6,7 @@ import type { ActivityItem } from "@/lib/activity";
 import type { Currency } from "@/lib/currency";
 import { useActivity } from "@/hooks/useActivity";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useCircles, type CircleInvite, type CircleSummary } from "@/hooks/useCircles";
 import { useBalance } from "@/hooks/useBalance";
 import { useHandle, type HandleStatus } from "@/hooks/useHandle";
 import { useSendPayment, type SendRequest } from "@/hooks/useSendPayment";
@@ -33,6 +34,13 @@ interface KoloValue {
   refreshActivity: () => Promise<void>;
 
   send: (request: SendRequest) => Promise<`0x${string}`>;
+
+  /** Circles this account is in, and the two things a member ever does. */
+  circles: CircleSummary[];
+  refreshCircles: () => Promise<void>;
+  contributeToCircle: (circle: CircleSummary) => Promise<void>;
+  cureCircle: (circle: CircleSummary) => Promise<void>;
+  joinCircle: (invite: CircleInvite) => Promise<void>;
 }
 
 const KoloContext = createContext<KoloValue | null>(null);
@@ -49,6 +57,13 @@ export function KoloProvider({ children }: { children: React.ReactNode }) {
   const { balance, refresh: refreshBalance, addMoney } = useBalance();
   const { items, addPending, refresh: refreshActivity } = useActivity();
   const { send } = useSendPayment();
+  const {
+    circles,
+    refresh: refreshCircles,
+    contribute: contributeToCircle,
+    cure: cureCircle,
+    join: joinCircle,
+  } = useCircles();
 
   return (
     <KoloContext.Provider
@@ -68,6 +83,11 @@ export function KoloProvider({ children }: { children: React.ReactNode }) {
         addPendingActivity: addPending,
         refreshActivity,
         send,
+        circles,
+        refreshCircles,
+        contributeToCircle,
+        cureCircle,
+        joinCircle,
       }}
     >
       {children}

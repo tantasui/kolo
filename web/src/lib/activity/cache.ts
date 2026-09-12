@@ -21,7 +21,7 @@ function keyFor(account: Address): string {
 
 interface StoredItem {
   id: string;
-  kind?: "payment" | "link";
+  kind?: "payment" | "link" | "circle";
   direction: "in" | "out";
   counterpartyHandle: string;
   counterpartyAddress: string;
@@ -34,6 +34,10 @@ interface StoredItem {
   secretHash?: string;
   linkState?: "pending" | "claimed" | "expired" | "cancelled";
   expiresAt?: number;
+  circleId?: string;
+  circleName?: string;
+  circleEvent?: "joined" | "contributed" | "missed" | "paid" | "cured";
+  round?: number;
 }
 
 export function loadCachedActivity(account: Address): ActivityCache {
@@ -63,6 +67,10 @@ export function loadCachedActivity(account: Address): ActivityCache {
         secretHash: item.secretHash as Hex | undefined,
         linkState: item.linkState,
         expiresAt: item.expiresAt,
+        circleId: item.circleId === undefined ? undefined : BigInt(item.circleId),
+        circleName: item.circleName,
+        circleEvent: item.circleEvent,
+        round: item.round,
       })),
       lastSyncedBlock:
         parsed.lastSyncedBlock === null || parsed.lastSyncedBlock === undefined
@@ -100,6 +108,10 @@ export function saveCachedActivity(account: Address, cache: ActivityCache): void
           secretHash: item.secretHash,
           linkState: item.linkState,
           expiresAt: item.expiresAt,
+          circleId: item.circleId?.toString(),
+          circleName: item.circleName,
+          circleEvent: item.circleEvent,
+          round: item.round,
         })),
       lastSyncedBlock: cache.lastSyncedBlock === null ? null : cache.lastSyncedBlock.toString(),
     };
