@@ -9,9 +9,16 @@ dollar balance. There are no addresses to copy, no gas to buy, no seed phrase to
 write down, and no confirmation dialogs. Every transaction is sponsored, and the
 send flow batches its approval so a payment is one tap.
 
-This repository is **Phase 1: identity + send**. Claim links, rotating savings
-circles (ajo) and shared streaming pots come later; the contracts and data model
-are shaped to grow into them, but none of that is built yet.
+Three things are built and live on Monad Testnet:
+
+- **Send** — pay anyone by their @handle, sponsored, one tap.
+- **Claim links** — park money behind a secret and send the link to someone who
+  has no account yet. They open it, see the amount, and collect it.
+- **Circles** — ajo / esusu. N people put in a fixed amount each round, one takes
+  the whole pot each round, rotating until everyone has been paid. The contract
+  does the job a trusted coordinator normally does.
+
+Shared streaming pots are the one thing still on the list.
 
 ---
 
@@ -19,12 +26,13 @@ are shaped to grow into them, but none of that is built yet.
 
 | | |
 | --- | --- |
-| Contracts | Written, 45 tests passing, **deployed to Monad Testnet** |
-| Deployment | **Verified live**: handles registered and resolved, faucet minted, batched approve + send moved $10.00, `Sent` event decoded |
-| App | Builds and type-checks; every screen rendered and reviewed at a 390px viewport |
-| Sponsored transactions | **Verified on Monad Testnet** — handle claim, faucet and a batched approve + send all sponsored, account balance 0 wei throughout (`npm run verify:sponsorship`) |
-| Sign-in | Privy SDK initialises against the configured app; the landing screen is live |
-| End-to-end demo | On-chain path proven; the browser half (email OTP → claim → send) is a manual run-through |
+| Contracts | Five, **142 tests**, all **deployed to Monad Testnet** |
+| Send | **Live** — handles registered and resolved, a batched approve + send moved $10.00, `Sent` event decoded |
+| Claim links | **Live** — a $15.00 link created, then claimed to a brand-new address by a *different* account, proving `claim` pays its recipient argument and not its caller. Double-claim and wrong-secret both revert; a sender reclaimed a live link in full |
+| Circles | **Live and unattended** — a two-person circle with 5-minute rounds: one member deliberately missed, and with nothing watching, the keeper closed the round at the deadline, drew that member's deposit and paid the other a whole pot. They cured, round two settled early on everyone-in, and both finished exactly where they started |
+| Sponsored transactions | **Verified on Monad Testnet** — every operation paid for by the paymaster, account balance 0 wei throughout |
+| App | Builds, type-checks and lints clean; every screen reviewed at a 390px viewport |
+| Known gaps | No tests over the TypeScript layer; the activity feed still reads the chain directly, so its history is device-local (see below) |
 
 ---
 
@@ -39,7 +47,7 @@ contracts/          Foundry project -- registry, payment router, demo dollar
     KoloLinks.sol       money parked behind a secret, for claim links
     KoloCircle.sol      ajo circles: rounds, deposits, rotation
     TestUSD.sol         6-decimal stand-in, kept for tests and other chains
-  test/                 128 tests, happy paths and reverts
+  test/                 142 tests, happy paths, reverts and fuzzed invariants
   script/Deploy.s.sol        registry, router, TestUSD
   script/DeployFaucet.s.sol  the demo faucet
   script/DeployLinks.s.sol   the claim-link contract
@@ -54,6 +62,10 @@ web/                Next.js PWA -- the entire user-facing app
   src/app/claim/        where a claim link opens
   src/app/circle/join/  where a circle invitation opens
   src/components/       screens and UI primitives
+
+web/scripts/
+  verify-sponsorship.mjs  proves every operation is paid for by the paymaster
+  keeper.mjs              closes circle rounds on a timer
 
 scripts/deploy.sh       deploys and writes the addresses into web/.env.local
 scripts/fund-faucet.sh  tops the demo faucet up from Agora's
@@ -80,13 +92,18 @@ starts and ends holding **0 wei**, so every operation was paid for by the
 paymaster:
 
 ```
-account   : 0xC661f95D17711f6e5518C74cEC0094A4C48055DD
+account   : 0xD38FA9CC7fE447401a92FA98e6705dDfC921FdDC
 gas held  : 0 wei (expected 0)
-[1/3] claiming @kolo_vn63rge …   ok
+[1/3] claiming @kolo_vyxt4t8 …   ok
 [2/3] adding demo funds …        balance = $100.00
 [3/3] sending $10.00 …           balance $100.00 -> $90.00
 gas held after 3 operations: 0 wei
+
+All three operations sponsored. The account paid nothing.
 ```
+
+It needs only `NEXT_PUBLIC_PIMLICO_BUNDLER_URL`: every address defaults to the
+live deployment, the same way the app's do.
 
 **Why a payment router.** `KoloPay.sendToHandle` resolves the recipient through
 the registry and emits a single `Sent` event carrying both handles, the amount
@@ -263,7 +280,7 @@ punctuality, not money.
 
 ```sh
 cd contracts
-forge test          # 45 tests
+forge test          # 142 tests
 ```
 
 The contracts are already deployed (see the table at the end), and that
@@ -309,12 +326,19 @@ npm ci                       # prefer ci over install; see the note below
 npm run dev                  # http://localhost:3000
 ```
 
-> `npm ci` installs exactly what the lockfile pins. Prefer it here: a targeted
-> `npm install <pkg>@<version>` in this tree has been observed to drop `ox` (a
-> `viem` dependency that `permissionless` also peer-requires at a different
-> range) from the lockfile, which breaks the build with
-> `Module not found: Can't resolve 'ox'`. If that happens, delete
-> `node_modules` and `package-lock.json` and reinstall.
+> **On npm 11, the build fails here.** The committed lockfile records `ox` — a
+> `viem` dependency that `permissionless` also needs hoisted — as
+> `"extraneous": true`. npm 11 honours that and skips it, so `npm ci` produces a
+> tree without `node_modules/ox` and the build dies with
+> `Module not found: Can't resolve 'ox'`. npm 10 installs it from the same
+> lockfile and is fine, which is why Netlify is unaffected: `netlify.toml` pins
+> `NODE_VERSION = "20"`, and Node 20 ships npm 10.
+>
+> Until the lockfile is regenerated, the fix on a current npm is one command:
+>
+> ```sh
+> npm install ox --no-save
+> ```
 
 Only `NEXT_PUBLIC_PRIVY_APP_ID` and `NEXT_PUBLIC_PIMLICO_BUNDLER_URL` are
 required — the contract addresses already default to the live deployment. If
@@ -434,5 +458,5 @@ Monad Testnet (chain ID `10143`):
 Deployed at block `59479502`. These are the defaults in
 [`web/src/config.ts`](web/src/config.ts), so a fresh clone talks to them without
 deploying anything — you only need the Privy and Pimlico values. Set the
-`NEXT_PUBLIC_KOLO_*` / `NEXT_PUBLIC_TEST_USD_ADDRESS` env vars to point at your
+`NEXT_PUBLIC_KOLO_*` and `NEXT_PUBLIC_TOKEN_ADDRESS` env vars to point at your
 own deployment instead.
