@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { encodeFunctionData } from "viem";
+import { decodeEventLog, encodeFunctionData } from "viem";
 import { erc20Abi } from "@/abi/erc20";
 import { koloCircleAbi } from "@/abi/koloCircle";
 import { config } from "@/config";
@@ -27,6 +27,17 @@ export interface CircleSummary {
   contributed: boolean;
   /** Non-zero means Behind: what they must put back to rejoin the rotation. */
   toCure: bigint;
+}
+
+/**
+ * What position `p` of a circle of `size` must post. Mirrors
+ * KoloCircle.depositFor, so the app can size an approval before it asks.
+ *
+ * Whoever is paid first has the most left to owe, so they post the most.
+ */
+export function depositFor(size: number, position: number, contribution: bigint): bigint {
+  const rounds = size - 1 > position ? BigInt(size - 1 - position) : 1n;
+  return rounds * contribution;
 }
 
 /** Seconds until this circle's contribution is due; negative once overdue. */
@@ -252,6 +263,72 @@ export function useCircles() {
   );
 
   /** Take the next free position, deposit batched with it so it is one tap. */
+  /**
+   * Open a circle and take the first position, in one sponsored operation.
+   *
+   * The creator joins as they create -- a circle with nobody in it is not a
+   * thing anyone means to make -- so the approval covers position 0's deposit,
+   * which is the largest on the ladder.
+   */
+  const create = useCallback(
+    async ({
+      name,
+      contribution,
+      size,
+      roundDuration,
+    }: {
+      name: string;
+      contribution: bigint;
+      size: number;
+      roundDuration: number;
+    }): Promise<bigint> => {
+      if (!client) throw new Error("account not ready");
+
+      const deposit = depositFor(size, 0, contribution);
+
+      const hash = await sendSponsored(client, [
+        {
+          to: config.contracts.token,
+          data: encodeFunctionData({
+            abi: erc20Abi,
+            functionName: "approve",
+            args: [config.contracts.circle, deposit],
+          }),
+        },
+        {
+          to: config.contracts.circle,
+          data: encodeFunctionData({
+            abi: koloCircleAbi,
+            functionName: "create",
+            args: [name, config.contracts.token, contribution, size, BigInt(roundDuration)],
+          }),
+        },
+      ]);
+
+      // Read the id back off the log rather than from circleCount, which
+      // somebody else's circle could have moved between the two calls.
+      const receipt = await getPublicClient().waitForTransactionReceipt({ hash });
+      let created: bigint | null = null;
+      for (const log of receipt.logs) {
+        if (log.address.toLowerCase() !== config.contracts.circle.toLowerCase()) continue;
+        try {
+          const parsed = decodeEventLog({ abi: koloCircleAbi, data: log.data, topics: log.topics });
+          if (parsed.eventName === "CircleCreated") {
+            created = (parsed.args as { circleId: bigint }).circleId;
+            break;
+          }
+        } catch {
+          // Other events from the same contract in the same operation.
+        }
+      }
+      if (created === null) throw new Error("circle created but its id was not in the receipt");
+
+      await refresh();
+      return created;
+    },
+    [client, refresh]
+  );
+
   const join = useCallback(
     async (invite: CircleInvite) => {
       if (!client) throw new Error("account not ready");
@@ -280,5 +357,5 @@ export function useCircles() {
     [client, refresh]
   );
 
-  return { circles, refresh, contribute, cure, join };
+  return { circles, refresh, create, contribute, cure, join };
 }

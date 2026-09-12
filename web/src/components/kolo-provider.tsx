@@ -38,6 +38,12 @@ interface KoloValue {
   /** Circles this account is in, and the two things a member ever does. */
   circles: CircleSummary[];
   refreshCircles: () => Promise<void>;
+  createCircle: (params: {
+    name: string;
+    contribution: bigint;
+    size: number;
+    roundDuration: number;
+  }) => Promise<bigint>;
   contributeToCircle: (circle: CircleSummary) => Promise<void>;
   cureCircle: (circle: CircleSummary) => Promise<void>;
   joinCircle: (invite: CircleInvite) => Promise<void>;
@@ -59,6 +65,7 @@ export function KoloProvider({ children }: { children: React.ReactNode }) {
   const { send } = useSendPayment();
   const {
     circles,
+    create: createCircle,
     refresh: refreshCircles,
     contribute: contributeToCircle,
     cure: cureCircle,
@@ -85,6 +92,7 @@ export function KoloProvider({ children }: { children: React.ReactNode }) {
         send,
         circles,
         refreshCircles,
+        createCircle,
         contributeToCircle,
         cureCircle,
         joinCircle,

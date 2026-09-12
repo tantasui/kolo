@@ -40,6 +40,8 @@ const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TOKEN_ADDRESS || DEPLOYED.token;
 const FAUCET_ADDRESS = process.env.NEXT_PUBLIC_KOLO_FAUCET_ADDRESS || DEPLOYED.faucet;
 const LINKS_ADDRESS = process.env.NEXT_PUBLIC_KOLO_LINKS_ADDRESS || DEPLOYED.links;
 const CIRCLE_ADDRESS = process.env.NEXT_PUBLIC_KOLO_CIRCLE_ADDRESS || DEPLOYED.circle;
+/** Five-minute circles are for showing the app, not for saving. */
+const DEMO_ROUNDS = process.env.NEXT_PUBLIC_KOLO_DEMO_ROUNDS !== "0";
 
 /** Block the contracts were deployed at. Bounds how far back we ever scan. */
 const DEPLOY_BLOCK = process.env.NEXT_PUBLIC_KOLO_DEPLOY_BLOCK || DEPLOYED.block;
@@ -139,6 +141,20 @@ export const config = {
     maxNameBytes: 40,
     /** How close a deadline has to be before the app says something. */
     dueSoonSeconds: 24 * 60 * 60,
+    /**
+     * Round lengths the app offers, longest first. `demo` exists so the whole
+     * lifecycle -- a miss, a deposit covering it, a cure -- can be shown in a
+     * few minutes instead of a fortnight. It mirrors KoloCircle.MIN_PERIOD.
+     *
+     * On by default because this build only ever runs against testnet and the
+     * demo is the point; set NEXT_PUBLIC_KOLO_DEMO_ROUNDS=0 to hide it.
+     */
+    periods: [
+      { label: "Every month", seconds: 30 * 24 * 60 * 60, demo: false },
+      { label: "Every week", seconds: 7 * 24 * 60 * 60, demo: false },
+      { label: "Every 5 minutes", seconds: 5 * 60, demo: true },
+    ] as const,
+    showDemoRounds: DEMO_ROUNDS,
   },
 
   activity: {

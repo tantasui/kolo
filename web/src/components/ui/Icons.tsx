@@ -122,9 +122,24 @@ export const LinkIcon = ({ className }: IconProps) => (
   </svg>
 );
 
+/** People sat in a ring -- a circle is who is in it, not a shape. */
 export const Circle = ({ className }: IconProps) => (
   <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-    <circle cx="12" cy="12" r="8.2" stroke="currentColor" strokeWidth="1.8" />
-    <path d="M12 3.8v3M20.2 12h-3M12 20.2v-3M3.8 12h3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    <circle cx="12" cy="5" r="2.1" fill="currentColor" />
+    <circle cx="18.66" cy="9.84" r="2.1" fill="currentColor" />
+    <circle cx="16.11" cy="17.66" r="2.1" fill="currentColor" />
+    <circle cx="7.89" cy="17.66" r="2.1" fill="currentColor" />
+    <circle cx="5.34" cy="9.84" r="2.1" fill="currentColor" />
+  </svg>
+);
+
+export const House = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <path
+      d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4v-5h-6v5H5a1 1 0 0 1-1-1v-8.5Z"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinejoin="round"
+    />
   </svg>
 );

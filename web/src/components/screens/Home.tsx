@@ -59,7 +59,7 @@ export function Home() {
 
   return (
     <>
-      <div className="flex min-h-[100dvh] flex-col px-5 pb-10 pt-6">
+      <div className="flex min-h-[100dvh] flex-col px-5 pb-28 pt-6">
         <header className="flex items-center gap-3">
           <Avatar handle={handle ?? "?"} size={40} />
           <button
