@@ -8,6 +8,7 @@ import { CircleDetail } from "../circles/CircleDetail";
 import { useKolo } from "../kolo-provider";
 import { SendSheet } from "../send/SendSheet";
 import { Settings } from "./Settings";
+import { CurrencySwitch } from "../ui/CurrencySwitch";
 import { Avatar } from "../ui/Avatar";
 import { ArrowUpRight, Check, Copy, Gear, Plus, Warning } from "../ui/Icons";
 import { Spinner } from "../ui/Spinner";
@@ -88,7 +89,10 @@ export function Home() {
         </header>
 
         <section className="mt-10">
-          <p className="text-[14px] font-medium text-muted">Balance</p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[14px] font-medium text-muted">Balance</p>
+            <CurrencySwitch />
+          </div>
           <p className="tabular mt-1 text-[52px] font-bold leading-none tracking-tight">
             {balance === null ? (
               <span className="inline-block h-[52px] w-48 animate-pulse rounded-2xl bg-raised align-middle" />
