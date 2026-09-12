@@ -51,6 +51,15 @@ contract KoloCircleTest is Test {
         vm.stopPrank();
     }
 
+    function _threeContribute(uint256 id) internal {
+        vm.prank(amara);
+        circles.contribute(id);
+        vm.prank(tunde);
+        circles.contribute(id);
+        vm.prank(chidi);
+        circles.contribute(id);
+    }
+
     /// A two-person circle, the shape the demo runs.
     function _twoPersonCircle() internal returns (uint256 id) {
         vm.prank(amara);
@@ -87,6 +96,51 @@ contract KoloCircleTest is Test {
         uint256 pot = uint256(size) * C;
 
         assertGe(deposit + contributed, pot, "posted must cover the pot");
+    }
+
+    /// The property the ladder exists for, checked against a circle that is
+    /// actually running rather than against the formula alone.
+    ///
+    /// A member is "ahead" exactly when they hold more than they started with:
+    /// posting the deposit and every contribution takes their balance down,
+    /// and taking the pot brings it back to -- never above -- where it began.
+    /// So `balance <= startingBalance`, always, is the whole guarantee.
+    function testFuzz_NoMemberIsEverAheadOfWhatTheyPosted(uint16 missMask) public {
+        address[3] memory who = [amara, tunde, chidi];
+        uint256[3] memory start;
+        for (uint256 i; i < 3; ++i) {
+            start[i] = usd.balanceOf(who[i]);
+        }
+
+        vm.prank(amara);
+        uint256 id = circles.create("Fuzz", address(usd), C, 3, ROUND);
+        vm.prank(tunde);
+        circles.join(id);
+        vm.prank(chidi);
+        circles.join(id);
+
+        for (uint8 round; round < 3; ++round) {
+            for (uint256 i; i < 3; ++i) {
+                bool pays = (missMask >> (round * 3 + uint8(i))) & 1 == 1;
+                if (!pays) continue;
+                vm.prank(who[i]);
+                circles.contribute(id);
+            }
+
+            vm.warp(block.timestamp + ROUND + 1);
+            // Everyone left may be Behind, in which case there is nobody the
+            // circle can afford to pay and it stops here. That is the stuck
+            // state `cancel` now unwinds; what matters is that it never got
+            // there by letting somebody run ahead.
+            try circles.payout(id) {}
+            catch {
+                break;
+            }
+
+            for (uint256 i; i < 3; ++i) {
+                assertLe(usd.balanceOf(who[i]), start[i], "a member is ahead of what they posted");
+            }
+        }
     }
 
     /* ---------- forming ---------- */
@@ -220,28 +274,21 @@ contract KoloCircleTest is Test {
         vm.prank(chidi);
         circles.join(id);
 
-        // Round 0: amara misses, so tunde is paid first.
-        vm.prank(tunde);
+        // Round 0: everybody in, so amara takes the first pot.
+        _threeContribute(id);
+        circles.payout(id);
+
+        // Round 1: chidi misses, but tunde is due and square, so tunde is paid.
+        vm.prank(amara);
         circles.contribute(id);
-        vm.prank(chidi);
+        vm.prank(tunde);
         circles.contribute(id);
         vm.warp(block.timestamp + ROUND);
         circles.payout(id);
 
-        // Round 1: amara cures and everybody is in, so amara is paid.
-        vm.prank(amara);
-        circles.cure(id);
-        vm.prank(amara);
-        circles.contribute(id);
-        vm.prank(tunde);
-        circles.contribute(id);
-        vm.prank(chidi);
-        circles.contribute(id);
-        circles.payout(id);
-
         KoloCircle.Member[] memory members = circles.membersOf(id);
-        assertEq(members[1].paidInRound, 0, "tunde took the first pot");
-        assertEq(members[0].paidInRound, 1, "amara took the second, after curing");
+        assertEq(members[0].paidInRound, 0, "amara took the first pot");
+        assertEq(members[1].paidInRound, 1, "tunde took the second");
         assertFalse(members[2].received, "chidi is still to come");
     }
 
@@ -286,10 +333,14 @@ contract KoloCircleTest is Test {
         assertEq(usd.balanceOf(amara) - before, 2 * C, "a full pot, out of the deposit");
     }
 
-    /// The reason Behind members are passed over: their deposit no longer
-    /// covers what they owe, so handing them the pot would break the invariant.
-    function test_BehindMemberIsSkippedForPayout() public {
-        // Three people so there is somebody to skip to.
+    /// When whoever is due to be paid has not put their own round in, the
+    /// round waits for them rather than skipping down the line.
+    ///
+    /// Skipping is what breaks the ladder: tunde posted a deposit sized for
+    /// being paid second, having contributed twice by then. Handing him the
+    /// first pot would leave him holding 3C against 2C posted -- ahead, which
+    /// is the one thing the deposit exists to prevent.
+    function test_TheRoundWaitsWhenWhoeverIsDueHasNotPaid() public {
         vm.prank(amara);
         uint256 id = circles.create("Rent", address(usd), C, 3, ROUND);
         vm.prank(tunde);
@@ -297,20 +348,56 @@ contract KoloCircleTest is Test {
         vm.prank(chidi);
         circles.join(id);
 
-        // Round 0: amara misses, so amara falls Behind and is passed over.
+        // Round 0: amara, who is due, misses. The other two are in.
         vm.prank(tunde);
         circles.contribute(id);
         vm.prank(chidi);
         circles.contribute(id);
         vm.warp(block.timestamp + ROUND);
 
+        // Nobody has posted enough to hold a 3C pot yet, so the round holds.
+        vm.expectRevert(KoloCircle.NoEligibleRecipient.selector);
+        circles.payout(id);
+
+        // She puts her round in late, and it settles to her.
+        vm.prank(amara);
+        circles.contribute(id);
+
         vm.expectEmit(true, true, false, true);
-        emit PaidOut(id, tunde, "tunde", 0, 3 * C);
+        emit PaidOut(id, amara, "amara", 0, 3 * C);
         circles.payout(id);
 
         KoloCircle.Member[] memory members = circles.membersOf(id);
-        assertFalse(members[0].received, "amara keeps her place");
-        assertTrue(members[1].received, "tunde was paid instead");
+        assertTrue(members[0].received, "amara took the first pot, once she was square");
+        assertFalse(members[1].received, "tunde keeps his turn");
+    }
+
+    /// A member who is short is passed over; one who is square is not.
+    function test_AMemberWhoIsShortIsPassedOver() public {
+        vm.prank(amara);
+        uint256 id = circles.create("Rent", address(usd), C, 3, ROUND);
+        vm.prank(tunde);
+        circles.join(id);
+        vm.prank(chidi);
+        circles.join(id);
+
+        // Round 0 settles normally to amara.
+        _threeContribute(id);
+        circles.payout(id);
+
+        // Round 1: chidi misses. Tunde is due and is square, so he is paid.
+        vm.prank(amara);
+        circles.contribute(id);
+        vm.prank(tunde);
+        circles.contribute(id);
+        vm.warp(block.timestamp + ROUND);
+
+        vm.expectEmit(true, true, false, true);
+        emit PaidOut(id, tunde, "tunde", 1, 3 * C);
+        circles.payout(id);
+
+        KoloCircle.Member[] memory members = circles.membersOf(id);
+        assertFalse(members[2].received, "chidi is short, so he waits");
     }
 
     function test_CureRestoresTheDepositAndTheRotation() public {
@@ -492,11 +579,88 @@ contract KoloCircleTest is Test {
         assertEq(usd.balanceOf(amara) - before, amaraDeposit, "amara gets what she posted back");
     }
 
-    function test_RevertWhen_CancellingARunningCircle() public {
+    function test_RevertWhen_WindingDownARunningCircleTooEarly() public {
         uint256 id = _twoPersonCircle();
         vm.warp(block.timestamp + circles.CANCEL_AFTER());
-        vm.expectRevert(KoloCircle.CircleNotForming.selector);
+        vm.expectRevert(KoloCircle.TooEarlyToCancel.selector);
         circles.cancel(id);
+    }
+
+    /// The deadlock: a circle nobody contributed to cannot pay anyone, and the
+    /// revert undoes the draw, so nothing is owed and nothing can be cured.
+    /// A week past the deadline it must still be possible to get the money out.
+    function test_StuckRunningCircleCanBeWoundDownAfterAWeek() public {
+        uint256 amaraBefore = usd.balanceOf(amara);
+        uint256 tundeBefore = usd.balanceOf(tunde);
+
+        uint256 id = _twoPersonCircle();
+        assertEq(usd.balanceOf(address(circles)), 2 * C, "deposits are held");
+
+        vm.warp(block.timestamp + ROUND + 1);
+        vm.expectRevert(KoloCircle.NoEligibleRecipient.selector);
+        circles.payout(id);
+
+        vm.warp(block.timestamp + circles.CANCEL_AFTER());
+        circles.cancel(id); // anyone
+
+        assertEq(uint8(circles.circleOf(id).status), uint8(KoloCircle.Status.Cancelled));
+        assertEq(usd.balanceOf(amara), amaraBefore, "amara is whole");
+        assertEq(usd.balanceOf(tunde), tundeBefore, "tunde is whole");
+        assertEq(usd.balanceOf(address(circles)), 0, "nothing left behind");
+    }
+
+    /// Winding down mid-round returns this round's contributions as well as
+    /// the deposits -- that money was never paid out to anyone.
+    function test_WindingDownReturnsThisRoundsContributionsToo() public {
+        uint256 amaraBefore = usd.balanceOf(amara);
+        uint256 tundeBefore = usd.balanceOf(tunde);
+
+        uint256 id = _twoPersonCircle();
+        vm.prank(amara);
+        circles.contribute(id); // only amara pays; tunde never does
+
+        vm.warp(block.timestamp + ROUND + 1 + circles.CANCEL_AFTER());
+        circles.cancel(id);
+
+        assertEq(usd.balanceOf(amara), amaraBefore, "her contribution came back with her deposit");
+        assertEq(usd.balanceOf(tunde), tundeBefore, "his deposit came back");
+        assertEq(usd.balanceOf(address(circles)), 0, "nothing left behind");
+    }
+
+    /* ---------- a finished circle is finished ---------- */
+
+    /// `_returnDeposits` used to mark a deposit returned by setting
+    /// depositDrawn = deposit, which made a completed circle report every
+    /// member as owing a cure -- and cure would take the money and keep it.
+    function test_RevertWhen_CuringACompletedCircle() public {
+        uint256 id = _twoPersonCircle();
+        _bothContribute(id);
+        circles.payout(id);
+        _bothContribute(id);
+        circles.payout(id);
+
+        assertEq(uint8(circles.circleOf(id).status), uint8(KoloCircle.Status.Complete));
+
+        vm.prank(amara);
+        vm.expectRevert(KoloCircle.CircleNotRunning.selector);
+        circles.cure(id);
+    }
+
+    function test_NothingIsOwedOnceTheCircleIsComplete() public {
+        uint256 id = _twoPersonCircle();
+        _bothContribute(id);
+        circles.payout(id);
+        _bothContribute(id);
+        circles.payout(id);
+
+        assertEq(circles.amountToCure(id, amara), 0, "a finished circle asks for nothing");
+        assertEq(circles.amountToCure(id, tunde), 0);
+
+        KoloCircle.Member[] memory members = circles.membersOf(id);
+        for (uint256 i; i < members.length; ++i) {
+            assertTrue(members[i].depositReturned, "deposit recorded as returned");
+            assertEq(members[i].depositDrawn, 0, "and the record is not corrupted to say so");
+        }
     }
 
     function test_RevertWhen_CancellingAnUnknownCircle() public {

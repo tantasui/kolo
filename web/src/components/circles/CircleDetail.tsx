@@ -72,7 +72,10 @@ export function CircleDetail({ circle, onClose }: { circle: CircleSummary; onClo
   }
 
   const you = detail?.you;
-  const behind = !!you && you.depositDrawn > 0n;
+  // Only a running circle has a rotation to rejoin. Without the status check
+  // a finished circle showed every member a "Restore deposit" button, and the
+  // contract took the money.
+  const behind = !!you && you.depositDrawn > 0n && detail.status === "running";
   const owesThisRound = !!you && !you.paidThisRound && detail?.status === "running";
   const history = detail ? payoutHistory(detail) : [];
 

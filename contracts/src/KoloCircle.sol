@@ -33,10 +33,15 @@ import {KoloRegistry} from "./KoloRegistry.sol";
 ///
 ///      **Nobody is ever thrown out.** A member who misses has the round drawn
 ///      from their deposit and is marked Behind. Behind members keep
-///      contributing and are skipped when their turn to be paid comes round --
-///      which is the whole point, since their deposit no longer covers what
-///      they owe. `cure()` puts the deposit back and returns them to the
+///      contributing, and are passed over when their turn comes while what is
+///      left of their deposit does not cover what they would still owe after
+///      taking the pot. `cure()` puts the deposit back and returns them to the
 ///      rotation. There is no expulsion and no forfeiture anywhere in here.
+///
+///      That coverage test, not the Behind flag, is what decides who gets paid
+///      -- because passing people over means payout order drifts from join
+///      order, and a deposit sized for being paid last does not cover being
+///      paid first.
 ///
 ///      **Money out never reverts the caller.** `payout`, deposit returns, and
 ///      `cancel` all move funds through `_send`, which credits the recipient
@@ -107,7 +112,18 @@ contract KoloCircle {
         /// @notice How much of that deposit has covered missed rounds.
         ///         Non-zero means Behind.
         uint256 depositDrawn;
+        /// @notice Everything this member has actually put into the circle --
+        ///         contributions they made, plus rounds their deposit covered.
+        /// @dev A round nobody could cover raises neither this nor
+        ///      `depositDrawn`, which is exactly how an unfunded round stays
+        ///      visible: it leaves them permanently short of their full share.
+        uint256 funded;
         bool received;
+        /// @notice Set once the circle has handed this deposit back.
+        /// @dev A flag rather than zeroing `depositDrawn`: overloading that
+        ///      field to mean "returned" made a finished circle report every
+        ///      member as owing a cure, and `cure` would take the money.
+        bool depositReturned;
         /// @notice Which round paid them. Only meaningful once `received`.
         /// @dev Payouts happen one per round, but a Behind member is passed
         ///      over, so position order is not payout order. Recording the
@@ -165,13 +181,10 @@ contract KoloCircle {
     /// @notice Open a circle and take the first position.
     /// @dev The creator joins immediately: a circle with nobody in it is not a
     ///      thing anyone means to make.
-    function create(
-        string calldata name,
-        address token,
-        uint256 contribution,
-        uint8 size,
-        uint64 roundDuration
-    ) external returns (uint256 circleId) {
+    function create(string calldata name, address token, uint256 contribution, uint8 size, uint64 roundDuration)
+        external
+        returns (uint256 circleId)
+    {
         if (size < MIN_MEMBERS || size > MAX_MEMBERS) revert InvalidSize();
         if (contribution == 0) revert AmountZero();
         if (token == address(0)) revert InvalidToken();
@@ -217,7 +230,9 @@ contract KoloCircle {
                 position: position,
                 deposit: deposit,
                 depositDrawn: 0,
+                funded: 0,
                 received: false,
+                depositReturned: false,
                 paidInRound: 0
             })
         );
@@ -254,6 +269,7 @@ contract KoloCircle {
 
         _contributed[circleId][circle.round][msg.sender] = true;
         _collected[circleId][circle.round] += circle.contribution;
+        _members[circleId][_indexOf[circleId][msg.sender]].funded += circle.contribution;
 
         IERC20(circle.token).safeTransferFrom(msg.sender, address(this), circle.contribution);
 
@@ -286,6 +302,7 @@ contract KoloCircle {
 
                 if (drawn != 0) {
                     member.depositDrawn += drawn;
+                    member.funded += drawn;
                     _collected[circleId][round] += drawn;
                 }
 
@@ -296,14 +313,27 @@ contract KoloCircle {
             }
         }
 
-        // Whoever is next in line and standing. A Behind member is passed over
-        // and keeps their place for a later round -- their deposit no longer
-        // covers what they owe, so paying them now is the one thing the circle
-        // cannot afford.
+        // Whoever is next in line and can afford to hold the pot.
+        //
+        // The ladder sizes deposits by join position, assuming position `p` is
+        // paid in round `p`. Passing people over breaks that assumption --
+        // skip enough members and somebody is paid earlier than their
+        // position, holding a pot their deposit was never sized for. So
+        // eligibility tests the thing the ladder was standing in for:
+        //
+        //     what you have put in + what is left of your deposit
+        //         >= your whole share of the circle
+        //
+        // Hold that and taking the pot can never leave you ahead, whichever
+        // round you take it in. It excludes a Behind member at their own turn,
+        // lets them back in once they have made the shortfall good, and keeps
+        // out anyone with a round nothing could cover.
+        uint256 wholeShare = uint256(circle.size) * circle.contribution;
         uint256 recipient = type(uint256).max;
         for (uint256 i; i < members.length; ++i) {
             Member storage member = members[i];
-            if (member.received || member.depositDrawn != 0) continue;
+            if (member.received) continue;
+            if (member.funded + (member.deposit - member.depositDrawn) < wholeShare) continue;
             recipient = i;
             break;
         }
@@ -331,6 +361,9 @@ contract KoloCircle {
     /// @notice Put back what your deposit covered, and rejoin the rotation.
     function cure(uint256 circleId) external {
         Circle storage circle = _circles[circleId];
+        // Only a running circle has a rotation to rejoin. Without this a
+        // finished circle still accepts the money and never gives it back.
+        if (circle.status != Status.Running) revert CircleNotRunning();
         if (!_isMember[circleId][msg.sender]) revert NotAMember();
 
         Member storage member = _members[circleId][_indexOf[circleId][msg.sender]];
@@ -351,34 +384,68 @@ contract KoloCircle {
 
         for (uint256 i; i < members.length; ++i) {
             Member storage member = members[i];
+            if (member.depositReturned) continue;
+
+            member.depositReturned = true;
+
             uint256 left = member.deposit - member.depositDrawn;
             if (left == 0) continue;
 
-            member.depositDrawn = member.deposit;
             _send(circle.token, member.account, left);
             emit DepositReturned(circleId, member.account, left);
         }
     }
 
-    /// @notice Wind down a circle that never filled, returning what each
-    ///         member has posted. Anyone may call once it has sat open a
-    ///         week -- nobody should have money stuck in a circle that never
-    ///         starts, and there is no coordinator to decide when to give up.
+    /// @notice Wind a circle down and give everyone back what the contract
+    ///         still holds for them. Anyone may call.
+    ///
+    /// @dev Two circles need this, for the same reason: money must never have
+    ///      no way out, and there is no coordinator to decide when to give up.
+    ///
+    ///      A **Forming** circle that never filled, a week after it opened.
+    ///
+    ///      A **Running** circle a week past a deadline it cannot clear. That
+    ///      happens when every member still waiting to be paid is Behind:
+    ///      `payout` has nobody it can pay and reverts, and because that revert
+    ///      undoes the deposit draw, nothing is owed and `cure` reverts too. A
+    ///      circle everybody walked away from would otherwise hold their
+    ///      deposits for good.
+    ///
+    ///      What comes back is exact. Each member gets whatever is left of
+    ///      their deposit, plus this round's contribution if they made it --
+    ///      and for the round in progress that is always their own money,
+    ///      since a draw only persists inside a `payout` that completed, and a
+    ///      completed `payout` moves the round on.
     function cancel(uint256 circleId) external {
         Circle storage circle = _circles[circleId];
         if (circle.size == 0) revert CircleNotFound();
-        if (circle.status != Status.Forming) revert CircleNotForming();
-        if (block.timestamp < circle.createdAt + CANCEL_AFTER) revert TooEarlyToCancel();
 
+        if (circle.status == Status.Forming) {
+            if (block.timestamp < circle.createdAt + CANCEL_AFTER) revert TooEarlyToCancel();
+        } else if (circle.status == Status.Running) {
+            if (block.timestamp < circle.roundEndsAt + CANCEL_AFTER) revert TooEarlyToCancel();
+        } else {
+            revert CircleNotForming();
+        }
+
+        uint8 round = circle.round;
+        bool running = circle.status == Status.Running;
         circle.status = Status.Cancelled;
 
         Member[] storage members = _members[circleId];
         for (uint256 i; i < members.length; ++i) {
             Member storage member = members[i];
-            uint256 amount = member.deposit;
+
+            uint256 amount;
+            if (!member.depositReturned) {
+                member.depositReturned = true;
+                amount = member.deposit - member.depositDrawn;
+            }
+            if (running && _contributed[circleId][round][member.account]) {
+                amount += circle.contribution;
+            }
             if (amount == 0) continue;
 
-            member.deposit = 0;
             _send(circle.token, member.account, amount);
         }
 
@@ -436,7 +503,10 @@ contract KoloCircle {
     }
 
     /// @notice Non-zero means Behind: how much they must `cure`.
+    /// @dev Zero unless the circle is running, so nothing can offer a cure on
+    ///      a circle that has no rotation left to rejoin.
     function amountToCure(uint256 circleId, address account) external view returns (uint256) {
+        if (_circles[circleId].status != Status.Running) return 0;
         if (!_isMember[circleId][account]) return 0;
         return _members[circleId][_indexOf[circleId][account]].depositDrawn;
     }
