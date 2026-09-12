@@ -29,6 +29,8 @@ const DEPLOYED = {
   faucet: "0xc656E6c73752C0e0bf57b1CD7822293c5E69570F",
   /** Escrow behind claim links. */
   links: "0xf4bde27146E8937aCEa9a39501E891Ed4a3C956D",
+  /** Runs ajo circles. */
+  circle: "0xCCABe852918A81d909dbE303Ee18F09Ad31111AD",
   block: "59479502",
 };
 
@@ -37,9 +39,7 @@ const PAY_ADDRESS = process.env.NEXT_PUBLIC_KOLO_PAY_ADDRESS || DEPLOYED.pay;
 const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TOKEN_ADDRESS || DEPLOYED.token;
 const FAUCET_ADDRESS = process.env.NEXT_PUBLIC_KOLO_FAUCET_ADDRESS || DEPLOYED.faucet;
 const LINKS_ADDRESS = process.env.NEXT_PUBLIC_KOLO_LINKS_ADDRESS || DEPLOYED.links;
-/** Circles. No default: KoloCircle is not deployed yet, and the flow hides
- *  itself until an address is configured. */
-const CIRCLE_ADDRESS = process.env.NEXT_PUBLIC_KOLO_CIRCLE_ADDRESS || "";
+const CIRCLE_ADDRESS = process.env.NEXT_PUBLIC_KOLO_CIRCLE_ADDRESS || DEPLOYED.circle;
 
 /** Block the contracts were deployed at. Bounds how far back we ever scan. */
 const DEPLOY_BLOCK = process.env.NEXT_PUBLIC_KOLO_DEPLOY_BLOCK || DEPLOYED.block;

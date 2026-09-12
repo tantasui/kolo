@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "verify:sponsorship": "node scripts/verify-sponsorship.mjs"
+    "verify:sponsorship": "node scripts/verify-sponsorship.mjs",
+    "keeper": "node scripts/keeper.mjs"
   },
   "dependencies": {
     "@privy-io/react-auth": "^2.14.2",
