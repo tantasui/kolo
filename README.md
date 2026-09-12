@@ -32,7 +32,8 @@ Shared streaming pots are the one thing still on the list.
 | Circles | **Live and unattended** — a two-person circle with 5-minute rounds: one member deliberately missed, and with nothing watching, the keeper closed the round at the deadline, drew that member's deposit and paid the other a whole pot. They cured, round two settled early on everyone-in, and both finished exactly where they started |
 | Sponsored transactions | **Verified on Monad Testnet** — every operation paid for by the paymaster, account balance 0 wei throughout |
 | App | Builds, type-checks and lints clean; every screen reviewed at a 390px viewport |
-| Known gaps | No tests over the TypeScript layer; the activity feed still reads the chain directly, so its history is device-local (see below) |
+| Activity feed | Reads the chain directly by default; set `ENVIO_API_TOKEN` and it rebuilds full history through Envio HyperSync instead |
+| Known gaps | No tests over the TypeScript layer. The HyperSync source is written and its decoding is tested, but it has not been run against a live token |
 
 ---
 
@@ -127,10 +128,28 @@ seconds to catch incoming payments, it persists what it has seen to
 block (capped) rather than rescanning after the app has been closed.
 
 Every read goes through the `ActivitySource` interface in
-[`web/src/lib/activity/types.ts`](web/src/lib/activity/types.ts). Swapping the
-RPC implementation for an Envio HyperIndex one means implementing that interface
-and changing one line in `useActivity` — no UI component knows where activity
-comes from.
+[`web/src/lib/activity/types.ts`](web/src/lib/activity/types.ts), and there are
+now two implementations of it.
+
+**Set `ENVIO_API_TOKEN` and the cap goes away.** Envio HyperSync serves Monad
+Testnet and answers arbitrary block ranges, so
+[`hyperSyncSource.ts`](web/src/lib/activity/hyperSyncSource.ts) reads the whole
+history from the deploy block in one sweep. `localStorage` stops being the only
+copy and becomes what it should have been: a cache. A cleared browser or a
+second device rebuilds the same feed.
+
+Without the token nothing breaks. The store starts on the RPC source, asks
+`/api/activity` whether the fast one is configured, and only switches if it is.
+
+The token never reaches the browser. A token in `NEXT_PUBLIC_*` is readable by
+anyone who opens the page, so it lives on the server behind
+[`/api/activity`](web/src/app/api/activity/route.ts) — which also fixes the
+contract addresses on its own side, so the route cannot be used as an open
+HyperSync proxy paid for with our token.
+
+Both sources share [`decode.ts`](web/src/lib/activity/decode.ts) and differ only
+in how they fetch. Two copies of the money mapping would drift, and the drift
+would be silent: a row that reads right from one source and wrong from the other.
 
 ---
 
@@ -368,6 +387,7 @@ All of these live in `web/.env.local` and are read in exactly one place,
 | `NEXT_PUBLIC_KOLO_LINKS_ADDRESS` | Optional; no default. Set it to enable claim links |
 | `NEXT_PUBLIC_KOLO_CIRCLE_ADDRESS` | Optional; no default. Set it to enable circles |
 | `NEXT_PUBLIC_KOLO_DEPLOY_BLOCK` | Optional; bounds how far back the feed scans |
+| `ENVIO_API_TOKEN` | Optional; **server-side only**. Switches the feed to Envio HyperSync, which lifts the 100-block cap |
 
 `contracts/.env` holds only `MONAD_RPC_URL` and the deployer `PRIVATE_KEY`. Both
 env files are gitignored.
