@@ -98,18 +98,35 @@ export function createHyperSyncActivitySource(): ActivitySource {
     },
 
     async fetch({ account, fromBlock, toBlock, knownLinkHashes = [] }: ActivityQuery) {
+      // The account and the known hashes go up so the filtering happens
+      // upstream: without them this would download every log these contracts
+      // ever emitted and drop almost all of it on the phone.
       const response = await fetch("/api/activity", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ fromBlock: Number(fromBlock), toBlock: Number(toBlock) }),
+        body: JSON.stringify({
+          fromBlock: Number(fromBlock),
+          toBlock: Number(toBlock),
+          account,
+          linkHashes: knownLinkHashes,
+        }),
       });
 
+      if (response.status === 429) {
+        // Backing off is the store's job -- it sweeps on a timer and the
+        // watermark has not moved, so the next tick simply asks again.
+        throw new Error("hypersync rate limited");
+      }
       if (!response.ok) throw new Error(`hypersync ${response.status}`);
       const { logs } = (await response.json()) as { logs: RawLog[] };
 
       const items: ActivityItem[] = [];
       const ours = new Set<string>(knownLinkHashes.map((hash) => hash.toLowerCase()));
 
+      // The route already filtered to this account. Re-checking here is not
+      // redundant: `Sent` still has to be resolved to a direction, and a source
+      // that trusts its transport to have filtered correctly is a source that
+      // shows somebody else's payment the day the filter is wrong.
       for (const raw of logs) {
         const log = decode(raw);
         if (!log) continue;

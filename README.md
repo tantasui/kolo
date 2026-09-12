@@ -143,9 +143,15 @@ Without the token nothing breaks. The store starts on the RPC source, asks
 
 The token never reaches the browser. A token in `NEXT_PUBLIC_*` is readable by
 anyone who opens the page, so it lives on the server behind
-[`/api/activity`](web/src/app/api/activity/route.ts) — which also fixes the
-contract addresses on its own side, so the route cannot be used as an open
-HyperSync proxy paid for with our token.
+[`/api/activity`](web/src/app/api/activity/route.ts).
+
+That route decides what may be asked. The client sends a block range, its own
+account and the link hashes it already holds — all of which can only *narrow*
+the query. The contract addresses are pinned on the server, so it cannot be
+aimed at anything but Kolo's own contracts, and it is rate limited per caller.
+Nothing it returns is private: these logs are on a public chain and anyone with
+an RPC URL can read them without us. The pinning protects the token; the
+filtering is so a phone downloads its own rows rather than everybody's.
 
 Both sources share [`decode.ts`](web/src/lib/activity/decode.ts) and differ only
 in how they fetch. Two copies of the money mapping would drift, and the drift
