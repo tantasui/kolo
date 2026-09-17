@@ -36,12 +36,15 @@ for (const line of readFileSync(
 
 const BUNDLER = process.env.NEXT_PUBLIC_PIMLICO_BUNDLER_URL;
 const RPC = process.env.NEXT_PUBLIC_MONAD_RPC_URL || "https://testnet-rpc.monad.xyz";
-const REGISTRY = process.env.NEXT_PUBLIC_KOLO_REGISTRY_ADDRESS;
-const PAY = process.env.NEXT_PUBLIC_KOLO_PAY_ADDRESS;
-const TOKEN = process.env.NEXT_PUBLIC_TEST_USD_ADDRESS;
+// Defaults mirror web/src/config.ts, so this runs against the live deployment
+// on a fresh clone exactly as the app does -- only the bundler URL is required.
+const REGISTRY = process.env.NEXT_PUBLIC_KOLO_REGISTRY_ADDRESS || "0xa4d9181bc7740d63df4783ff2c60ebb84f413212";
+const PAY = process.env.NEXT_PUBLIC_KOLO_PAY_ADDRESS || "0x99278ba6c5b64c72862c678b38c25a3c7cf59547";
+const TOKEN = process.env.NEXT_PUBLIC_TOKEN_ADDRESS || "0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC";
+const FAUCET = process.env.NEXT_PUBLIC_KOLO_FAUCET_ADDRESS || "0xc656E6c73752C0e0bf57b1CD7822293c5E69570F";
 const RECIPIENT = process.env.KOLO_TEST_RECIPIENT || "kolo_test_b";
 
-for (const [name, value] of Object.entries({ BUNDLER, REGISTRY, PAY, TOKEN })) {
+for (const [name, value] of Object.entries({ BUNDLER, REGISTRY, PAY, TOKEN, FAUCET })) {
   if (!value) throw new Error(`missing env for ${name}`);
 }
 
@@ -51,9 +54,15 @@ const registryAbi = [
   { type: "function", name: "isAvailable", stateMutability: "view", inputs: [{ name: "h", type: "string" }], outputs: [{ type: "bool" }] },
 ];
 const tokenAbi = [
-  { type: "function", name: "faucet", stateMutability: "nonpayable", inputs: [], outputs: [] },
   { type: "function", name: "approve", stateMutability: "nonpayable", inputs: [{ name: "s", type: "address" }, { name: "v", type: "uint256" }], outputs: [{ type: "bool" }] },
   { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ name: "a", type: "address" }], outputs: [{ type: "uint256" }] },
+];
+// Our own faucet, not the token's: the dollar balance is Agora AUSD, whose
+// supply we do not control, so KoloFaucet hands out a sane $100 from a reserve
+// we top up. `drip` pays the address passed in, which is how a smart account
+// funds itself in one sponsored call with no relayer.
+const faucetAbi = [
+  { type: "function", name: "drip", stateMutability: "nonpayable", inputs: [{ name: "recipient", type: "address" }], outputs: [] },
 ];
 const payAbi = [
   { type: "function", name: "sendToHandle", stateMutability: "nonpayable", inputs: [{ name: "handle", type: "string" }, { name: "token", type: "address" }, { name: "amount", type: "uint256" }, { name: "memo", type: "string" }], outputs: [] },
@@ -105,12 +114,14 @@ if (claimed !== handle) throw new Error("handle was not registered");
 // --- 2. add demo funds -------------------------------------------------
 console.log("[2/3] adding demo funds …");
 tx = await smart.sendTransaction({
-  calls: [{ to: TOKEN, data: encodeFunctionData({ abi: tokenAbi, functionName: "faucet" }) }],
+  calls: [
+    { to: FAUCET, data: encodeFunctionData({ abi: faucetAbi, functionName: "drip", args: [account.address] }) },
+  ],
 });
 const funded = await publicClient.readContract({ address: TOKEN, abi: tokenAbi, functionName: "balanceOf", args: [account.address] });
 console.log(`      ok  ${tx}`);
 console.log(`      balance = ${usd(funded)}\n`);
-if (funded === 0n) throw new Error("faucet did not mint");
+if (funded === 0n) throw new Error("the faucet did not pay out");
 
 // --- 3. batched approve + send, exactly as the UI does ------------------
 const amount = 10_000000n;

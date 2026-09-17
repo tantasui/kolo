@@ -5,7 +5,9 @@ import type { Address } from "viem";
 import { config } from "@/config";
 import type { Hex } from "viem";
 import {
+  createHyperSyncActivitySource,
   createRpcActivitySource,
+  hyperSyncAvailable,
   loadCachedActivity,
   saveCachedActivity,
   sortActivity,
@@ -108,8 +110,20 @@ export function useActivity() {
 
       // Resume from where we left off; if we have never synced (or have been
       // away a long time) fall back to the widest catch-up we allow.
-      const widest = head - span * BigInt(config.activity.maxBackfillWindows) + 1n;
-      const resume = lastSyncedRef.current === null ? head - span + 1n : lastSyncedRef.current + 1n;
+      //
+      // A source that can read any block gets no such cap on a first sync: it
+      // starts at the deploy block and reads the lot, which is the whole point
+      // of having one. The cap is there to protect a source that would refuse.
+      const firstSync = lastSyncedRef.current === null;
+      const widest =
+        firstSync && source.fullHistory
+          ? config.deployBlock
+          : head - span * BigInt(config.activity.maxBackfillWindows) + 1n;
+      const resume = firstSync
+        ? source.fullHistory
+          ? config.deployBlock
+          : head - span + 1n
+        : lastSyncedRef.current! + 1n;
 
       let from = resume > widest ? resume : widest;
       if (from < config.deployBlock) from = config.deployBlock;
@@ -187,6 +201,12 @@ export function useActivity() {
     }
 
     accountRef.current = address;
+
+    // The RPC source needs nothing and always works, so it is what we start on
+    // and what we stay on if the fast one is not configured. HyperSync answers
+    // arbitrary ranges instead of 100 blocks, so when it is available the feed
+    // can rebuild itself from the deploy block rather than depending on what
+    // this device happened to cache.
     sourceRef.current = createRpcActivitySource(getPublicClient());
 
     const cached = loadCachedActivity(address);
@@ -194,9 +214,23 @@ export function useActivity() {
     lastSyncedRef.current = cached.lastSyncedBlock;
     setItems(sortActivity(cached.items));
 
-    void sweep();
+    let cancelled = false;
+    void (async () => {
+      if (await hyperSyncAvailable()) {
+        if (cancelled) return;
+        sourceRef.current = createHyperSyncActivitySource();
+        // Nothing cached is trusted as a watermark any more: this source can
+        // read the whole history, so let the next sweep do exactly that.
+        lastSyncedRef.current = null;
+      }
+      if (!cancelled) void sweep();
+    })();
+
     const timer = setInterval(() => void sweep(), config.activity.pollIntervalMs);
-    return () => clearInterval(timer);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
   }, [ready, address, sweep]);
 
   return { items, addPending, refresh: sweep };

@@ -10,4 +10,5 @@ export type {
 } from "./types";
 export { sortActivity, linkStateOf, isRecoverable } from "./types";
 export { createRpcActivitySource } from "./rpcSource";
+export { createHyperSyncActivitySource, hyperSyncAvailable } from "./hyperSyncSource";
 export { loadCachedActivity, saveCachedActivity, type ActivityCache } from "./cache";

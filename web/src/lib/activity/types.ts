@@ -102,6 +102,14 @@ export interface ActivitySource {
   readonly name: string;
   /** Largest span a single `fetch` may cover. Callers page by this. */
   readonly maxRange: bigint;
+  /**
+   * True when this source can answer for any block, so a first sync should
+   * start at the deploy block and read everything rather than catching up a
+   * bounded window. The bounded catch-up exists to keep a capped RPC from
+   * being asked for more than it will serve; a source without that cap has no
+   * reason to leave history behind.
+   */
+  readonly fullHistory?: boolean;
   /** Latest block this source can answer for. */
   getHead(): Promise<bigint>;
   fetch(query: ActivityQuery): Promise<ActivityItem[]>;
