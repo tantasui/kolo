@@ -31,6 +31,15 @@ const DEPLOYED = {
   links: "0xf4bde27146E8937aCEa9a39501E891Ed4a3C956D",
   /** Runs ajo circles. */
   circle: "0xCCABe852918A81d909dbE303Ee18F09Ad31111AD",
+  /** Personal saving goals. */
+  goals: "0x28f0B605eB5b8b493f8071747433658d70C6465F",
+  /** Pots: shared balances, each member paying for their own use. */
+  pots: "0x176abcd860AF6efacCA16b227AE26E4C17bf0e44",
+  /**
+   * @kolo_premium -- the mock premium service demo pots pay. It can only
+   * withdraw what members have used; it has no way to charge anyone.
+   */
+  demoPayee: "0xA7d1eDa377d49F8dFE02caE5DEbD0B6079cDB9e8",
   block: "59479502",
 };
 
@@ -40,6 +49,9 @@ const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TOKEN_ADDRESS || DEPLOYED.token;
 const FAUCET_ADDRESS = process.env.NEXT_PUBLIC_KOLO_FAUCET_ADDRESS || DEPLOYED.faucet;
 const LINKS_ADDRESS = process.env.NEXT_PUBLIC_KOLO_LINKS_ADDRESS || DEPLOYED.links;
 const CIRCLE_ADDRESS = process.env.NEXT_PUBLIC_KOLO_CIRCLE_ADDRESS || DEPLOYED.circle;
+const GOALS_ADDRESS = process.env.NEXT_PUBLIC_KOLO_GOALS_ADDRESS || DEPLOYED.goals;
+const POTS_ADDRESS = process.env.NEXT_PUBLIC_KOLO_POTS_ADDRESS || DEPLOYED.pots;
+const DEMO_PAYEE_ADDRESS = process.env.NEXT_PUBLIC_KOLO_DEMO_PAYEE || DEPLOYED.demoPayee;
 /** Five-minute circles are for showing the app, not for saving. */
 const DEMO_ROUNDS = process.env.NEXT_PUBLIC_KOLO_DEMO_ROUNDS !== "0";
 
@@ -82,6 +94,12 @@ export const config = {
     links: asAddress(LINKS_ADDRESS),
     /** Runs ajo circles. "0x" when unconfigured. */
     circle: asAddress(CIRCLE_ADDRESS),
+    /** Personal saving goals. */
+    goals: asAddress(GOALS_ADDRESS),
+    /** Pots. */
+    pots: asAddress(POTS_ADDRESS),
+    /** Who demo pots pay: the mock premium service. */
+    demoPayee: asAddress(DEMO_PAYEE_ADDRESS),
   },
 
   /**

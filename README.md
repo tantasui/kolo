@@ -428,6 +428,9 @@ Monad Testnet (chain ID `10143`):
 | `KoloFaucet` | `0xc656E6c73752C0e0bf57b1CD7822293c5E69570F` |
 | `KoloLinks` | `0xf4bde27146E8937aCEa9a39501E891Ed4a3C956D` |
 | `KoloCircle` | `0xCCABe852918A81d909dbE303Ee18F09Ad31111AD` |
+| `KoloGoals` | `0x28f0B605eB5b8b493f8071747433658d70C6465F` |
+| `KoloPots` | `0x176abcd860AF6efacCA16b227AE26E4C17bf0e44` |
+| Demo payee `@kolo_premium` (the mock service pots pay) | `0xA7d1eDa377d49F8dFE02caE5DEbD0B6079cDB9e8` |
 | Agora AUSD (not ours) | `0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC` |
 | `TestUSD` (unused by the app) | `0xeb7cc503d0ed16c90e26eaab301cd9d0912cec4f` |
 
