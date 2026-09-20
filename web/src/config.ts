@@ -113,6 +113,18 @@ export const config = {
     circles: asAddress(CIRCLE_ADDRESS) !== "0x",
     /** Goals appear only once KoloGoals is configured. */
     goals: asAddress(GOALS_ADDRESS) !== "0x",
+    /** Pots appear only once KoloPots is configured. */
+    pots: asAddress(POTS_ADDRESS) !== "0x",
+  },
+
+  /**
+   * One-tap amounts, in whole units of the currency on screen. Per currency
+   * rather than converted, because ₦8,075 is not an amount anybody chooses --
+   * ₦5,000 is. Shared by anything that asks for money.
+   */
+  quickAmounts: {
+    USD: [5, 10, 25, 50],
+    NGN: [5_000, 10_000, 25_000, 50_000],
   },
 
   /**
@@ -180,15 +192,11 @@ export const config = {
   goals: {
     /** Mirrors KoloGoals.MAX_LABEL_BYTES. Bytes, not characters. */
     maxLabelBytes: 40,
-    /**
-     * One-tap amounts, in whole units of the currency on screen. They are
-     * per currency rather than converted, because ₦8,075 is not an amount
-     * anybody chooses -- ₦5,000 is.
-     */
-    quickAmounts: {
-      USD: [5, 10, 25, 50],
-      NGN: [5_000, 10_000, 25_000, 50_000],
-    },
+  },
+
+  pots: {
+    /** Mirrors KoloPots.MAX_NAME_BYTES. Bytes, not characters. */
+    maxNameBytes: 40,
   },
 
   activity: {

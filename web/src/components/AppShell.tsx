@@ -9,6 +9,7 @@ import { useKolo } from "./kolo-provider";
 import { ClaimHandle } from "./screens/ClaimHandle";
 import { Circles } from "./screens/Circles";
 import { Goals } from "./screens/Goals";
+import { Pots } from "./screens/Pots";
 import { Home } from "./screens/Home";
 import { Landing } from "./screens/Landing";
 import { Splash } from "./Splash";
@@ -28,7 +29,15 @@ export function AppShell() {
 
   return (
     <>
-      {tab === "home" ? <Home /> : tab === "circles" ? <Circles /> : <Goals />}
+      {tab === "home" ? (
+        <Home />
+      ) : tab === "circles" ? (
+        <Circles />
+      ) : tab === "goals" ? (
+        <Goals />
+      ) : (
+        <Pots />
+      )}
       <BottomNav tab={tab} onChange={setTab} circlesNeedYou={circles.some(isDueSoon)} />
       <InstallPWA />
     </>

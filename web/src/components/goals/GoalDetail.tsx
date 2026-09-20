@@ -239,7 +239,7 @@ function AmountEntry({
 
   // Whole-currency shortcuts, plus the one amount that is specific to this
   // goal: exactly what is left to save, or exactly what is saved.
-  const quick = config.goals.quickAmounts[currency].map((n) => ({
+  const quick = config.quickAmounts[currency].map((n) => ({
     label: formatMoney(quickAmountUnits(n, currency), currency),
     units: quickAmountUnits(n, currency),
   }));

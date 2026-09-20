@@ -1,9 +1,9 @@
 "use client";
 
 import { config } from "@/config";
-import { Circle, House, Target } from "./ui/Icons";
+import { Circle, House, Meter, Target } from "./ui/Icons";
 
-export type Tab = "home" | "circles" | "goals";
+export type Tab = "home" | "circles" | "goals" | "pots";
 
 /**
  * The places there are.
@@ -51,6 +51,14 @@ export function BottomNav({
             selected={tab === "goals"}
             onSelect={() => onChange("goals")}
             icon={<Target className="h-6 w-6" />}
+          />
+        )}
+        {config.features.pots && (
+          <Item
+            label="Pots"
+            selected={tab === "pots"}
+            onSelect={() => onChange("pots")}
+            icon={<Meter className="h-6 w-6" />}
           />
         )}
       </div>

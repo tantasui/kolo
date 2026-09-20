@@ -152,3 +152,12 @@ export const House = ({ className }: IconProps) => (
     />
   </svg>
 );
+
+/** A meter: one dial, several people reading their own share off it. */
+export const Meter = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <path d="M4 16.5a8 8 0 1 1 16 0" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    <path d="m12 16 4-4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="12" cy="16.4" r="1.5" fill="currentColor" />
+  </svg>
+);

@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "verify:sponsorship": "node scripts/verify-sponsorship.mjs",
     "keeper": "node scripts/keeper.mjs",
-    "verify:goals": "node scripts/verify-goals.mjs"
+    "verify:goals": "node scripts/verify-goals.mjs",
+    "verify:pots": "node scripts/verify-pots.mjs"
   },
   "dependencies": {
     "@privy-io/react-auth": "^2.14.2",
