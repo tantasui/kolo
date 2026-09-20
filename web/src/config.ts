@@ -94,7 +94,7 @@ export const config = {
     links: asAddress(LINKS_ADDRESS),
     /** Runs ajo circles. "0x" when unconfigured. */
     circle: asAddress(CIRCLE_ADDRESS),
-    /** Personal saving goals. */
+    /** Personal saving goals. "0x" when unconfigured. */
     goals: asAddress(GOALS_ADDRESS),
     /** Pots. */
     pots: asAddress(POTS_ADDRESS),
@@ -111,6 +111,8 @@ export const config = {
     claimLinks: asAddress(LINKS_ADDRESS) !== "0x",
     /** Circles appear only once KoloCircle is configured. */
     circles: asAddress(CIRCLE_ADDRESS) !== "0x",
+    /** Goals appear only once KoloGoals is configured. */
+    goals: asAddress(GOALS_ADDRESS) !== "0x",
   },
 
   /**
@@ -173,6 +175,20 @@ export const config = {
       { label: "Every 5 minutes", seconds: 5 * 60, demo: true },
     ] as const,
     showDemoRounds: DEMO_ROUNDS,
+  },
+
+  goals: {
+    /** Mirrors KoloGoals.MAX_LABEL_BYTES. Bytes, not characters. */
+    maxLabelBytes: 40,
+    /**
+     * One-tap amounts, in whole units of the currency on screen. They are
+     * per currency rather than converted, because ₦8,075 is not an amount
+     * anybody chooses -- ₦5,000 is.
+     */
+    quickAmounts: {
+      USD: [5, 10, 25, 50],
+      NGN: [5_000, 10_000, 25_000, 50_000],
+    },
   },
 
   activity: {

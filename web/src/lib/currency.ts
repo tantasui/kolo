@@ -28,18 +28,40 @@ function isCurrency(value: unknown): value is Currency {
 /**
  * Raw token units (6dp dollars) -> units of `currency`, still 6dp.
  *
- * The rate is a whole number, so dollars -> naira is exact and the reverse
- * truncates by at most one micro-unit. Converting a displayed balance back
- * therefore always lands on or just under the original, never above it --
- * which is the direction that matters, since the result is spendable.
+ * The rate is a whole number, so dollars -> naira is exact. Naira is then shown
+ * rounded down (see formatMoney), so a displayed balance never overstates what
+ * is held.
  */
 export function toDisplayUnits(usdUnits: bigint, currency: Currency): bigint {
   return currency === "NGN" ? usdUnits * BigInt(getRate()) : usdUnits;
 }
 
-/** Units of `currency` -> raw token units. Inverse of `toDisplayUnits`. */
+/**
+ * Units of `currency` -> raw token units. Inverse of `toDisplayUnits`.
+ *
+ * **Naira rounds up**, to the next micro-dollar. A whole-naira amount is almost
+ * never a whole number of micro-dollars, so one direction or the other has to
+ * give -- and rounding down meant the amount somebody typed came back smaller
+ * on the very next screen: ₦5,000 typed, "Send ₦4,999" shown.
+ *
+ * Rounding up fixes that and keeps the guarantee that matters. For a naira
+ * amount N and rate r (r < 10^6):
+ *
+ *   shows as typed   u = ceil(N·10^6 / r) gives N·10^6 <= u·r < N·10^6 + r,
+ *                    so floor(u·r / 10^6) = N exactly.
+ *
+ *   still spendable  a balance B shown as D = floor(B·r / 10^6) has
+ *                    B·r >= D·10^6, so the integer B >= ceil(D·10^6 / r).
+ *                    Typing back the balance on screen never asks for more
+ *                    than is held.
+ *
+ * The cost is at most one micro-dollar more than N's exact value, and every
+ * caller still checks the result against the real balance in units.
+ */
 export function fromDisplayUnits(displayUnits: bigint, currency: Currency): bigint {
-  return currency === "NGN" ? displayUnits / BigInt(getRate()) : displayUnits;
+  if (currency !== "NGN") return displayUnits;
+  const rate = BigInt(getRate());
+  return (displayUnits + rate - 1n) / rate;
 }
 
 /**

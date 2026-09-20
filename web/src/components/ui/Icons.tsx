@@ -133,6 +133,15 @@ export const Circle = ({ className }: IconProps) => (
   </svg>
 );
 
+/** A target: something you are aiming at, not something you are locked into. */
+export const Target = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.9" />
+    <circle cx="12" cy="12" r="4.2" stroke="currentColor" strokeWidth="1.9" />
+    <circle cx="12" cy="12" r="1.2" fill="currentColor" />
+  </svg>
+);
+
 export const House = ({ className }: IconProps) => (
   <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
     <path

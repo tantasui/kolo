@@ -1,15 +1,20 @@
 "use client";
 
-import { Circle, House } from "./ui/Icons";
+import { config } from "@/config";
+import { Circle, House, Target } from "./ui/Icons";
 
-export type Tab = "home" | "circles";
+export type Tab = "home" | "circles" | "goals";
 
 /**
- * The two places there are.
+ * The places there are.
  *
  * Sends are a thing you do from your balance, so Home keeps them; Circles is
- * the standing commitment you come back to. A badge rather than a number: the
- * point is that one of them wants you, not how many.
+ * the standing commitment you come back to; Goals is money you have set aside
+ * for yourself. A badge rather than a number: the point is that one of them
+ * wants you, not how many.
+ *
+ * Goals only appears once its contract is configured, so a build pointed at a
+ * chain without it shows two tabs rather than one that cannot work.
  */
 export function BottomNav({
   tab,
@@ -40,6 +45,14 @@ export function BottomNav({
           icon={<Circle className="h-6 w-6" />}
           badge={circlesNeedYou}
         />
+        {config.features.goals && (
+          <Item
+            label="Goals"
+            selected={tab === "goals"}
+            onSelect={() => onChange("goals")}
+            icon={<Target className="h-6 w-6" />}
+          />
+        )}
       </div>
     </nav>
   );
