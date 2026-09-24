@@ -8,6 +8,8 @@ import { useActivity } from "@/hooks/useActivity";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useCircles, type CircleInvite, type CircleSummary } from "@/hooks/useCircles";
 import { useGoals } from "@/hooks/useGoals";
+import { usePots } from "@/hooks/usePots";
+import type { Pot } from "@/lib/pots";
 import type { Goal } from "@/lib/goals";
 import { useBalance } from "@/hooks/useBalance";
 import { useHandle, type HandleStatus } from "@/hooks/useHandle";
@@ -57,6 +59,21 @@ interface KoloValue {
   createGoal: (params: { label: string; target: bigint; targetDate: number }) => Promise<bigint>;
   contributeToGoal: (goal: Goal, amount: bigint) => Promise<Goal>;
   withdrawFromGoal: (goal: Goal, amount: bigint) => Promise<Goal>;
+
+  /** Pots this account has a share in. */
+  pots: Pot[];
+  potsLoaded: boolean;
+  refreshPots: () => Promise<void>;
+  createPot: (params: {
+    name: string;
+    price: bigint;
+    deposit: bigint;
+    payee: `0x${string}`;
+  }) => Promise<bigint>;
+  joinPot: (potId: bigint, amount: bigint) => Promise<void>;
+  topUpPot: (potId: bigint, amount: bigint) => Promise<void>;
+  withdrawFromPot: (potId: bigint) => Promise<void>;
+  closePot: (potId: bigint) => Promise<void>;
 }
 
 const KoloContext = createContext<KoloValue | null>(null);
@@ -89,6 +106,16 @@ export function KoloProvider({ children }: { children: React.ReactNode }) {
     contribute: contributeToGoal,
     withdraw: withdrawFromGoal,
   } = useGoals();
+  const {
+    pots,
+    loaded: potsLoaded,
+    refresh: refreshPots,
+    create: createPot,
+    join: joinPot,
+    topUp: topUpPot,
+    withdraw: withdrawFromPot,
+    close: closePot,
+  } = usePots();
 
   return (
     <KoloContext.Provider
@@ -120,6 +147,14 @@ export function KoloProvider({ children }: { children: React.ReactNode }) {
         createGoal,
         contributeToGoal,
         withdrawFromGoal,
+        pots,
+        potsLoaded,
+        refreshPots,
+        createPot,
+        joinPot,
+        topUpPot,
+        withdrawFromPot,
+        closePot,
       }}
     >
       {children}
