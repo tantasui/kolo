@@ -1,4 +1,5 @@
 import { getRate } from "@/config";
+import { toNairaUnits, toUsdUnits } from "./money";
 
 /**
  * The currency the user sees. The balance is always dollars on chain -- this
@@ -33,7 +34,7 @@ function isCurrency(value: unknown): value is Currency {
  * is held.
  */
 export function toDisplayUnits(usdUnits: bigint, currency: Currency): bigint {
-  return currency === "NGN" ? usdUnits * BigInt(getRate()) : usdUnits;
+  return currency === "NGN" ? toNairaUnits(usdUnits, BigInt(getRate())) : usdUnits;
 }
 
 /**
@@ -57,11 +58,14 @@ export function toDisplayUnits(usdUnits: bigint, currency: Currency): bigint {
  *
  * The cost is at most one micro-dollar more than N's exact value, and every
  * caller still checks the result against the real balance in units.
+ *
+ * The arithmetic itself is in `money.ts`, where `scripts/check-money.mjs` can
+ * reach it: both properties above are checked there over millions of amounts,
+ * so a change of direction fails rather than showing up on a phone.
  */
 export function fromDisplayUnits(displayUnits: bigint, currency: Currency): bigint {
   if (currency !== "NGN") return displayUnits;
-  const rate = BigInt(getRate());
-  return (displayUnits + rate - 1n) / rate;
+  return toUsdUnits(displayUnits, BigInt(getRate()));
 }
 
 /**
