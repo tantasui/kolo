@@ -7,6 +7,8 @@ import type { Currency } from "@/lib/currency";
 import { useActivity } from "@/hooks/useActivity";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useCircles, type CircleInvite, type CircleSummary } from "@/hooks/useCircles";
+import { useGoals } from "@/hooks/useGoals";
+import type { Goal } from "@/lib/goals";
 import { useBalance } from "@/hooks/useBalance";
 import { useHandle, type HandleStatus } from "@/hooks/useHandle";
 import { useSendPayment, type SendRequest } from "@/hooks/useSendPayment";
@@ -47,6 +49,14 @@ interface KoloValue {
   contributeToCircle: (circle: CircleSummary) => Promise<void>;
   cureCircle: (circle: CircleSummary) => Promise<void>;
   joinCircle: (invite: CircleInvite) => Promise<void>;
+
+  /** Savings goals this account owns. */
+  goals: Goal[];
+  goalsLoaded: boolean;
+  refreshGoals: () => Promise<void>;
+  createGoal: (params: { label: string; target: bigint; targetDate: number }) => Promise<bigint>;
+  contributeToGoal: (goal: Goal, amount: bigint) => Promise<Goal>;
+  withdrawFromGoal: (goal: Goal, amount: bigint) => Promise<Goal>;
 }
 
 const KoloContext = createContext<KoloValue | null>(null);
@@ -71,6 +81,14 @@ export function KoloProvider({ children }: { children: React.ReactNode }) {
     cure: cureCircle,
     join: joinCircle,
   } = useCircles();
+  const {
+    goals,
+    loaded: goalsLoaded,
+    refresh: refreshGoals,
+    create: createGoal,
+    contribute: contributeToGoal,
+    withdraw: withdrawFromGoal,
+  } = useGoals();
 
   return (
     <KoloContext.Provider
@@ -96,6 +114,12 @@ export function KoloProvider({ children }: { children: React.ReactNode }) {
         contributeToCircle,
         cureCircle,
         joinCircle,
+        goals,
+        goalsLoaded,
+        refreshGoals,
+        createGoal,
+        contributeToGoal,
+        withdrawFromGoal,
       }}
     >
       {children}
