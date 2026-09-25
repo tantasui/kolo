@@ -9,9 +9,11 @@ dollar balance. There are no addresses to copy, no gas to buy, no seed phrase to
 write down, and no confirmation dialogs. Every transaction is sponsored, and the
 send flow batches its approval so a payment is one tap.
 
-This repository is **Phase 1: identity + send**. Claim links, rotating savings
-circles (ajo) and shared streaming pots come later; the contracts and data model
-are shaped to grow into them, but none of that is built yet.
+Five things are built on top of that, each with its own contract on Monad
+Testnet: **send by @handle**, **claim links** for people who are not on Kolo
+yet, **circles** (ajo/esusu, where a group takes turns collecting the pot),
+**saving goals**, and **pots**, where a few people fund one service and each
+pays only for what they use themselves.
 
 ---
 
@@ -19,12 +21,12 @@ are shaped to grow into them, but none of that is built yet.
 
 | | |
 | --- | --- |
-| Contracts | Written, 45 tests passing, **deployed to Monad Testnet** |
-| Deployment | **Verified live**: handles registered and resolved, faucet minted, batched approve + send moved $10.00, `Sent` event decoded |
-| App | Builds and type-checks; every screen rendered and reviewed at a 390px viewport |
-| Sponsored transactions | **Verified on Monad Testnet** — handle claim, faucet and a batched approve + send all sponsored, account balance 0 wei throughout (`npm run verify:sponsorship`) |
-| Sign-in | Privy SDK initialises against the configured app; the landing screen is live |
-| End-to-end demo | On-chain path proven; the browser half (email OTP → claim → send) is a manual run-through |
+| Contracts | **192 tests passing**; seven deployed to Monad Testnet (see the addresses at the end) |
+| Money rules | Checked on chain, not only in tests: a circle settled a missed round unattended and paid in full; a pot refused one member spending past their own share while another got every cent back (`npm run verify:pots`); a goal filled, was recorded as reached, and was withdrawn anyway (`npm run verify:goals`) |
+| Sponsored transactions | **Verified on Monad Testnet** — every operation sponsored, account balance 0 wei throughout (`npm run verify:sponsorship`) |
+| App | Live on Netlify: send, claim links, circles, goals and pots, with type-check, lint and build clean |
+| Rounding | `npm run check:money` proves the naira rule over ~1.8m amounts, and fails if either rounding direction is flipped back |
+| Not built yet | The mock service page a pot pays, so nothing in the app records a *use* yet — a pot's "used" column only moves from `verify:pots` |
 
 ---
 
@@ -38,12 +40,15 @@ contracts/          Foundry project -- registry, payment router, demo dollar
     KoloFaucet.sol      hands demo users $100 of AUSD at a time
     KoloLinks.sol       money parked behind a secret, for claim links
     KoloCircle.sol      ajo circles: rounds, deposits, rotation
+    KoloGoals.sol       money set aside toward a target, withdrawable any time
+    KoloPots.sol        ring-fenced shares behind one meter
     TestUSD.sol         6-decimal stand-in, kept for tests and other chains
-  test/                 128 tests, happy paths and reverts
+  test/                 192 tests, happy paths, reverts and fuzzed invariants
   script/Deploy.s.sol        registry, router, TestUSD
   script/DeployFaucet.s.sol  the demo faucet
   script/DeployLinks.s.sol   the claim-link contract
   script/DeployCircle.s.sol  the circle contract
+  script/DeployPhase4.s.sol  goals and pots
 
 web/                Next.js PWA -- the entire user-facing app
   DESIGN.md             the design system: colour, type, motion, language
@@ -53,10 +58,14 @@ web/                Next.js PWA -- the entire user-facing app
   src/lib/activity/     the data layer the UI reads through
   src/app/claim/        where a claim link opens
   src/app/circle/join/  where a circle invitation opens
+  src/app/pot/join/     where a pot invitation opens
+  src/lib/money.ts      the naira/dollar rounding rule, on its own so it can be checked
   src/components/       screens and UI primitives
 
 scripts/deploy.sh       deploys and writes the addresses into web/.env.local
 scripts/fund-faucet.sh  tops the demo faucet up from Agora's
+web/scripts/            keeper.mjs (closes circle rounds), and the checks:
+                        check:money, verify:goals, verify:pots, verify:sponsorship
 ```
 
 ---
@@ -250,6 +259,90 @@ punctuality, not money.
 
 ---
 
+## There is no backend
+
+Nothing in this repository runs a server of ours. There are no API routes, no
+serverless functions, no database, and no environment variable that is not
+`NEXT_PUBLIC_`. The app is the browser talking to Monad, with Privy for sign-in
+and Pimlico paying the gas. Netlify serves the files.
+
+That is a constraint, not a boast, and it decided real things:
+
+- **Pots have no service account.** A member records their own use and pays for
+  it out of their own share. The alternative -- a service key that charges
+  people -- would have had nowhere to live but the browser, where anyone could
+  read it and charge anybody.
+- **The keeper is a script, not a service.** `payout` on a circle is callable by
+  anyone, so `web/scripts/keeper.mjs` is only whoever bothers to run it. Losing
+  it costs punctuality, not money.
+- **The activity feed reads the chain directly**, which is why it lives with the
+  100-block window described above.
+
+The one open pull request that would change this adds a single route to proxy
+an indexing token that must not reach the browser. If that lands, this section
+needs a sentence; nothing else here does.
+
+---
+
+## Saving goals
+
+Money set aside toward something, out of the spending balance.
+
+There is nothing to guarantee here and the contract does not pretend otherwise:
+one person saves toward their own target, so the value is separation rather
+than security. **Withdraw any amount at any time, before or after the target,
+with no penalty** -- an app whose promise is "your money is always yours"
+should not hold money against the person it belongs to. The target date is a
+note to self and is never enforced.
+
+Reaching the target is recorded when it happens, with a timestamp, and it stays
+recorded after a withdrawal: reaching it happened, and taking the money out
+afterwards -- which is allowed, and is the point -- does not undo it.
+
+---
+
+## Pots
+
+A few people put money in for one service, and each pays only for what they
+use.
+
+**A pot is not a pool.** It is several ring-fenced balances sharing one meter.
+Every member has one row, and for each of them this holds at all times:
+
+```
+contributed = used + withdrawn + available
+```
+
+Every call changes only the row of whoever made it. That is what makes "you
+only pay for what you used" a fact rather than a slogan: one member spending
+never reaches another member's money. A member who tries to use more than their
+own share is refused -- the overspend is not taken out of somebody who has
+spent nothing. `npm run verify:pots` runs exactly that on testnet.
+
+**Withdraw-only.** Members take their unspent share when they ask; the service
+takes what was used when it asks. The contract never sends anyone anything on
+its own, so one address that cannot receive the token holds up nobody but
+itself. To be accurate about the rest of the repo: `KoloCircle` still pays out
+directly, falling back to a withdrawable balance only when a transfer fails,
+and `KoloLinks` and `KoloFaucet` pay out directly. That risk -- one frozen
+address holding up everyone's settlement -- is what taught the rule.
+
+**Joining a pot is open, and joining a circle should not be.** A place in a
+circle is worth taking: it is a turn at collecting everyone's money. A place in
+a pot is worth nothing to a stranger, because all they can ever spend is what
+they put in themselves. The invitation link is how you find a pot, not
+permission to be in it.
+
+The price of one use is fixed when the pot is made, because members join under
+it and changing it would reprice money already in. Closing a pot stops joining,
+topping up and use -- and moves no money: withdrawals stay open forever.
+
+What the contract proves is who paid, how much, and that nobody paid out of
+another member's share. It cannot prove the service delivered anything in
+return.
+
+---
+
 ## Setup
 
 ### Prerequisites
@@ -263,7 +356,7 @@ punctuality, not money.
 
 ```sh
 cd contracts
-forge test          # 45 tests
+forge test          # 192 tests
 ```
 
 The contracts are already deployed (see the table at the end), and that
@@ -341,13 +434,19 @@ All of these live in `web/.env.local` and are read in exactly one place,
 | `NEXT_PUBLIC_KOLO_PAY_ADDRESS` | Optional; defaults to the deployment below |
 | `NEXT_PUBLIC_TOKEN_ADDRESS` | Optional; defaults to Agora AUSD. Any 6-decimal token works |
 | `NEXT_PUBLIC_KOLO_FAUCET_ADDRESS` | Optional; defaults to our demo faucet |
-| `NEXT_PUBLIC_KOLO_LINKS_ADDRESS` | Optional; no default. Set it to enable claim links |
-| `NEXT_PUBLIC_KOLO_CIRCLE_ADDRESS` | Optional; no default. Set it to enable circles |
-| `NEXT_PUBLIC_KOLO_GOALS_ADDRESS` | Optional; no default. Set it to show the Goals tab |
+| `NEXT_PUBLIC_KOLO_LINKS_ADDRESS` | Optional; defaults to the deployment below |
+| `NEXT_PUBLIC_KOLO_CIRCLE_ADDRESS` | Optional; defaults to the deployment below |
+| `NEXT_PUBLIC_KOLO_GOALS_ADDRESS` | Optional; defaults to the deployment below |
+| `NEXT_PUBLIC_KOLO_POTS_ADDRESS` | Optional; defaults to the deployment below |
+| `NEXT_PUBLIC_KOLO_DEMO_PAYEE` | Optional; the mock service pots pay (`@kolo_premium`) |
 | `NEXT_PUBLIC_KOLO_DEPLOY_BLOCK` | Optional; bounds how far back the feed scans |
 
-`contracts/.env` holds only `MONAD_RPC_URL` and the deployer `PRIVATE_KEY`. Both
-env files are gitignored.
+Every contract address already defaults to the live deployment, so a fresh
+clone needs only the Privy and Pimlico values.
+
+`contracts/.env` holds `MONAD_RPC_URL`, the deployer `PRIVATE_KEY`, and
+`DEMO_PAYEE_PRIVATE_KEY` -- the mock service, which can do nothing but withdraw
+what members have used. Both env files are gitignored.
 
 ---
 
