@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { config } from "@/config";
-import { resolveHandle } from "@/hooks/useHandle";
+import { resolveHandle } from "@/lib/registry";
 import {
   formatApprox,
   formatEntry,

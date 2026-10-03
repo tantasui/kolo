@@ -44,7 +44,11 @@ body {
   position: absolute;
   inset: -30% -20% auto -20%;
   height: 55%;
-  background: radial-gradient(60% 60% at 50% 0%, rgba(210, 255, 58, 0.16), transparent 70%);
+  background: radial-gradient(
+    60% 60% at 50% 0%,
+    rgba(210, 255, 58, 0.16),
+    transparent 70%
+  );
   pointer-events: none;
 }
 
@@ -56,4 +60,87 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   `/about` only. The app is flat surfaces and one bloom; a public page gets a
+   little more depth, and these are the three treatments it uses. Kept here
+   rather than inline so they are findable, and prefixed so nothing in the app
+   picks them up by accident.
+   --------------------------------------------------------------------------- */
+
+/* A faint 32px rule grid, to stop a tall dark page reading as a void. */
+.about-grid {
+  background-size: 32px 32px;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+}
+
+/* A one-pixel border that fades from accent at the top to nothing at the
+   bottom. Masked rather than drawn, so it follows the element's radius. */
+.about-lit-border {
+  position: relative;
+}
+.about-lit-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    180deg,
+    rgba(210, 255, 58, 0.25) 0%,
+    rgba(38, 38, 47, 0.6) 40%,
+    rgba(20, 20, 25, 0.1) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* A panel you can see the page through.
+ *
+ * Worth it only where there is something behind worth seeing -- the 32px grid
+ * and the accent glow. Over flat ink it is just a card with a weaker border, so
+ * `/about` uses it on the panels that sit over textured sections and leaves the
+ * rest alone.
+ *
+ * The inset highlight is the top edge catching the glow; it is what stops a
+ * translucent panel reading as a flat grey rectangle. `saturate` keeps the
+ * accent behind it from going muddy under the blur.
+ */
+.about-pane {
+  background: linear-gradient(
+    180deg,
+    rgba(28, 28, 35, 0.72) 0%,
+    rgba(20, 20, 25, 0.6) 100%
+  );
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+  /* Deliberately no `border` here. This file loads after Tailwind's
+     utilities, so setting one would beat `hover:border-accent/30` on the
+     cards and quietly kill their hover. The border stays a utility. */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+/* The sticky header, which sits over everything the page scrolls past. */
+.about-bar {
+  background: rgba(10, 10, 12, 0.72);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow:
+    inset 0 -1px 0 rgba(38, 38, 47, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* The phone shell: lit from the top, with a hairline edge. */
+.about-glass {
+  background: radial-gradient(circle at 50% 0%, #1a1a22 0%, #141419 75%);
+  box-shadow:
+    0 25px 60px -15px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
 }

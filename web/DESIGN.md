@@ -15,18 +15,18 @@ document is how to use them.
 
 Semantic names only. No raw hex at a call site.
 
-| Token | Value | Used for |
-| --- | --- | --- |
-| `ink` | `#0A0A0C` | the page ground |
-| `surface` | `#141419` | cards and inputs |
-| `raised` | `#1C1C23` | secondary buttons, chips, skeletons |
-| `line` | `#26262F` | borders and dividers |
-| `text` | `#F7F7F8` | primary text |
-| `muted` | `#84848F` | labels, captions, secondary text |
-| `accent` | `#D2FF3A` | the one action, and affirmative states |
-| `accent-dim` | `#A8CC2E` | accent hover |
-| `inbound` | `#5CE39B` | money coming in |
-| `danger` | `#FF6B6B` | errors and destructive states |
+| Token        | Value     | Used for                               |
+| ------------ | --------- | -------------------------------------- |
+| `ink`        | `#0A0A0C` | the page ground                        |
+| `surface`    | `#141419` | cards and inputs                       |
+| `raised`     | `#1C1C23` | secondary buttons, chips, skeletons    |
+| `line`       | `#26262F` | borders and dividers                   |
+| `text`       | `#F7F7F8` | primary text                           |
+| `muted`      | `#84848F` | labels, captions, secondary text       |
+| `accent`     | `#D2FF3A` | the one action, and affirmative states |
+| `accent-dim` | `#A8CC2E` | accent hover                           |
+| `inbound`    | `#5CE39B` | money coming in                        |
+| `danger`     | `#FF6B6B` | errors and destructive states          |
 
 **Accent is scarce.** A screen gets one accent action — the thing you want the
 user to tap. Beyond that it marks affirmation only: a handle is available, the
@@ -34,7 +34,7 @@ fee is nothing, the payment landed. Text on an accent ground is always
 `text-ink`, never white.
 
 **`inbound` is reserved for money arriving.** Outgoing amounts are plain
-`text-text`. Green means *you received something*, and nothing else.
+`text-text`. Green means _you received something_, and nothing else.
 
 **There is no light theme.** `color-scheme: dark` is fixed in `globals.css`.
 Don't add `dark:` variants; there is nothing to vary against.
@@ -46,15 +46,15 @@ Don't add `dark:` variants; there is nothing to vary against.
 Sizes are arbitrary pixel values, not Tailwind's `text-sm`/`text-lg` scale,
 because this is one designed surface rather than a general-purpose system.
 
-| Size | Role |
-| --- | --- |
-| 13px | captions, timestamps, helper text |
-| 14px | section labels ("Balance", "Activity") |
-| 15px | body and secondary text — the most common size |
-| 16–17px | list row titles, primary body, button labels |
-| 26–28px | text inputs, wordmark |
-| 32–44px | screen headings |
-| **52–60px** | **money** |
+| Size        | Role                                           |
+| ----------- | ---------------------------------------------- |
+| 13px        | captions, timestamps, helper text              |
+| 14px        | section labels ("Balance", "Activity")         |
+| 15px        | body and secondary text — the most common size |
+| 16–17px     | list row titles, primary body, button labels   |
+| 26–28px     | text inputs, wordmark                          |
+| 32–44px     | screen headings                                |
+| **52–60px** | **money**                                      |
 
 **Money is always the largest element on its screen.** The balance is 52px, the
 keypad entry is 60px, the success amount is 34px. If a new screen shows an
@@ -66,15 +66,15 @@ updates mid-animation.
 
 ### Never render an amount without a currency
 
-The chain always holds 6-decimal dollars. What the user *sees* is their choice
+The chain always holds 6-decimal dollars. What the user _sees_ is their choice
 in Settings — dollars or naira — so every amount goes through the currency-aware
 helpers in [`src/lib/format.ts`](src/lib/format.ts):
 
 ```tsx
 const { currency } = useKolo();
-formatMoney(balance, currency)      // raw units -> "$100.00" / "₦161,500.00"
-parseAmount(entry, currency)        // typed entry -> raw units
-formatEntry(entry, currency)        // in-progress keypad entry
+formatMoney(balance, currency); // raw units -> "$100.00" / "₦161,500.00"
+parseAmount(entry, currency); // typed entry -> raw units
+formatEntry(entry, currency); // in-progress keypad entry
 ```
 
 This includes the keypad. A screen that shows a naira balance next to a dollar
@@ -83,14 +83,14 @@ from `getRate()` in [`src/config.ts`](src/config.ts) — never inline it.
 
 The two currencies are shaped differently, and both shapes are deliberate:
 
-| | Dollars | Naira |
-| --- | --- | --- |
-| Decimals | 2 | **0** — kobo are noise at ₦1,615 to $1 |
-| Rounding | to the nearest cent | **always down** |
-| Secondary line | none | muted `≈ $100.00` |
-| Keypad `.` key | shown | **refused**, cell left blank |
+|                | Dollars             | Naira                                  |
+| -------------- | ------------------- | -------------------------------------- |
+| Decimals       | 2                   | **0** — kobo are noise at ₦1,615 to $1 |
+| Rounding       | to the nearest cent | **always down**                        |
+| Secondary line | none                | muted `≈ $100.00`                      |
+| Keypad `.` key | shown               | **refused**, cell left blank           |
 
-Naira floors rather than rounds because it is a *view* onto a dollar balance:
+Naira floors rather than rounds because it is a _view_ onto a dollar balance:
 flooring means the figure on screen never overstates what is held, so the whole
 displayed balance is always spendable. Round it to nearest and a user can be
 shown ₦1,615, type ₦1,615, and be told it is more than their balance.
@@ -111,13 +111,13 @@ Radius signals affordance:
 
 Heights are fixed so controls line up across screens:
 
-| Height | Control |
-| --- | --- |
-| `h-14` | full-width primary button |
+| Height     | Control                                      |
+| ---------- | -------------------------------------------- |
+| `h-14`     | full-width primary button                    |
 | `h-[54px]` | the Home button pair (Send / Add demo funds) |
-| `h-16` | keypad keys |
-| `h-10` | icon buttons (back, close) |
-| `h-9` | inline chips |
+| `h-16`     | keypad keys                                  |
+| `h-10`     | icon buttons (back, close)                   |
+| `h-9`      | inline chips                                 |
 
 ---
 
@@ -131,7 +131,7 @@ Heights are fixed so controls line up across screens:
 
 **Never ship a hover-only affordance.** Most users are on a phone and will never
 produce a hover event. Tap highlight is suppressed globally
-(`-webkit-tap-highlight-color: transparent`), so the scale *is* the feedback — if
+(`-webkit-tap-highlight-color: transparent`), so the scale _is_ the feedback — if
 you omit it, the control feels dead.
 
 ---
@@ -156,12 +156,12 @@ Every screen is the same shell:
 
 Four named animations, all on `cubic-bezier(0.22, 1, 0.36, 1)`:
 
-| Animation | Duration | Used for |
-| --- | --- | --- |
-| `rise-in` | 320ms | screen entrances |
-| `sheet-up` | 280ms | the send sheet |
-| `pop-in` | 420ms | the success badge |
-| `draw-check` | 320ms | the success checkmark stroke |
+| Animation    | Duration | Used for                     |
+| ------------ | -------- | ---------------------------- |
+| `rise-in`    | 320ms    | screen entrances             |
+| `sheet-up`   | 280ms    | the send sheet               |
+| `pop-in`     | 420ms    | the success badge            |
+| `draw-check` | 320ms    | the success checkmark stroke |
 
 `globals.css` neutralises all animation under `prefers-reduced-motion`, and
 `Confetti` re-checks the query in JavaScript before it draws a single frame —
@@ -177,7 +177,12 @@ There is no icon library, and adding one is not a small decision.
 ```tsx
 export const Plus = ({ className }: IconProps) => (
   <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-    <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+    <path
+      d="M12 5v14M5 12h14"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+    />
   </svg>
 );
 ```
@@ -230,8 +235,8 @@ The UI is held to a small vocabulary. It says:
 
 > Balance · Send · Add demo funds · @handle · No fee · Note · Sending…
 
-It **never** says: *wallet, gas, transaction, hash, blockchain, Monad, token,
-approve, sign, smart account, wei, address, crypto* — not in labels, not in
+It **never** says: _wallet, gas, transaction, hash, blockchain, Monad, token,
+approve, sign, smart account, wei, address, crypto_ — not in labels, not in
 placeholders, not in `aria-label`s, not in error text, not in empty states.
 
 The whole product thesis is that the user never learns there is a blockchain
@@ -250,14 +255,14 @@ setStep("failed");
 
 The only user-facing failure strings that exist are:
 
-| Message | Cause |
-| --- | --- |
-| "Something went wrong — try again" | the catch-all |
+| Message                                | Cause                   |
+| -------------------------------------- | ----------------------- |
+| "Something went wrong — try again"     | the catch-all           |
 | "You've already added funds this hour" | faucet `CooldownActive` |
-| "Demo funds have run out for now" | faucet `FaucetEmpty` |
+| "Demo funds have run out for now"      | faucet `FaucetEmpty`    |
 
 Failure copy reassures about money first — the send failure screen leads with
-*"Your money hasn't moved."*
+_"Your money hasn't moved."_
 
 > **Watch out:** the two specific faucet messages are produced by string-matching
 > the custom error name out of the revert
@@ -276,3 +281,33 @@ Failure copy reassures about money first — the send failure screen leads with
 5. Give every tappable thing an `active:scale-*` and an accessible name.
 6. Render every amount through `formatMoney(units, currency)` — never bare.
 7. Write the copy as if for a consumer banking app with nothing underneath it.
+
+---
+
+## Outside the app: `/about`
+
+Everything above governs the app — the phone-width surface behind sign-in.
+[`/about`](src/app/about/page.tsx) is the one page that is not the app, and it
+is the one place the rules above are deliberately bent. They are written down
+here so the bends stay bounded and nobody has to guess which way to go next
+time.
+
+| Rule                    | What `/about` does instead                       | Why                                                                                                                                                                                                                                                                                                                         |
+| ----------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 390px phone column      | `max-w-7xl` desktop grid, single column at 390px | It is a web page, read on a laptop as often as a phone. The phone column lives in `app/(app)/layout.tsx` so the root layout no longer imposes it.                                                                                                                                                                           |
+| One typeface            | Adds JetBrains Mono, for tags and figures only   | A measurement should read as a measurement. Loaded in `app/about/layout.tsx`, scoped to that route, so the app pays nothing for it.                                                                                                                                                                                         |
+| Four animations         | Adds `reveal-up`, on the same curve              | Section-entry on scroll, via `about/Reveal.tsx`. Fires once, never hides anything in the markup, and collapses to nothing under `prefers-reduced-motion`.                                                                                                                                                                   |
+| Hand-rolled icons       | Still hand-rolled, in `about/Icons.tsx`          | The page needed sixteen the app does not have. **The no-icon-font rule does not bend**: a webfont for glyphs costs a round trip and renders as tofu before it lands.                                                                                                                                                        |
+| The vocabulary ban-list | Narrowed, not waived                             | Above the architecture section the page may say what you do _not_ have to deal with — _no addresses, no gas, no seed phrase_ — and may name the network where it is being honest that this is a testnet. It never names the machinery as something you operate. `0 wei` belongs below the divider, and that is where it is. |
+
+Two things on that page are **not** negotiable, and the header comment in
+`page.tsx` says so at more length:
+
+1. **No claim the repository or the chain cannot back.** No funding, no
+   auditors, no press, no user counts, no latency or throughput figures, no
+   feature that is not built. It does not volunteer caveats either -- the
+   README carries the limitations in full, and the app's own button says "Add
+   demo funds" to whoever taps it. The page states what is true; it is not the
+   apology.
+2. **Addresses and amounts are read from `config`**, never retyped, so the page
+   cannot drift from the deployment.
