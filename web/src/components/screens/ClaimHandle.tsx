@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { config } from "@/config";
-import { checkHandleAvailable } from "@/hooks/useHandle";
+import { checkHandleAvailable } from "@/lib/registry";
 import { handleProblem, normaliseHandle } from "@/lib/format";
+import { takeWantedHandle } from "@/lib/wantedHandle";
 import { useKolo } from "../kolo-provider";
 import { Button } from "../ui/Button";
 import { Check, Close, Warning } from "../ui/Icons";
@@ -22,13 +23,23 @@ export function ClaimHandle() {
   const { claimHandle, accountReady } = useKolo();
 
   const [input, setInput] = useState("");
-  const [availability, setAvailability] = useState<Availability>({ kind: "empty" });
+  const [availability, setAvailability] = useState<Availability>({
+    kind: "empty",
+  });
   const [claiming, setClaiming] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handle = normaliseHandle(input);
   // Guards against a slow check overwriting a newer one.
   const requestRef = useRef(0);
+
+  /* If they typed a name on /about before signing in, start with it. Read in
+     an effect rather than in useState so the server and the first client
+     render agree. */
+  useEffect(() => {
+    const wanted = takeWantedHandle();
+    if (wanted) setInput(wanted);
+  }, []);
 
   useEffect(() => {
     setError(null);
@@ -81,7 +92,8 @@ export function ClaimHandle() {
         Pick your @handle
       </h1>
       <p className="mt-2 text-[16px] leading-relaxed text-muted">
-        This is how friends send you money. Choose carefully — it&apos;s yours for good.
+        This is how friends send you money. Choose carefully — it&apos;s yours
+        for good.
       </p>
 
       <div className="mt-8">
@@ -126,7 +138,9 @@ export function ClaimHandle() {
         disabled={availability.kind !== "available" || !accountReady}
         onClick={onClaim}
       >
-        {availability.kind === "available" ? `Claim @${handle}` : "Claim your @handle"}
+        {availability.kind === "available"
+          ? `Claim @${handle}`
+          : "Claim your @handle"}
       </Button>
       <p className="mt-3 text-center text-[13px] text-muted">
         {claiming ? "Setting up your account…" : "Free, and takes a second."}
@@ -135,12 +149,19 @@ export function ClaimHandle() {
   );
 }
 
-function StatusLine({ availability, handle }: { availability: Availability; handle: string }) {
+function StatusLine({
+  availability,
+  handle,
+}: {
+  availability: Availability;
+  handle: string;
+}) {
   switch (availability.kind) {
     case "empty":
       return (
         <span className="text-muted">
-          {config.handle.minLength}–{config.handle.maxLength} characters. Letters, numbers and _
+          {config.handle.minLength}–{config.handle.maxLength} characters.
+          Letters, numbers and _
         </span>
       );
     case "invalid":
@@ -164,6 +185,10 @@ function StatusLine({ availability, handle }: { availability: Availability; hand
         </span>
       );
     case "unknown":
-      return <span className="text-muted">Couldn&apos;t check that one — try again</span>;
+      return (
+        <span className="text-muted">
+          Couldn&apos;t check that one — try again
+        </span>
+      );
   }
 }

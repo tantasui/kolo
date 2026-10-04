@@ -77,30 +77,8 @@ export function useHandle() {
       setHandle(desired);
       setStatus("registered");
     },
-    [client]
+    [client],
   );
 
   return { handle, status, refresh, claim };
-}
-
-/** Live availability check used by the handle picker. */
-export async function checkHandleAvailable(candidate: string): Promise<boolean> {
-  return getPublicClient().readContract({
-    address: config.contracts.registry,
-    abi: koloRegistryAbi,
-    functionName: "isAvailable",
-    args: [candidate],
-  });
-}
-
-/** Resolve a handle to an account, or null when nobody has claimed it. */
-export async function resolveHandle(candidate: string): Promise<`0x${string}` | null> {
-  const resolved = await getPublicClient().readContract({
-    address: config.contracts.registry,
-    abi: koloRegistryAbi,
-    functionName: "resolve",
-    args: [candidate],
-  });
-
-  return resolved === "0x0000000000000000000000000000000000000000" ? null : resolved;
 }

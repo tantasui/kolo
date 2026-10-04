@@ -18,6 +18,17 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
+        /**
+         * Only `/about` loads this, and only for tags and figures. The app has
+         * one family; a public page gets a second so a number reads as a
+         * measurement rather than as prose. See DESIGN.md, "Outside the app".
+         */
+        mono: [
+          "var(--font-mono)",
+          "ui-monospace",
+          "SFMono-Regular",
+          "monospace",
+        ],
       },
       borderRadius: {
         xl2: "1.25rem",
@@ -45,6 +56,18 @@ const config: Config = {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
+        /* A dot that breathes rather than blinks, for ambient status on
+           /about. Opacity only -- nothing moves. */
+        "pulse-gentle": {
+          "0%, 100%": { opacity: "0.4" },
+          "50%": { opacity: "0.9" },
+        },
+        /* Scroll reveal on /about. Same shape as rise-in, further to travel,
+           because it fires against a full-page scroll rather than a sheet. */
+        "reveal-up": {
+          "0%": { opacity: "0", transform: "translateY(22px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "rise-in": "rise-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both",
@@ -52,6 +75,8 @@ const config: Config = {
         "pop-in": "pop-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both",
         "draw-check": "draw-check 320ms 220ms ease-out both",
         shimmer: "shimmer 1.4s linear infinite",
+        "reveal-up": "reveal-up 620ms cubic-bezier(0.22, 1, 0.36, 1) both",
+        "pulse-gentle": "pulse-gentle 3s ease-in-out infinite",
       },
     },
   },

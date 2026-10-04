@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePrivy } from "@privy-io/react-auth";
 import { Button } from "../ui/Button";
 import { Wordmark } from "../ui/Wordmark";
@@ -20,8 +21,8 @@ export function Landing() {
           like a message.
         </h1>
         <p className="mt-5 max-w-[19rem] animate-rise-in text-[17px] leading-relaxed text-muted">
-          Send to anyone by their @handle. It lands in seconds, and it never costs a
-          thing.
+          Send to anyone by their @handle. It lands in seconds, and it never
+          costs a thing.
         </p>
       </div>
 
@@ -31,6 +32,17 @@ export function Landing() {
         </Button>
         <p className="text-center text-[13px] text-muted">
           Use your email — nothing to download, nothing to set up.
+        </p>
+        {/* The only way out of the app, for someone who arrived without being
+            told what this is. Deliberately quiet: the thing to do here is tap
+            Get started. */}
+        <p className="text-center text-[13px]">
+          <Link
+            href="/about"
+            className="text-muted underline decoration-line underline-offset-4"
+          >
+            What is Kolo?
+          </Link>
         </p>
       </div>
     </div>

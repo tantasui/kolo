@@ -10,7 +10,8 @@ const geistSans = localFont({
 
 const APP_NAME = "Kolo";
 const APP_TITLE = "Kolo — send money by @handle";
-const APP_DESCRIPTION = "Send money to anyone by their @handle. Instantly, with no fee.";
+const APP_DESCRIPTION =
+  "Send money to anyone by their @handle. Instantly, with no fee.";
 
 export const metadata: Metadata = {
   applicationName: APP_NAME,
@@ -40,12 +41,15 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
+      {/* The phone-width column lives in `(app)/layout.tsx`, not here, so
+          `/about` can use the full viewport. */}
       <body className={`${geistSans.variable} font-sans antialiased`}>
-        {/* Phone-width column, centred on anything larger. */}
-        <div className="mx-auto min-h-[100dvh] w-full max-w-md">{children}</div>
+        {children}
       </body>
     </html>
   );

@@ -1,11 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import { usePrivy } from "@privy-io/react-auth";
 import type { Hex } from "viem";
 import { readSecretFromFragment } from "@/lib/claimLink";
 import { formatApprox, formatMoney } from "@/lib/format";
-import { lookUpLink, useClaimLink, type LinkLookup } from "@/hooks/useClaimLink";
+import {
+  lookUpLink,
+  useClaimLink,
+  type LinkLookup,
+} from "@/hooks/useClaimLink";
 import { useKolo } from "../kolo-provider";
 import { Button } from "../ui/Button";
 import { Confetti } from "../ui/Confetti";
@@ -68,7 +73,13 @@ export function ClaimLink() {
     }
   }
 
-  if (stage === "done") return <Claimed amount={lookup.kind === "ready" ? lookup.amount : 0n} currency={currency} />;
+  if (stage === "done")
+    return (
+      <Claimed
+        amount={lookup.kind === "ready" ? lookup.amount : 0n}
+        currency={currency}
+      />
+    );
 
   return (
     <div className="bloom relative flex min-h-[100dvh] flex-col px-6 pb-10 pt-14">
@@ -104,6 +115,7 @@ export function ClaimLink() {
 
         {lookup.kind === "ready" && (
           <>
+            <Mascot />
             <p className="text-[17px] text-muted">Someone sent you</p>
             <p className="tabular mt-2 text-[52px] font-bold leading-none tracking-tight">
               {formatMoney(lookup.amount, currency)}
@@ -114,8 +126,8 @@ export function ClaimLink() {
               </p>
             )}
             <p className="mt-6 max-w-[20rem] text-[15px] leading-relaxed text-muted">
-              It&apos;s yours to keep. Collect it into your Kolo balance — there&apos;s no fee, and
-              nothing to set up beyond your email.
+              It&apos;s yours to keep. Collect it into your Kolo balance —
+              there&apos;s no fee, and nothing to set up beyond your email.
             </p>
           </>
         )}
@@ -141,7 +153,12 @@ export function ClaimLink() {
             </>
           ) : (
             <>
-              <Button full loading={stage === "claiming"} disabled={!accountReady} onClick={onClaim}>
+              <Button
+                full
+                loading={stage === "claiming"}
+                disabled={!accountReady}
+                onClick={onClaim}
+              >
                 Collect {formatMoney(lookup.amount, currency)}
               </Button>
               <p className="mt-3 text-center text-[13px] text-muted">
@@ -155,19 +172,69 @@ export function ClaimLink() {
   );
 }
 
+/**
+ * The one screen a stranger meets Kolo on.
+ *
+ * Everything else in the app is for somebody who already decided to be here;
+ * this is a person who followed a link from a friend and has no idea what any
+ * of it is. It is the only place in the app warm enough for a character, and
+ * the only place that has to do emotional work before informational work.
+ *
+ * It sits *above* the amount, never beside it: DESIGN.md puts money at the top
+ * of the type ladder as the largest thing on its screen, and a character level
+ * with a 52px figure would compete with it.
+ *
+ * The art is greyscale, so the only thing tying it to Kolo is the coin. The
+ * glow is placed behind where the coin sits in the frame -- it is what makes
+ * the picture ours rather than a stock cartoon, and it is why the position is
+ * a percentage of the image rather than a round number.
+ */
+function Mascot() {
+  return (
+    <div aria-hidden className="relative mx-auto mb-3 h-64 w-64 shrink-0">
+      {/* Behind the coin, not behind the character. */}
+      <span className="absolute left-[74%] top-[29%] h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/50 blur-2xl" />
+      <Image
+        src="/img/mascot.webp"
+        alt=""
+        fill
+        priority
+        sizes="256px"
+        /* `mix-blend-screen` so the art's own black contributes nothing and
+           there is no box around it -- the drawing sits on the page rather
+           than in a panel on it. Over near-black the character itself is
+           unchanged, so only the seam disappears. */
+        className="relative object-contain mix-blend-screen
+                   [mask-image:radial-gradient(closest-side,#000_72%,transparent_100%)]
+                   [-webkit-mask-image:radial-gradient(closest-side,#000_72%,transparent_100%)]"
+      />
+    </div>
+  );
+}
+
 function Message({ title, body }: { title: string; body: string }) {
   return (
     <>
       <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-raised">
         <Warning className="h-7 w-7 text-muted" />
       </span>
-      <h1 className="mt-6 text-[28px] font-bold leading-tight tracking-tight">{title}</h1>
-      <p className="mt-3 max-w-[20rem] text-[16px] leading-relaxed text-muted">{body}</p>
+      <h1 className="mt-6 text-[28px] font-bold leading-tight tracking-tight">
+        {title}
+      </h1>
+      <p className="mt-3 max-w-[20rem] text-[16px] leading-relaxed text-muted">
+        {body}
+      </p>
     </>
   );
 }
 
-function Claimed({ amount, currency }: { amount: bigint; currency: Parameters<typeof formatMoney>[1] }) {
+function Claimed({
+  amount,
+  currency,
+}: {
+  amount: bigint;
+  currency: Parameters<typeof formatMoney>[1];
+}) {
   return (
     <div className="relative flex min-h-[100dvh] flex-col items-center justify-center px-6">
       <Confetti />
