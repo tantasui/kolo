@@ -48,6 +48,20 @@ const CURRENCY_WORDS: Record<string, SpokenCurrency> = {
 
 const DIGITS = /^(\d+(?:\.\d+)?)(k|m)?$/;
 
+/**
+ * How recognition writes letters when someone spells a handle out:
+ * "a b d o l", but also "see" for C, "you" for U, "why" for Y.
+ */
+const LETTER_NAMES: Record<string, string> = {
+  bee: "b", be: "b", see: "c", sea: "c", cee: "c", dee: "d", ef: "f", eff: "f", gee: "g",
+  aitch: "h", eye: "i", jay: "j", kay: "k", el: "l", ell: "l", em: "m", en: "n", oh: "o",
+  pee: "p", pea: "p", queue: "q", cue: "q", are: "r", ar: "r", es: "s", ess: "s", tee: "t",
+  tea: "t", you: "u", vee: "v", ex: "x", why: "y", wye: "y", zed: "z", zee: "z",
+};
+
+/** Scales a spoken number can be multiplied by without a digit next to it. */
+const WORD_SCALES = new Set(["hundred", "thousand", "million"]);
+
 function isNumberWord(token: string): boolean {
   return token in ONES || token in TENS || token in SCALES || token === "hundred" || DIGITS.test(token);
 }
@@ -55,10 +69,18 @@ function isNumberWord(token: string): boolean {
 /** Can `tokens[i]` belong to a spoken amount? */
 function isAmountToken(tokens: string[], i: number): boolean {
   const token = tokens[i];
-  if (isNumberWord(token) || token in CURRENCY_WORDS) return true;
+  const previous = tokens[i - 1];
   const next = tokens[i + 1];
+
+  // "5 k" is five thousand, but a lone "k" is someone spelling "k e m i".
+  if (token in SCALES) {
+    if (previous === undefined) return false;
+    if (previous === "a") return WORD_SCALES.has(token);
+    return (isNumberWord(previous) && !(previous in SCALES)) || WORD_SCALES.has(previous);
+  }
+  if (isNumberWord(token) || token in CURRENCY_WORDS) return true;
   // "a thousand", "one point five", "two hundred and fifty"
-  if (token === "a") return next === "hundred" || (next !== undefined && next in SCALES);
+  if (token === "a") return next !== undefined && WORD_SCALES.has(next);
   if (token === "point" || token === "and") {
     return i > 0 && isNumberWord(tokens[i - 1]) && next !== undefined && isNumberWord(next);
   }
@@ -169,8 +191,7 @@ export function parseCommand(text: string): VoiceCommand {
   const words = tokens
     .map((token) => token.replace(/^@+/, ""))
     .filter((token) => token && !FILLER.has(token));
-  const handle = words
-    .map((token) => (token === "underscore" ? "_" : token))
+  const handle = spellOut(words)
     .join("")
     .replace(/[^a-z0-9_]/g, "");
 
@@ -178,6 +199,36 @@ export function parseCommand(text: string): VoiceCommand {
   if (verb < 0 && amount === null) return { handle: null, amount: null, currency: null, note: "" };
 
   return { handle: handle || null, amount, currency, note };
+}
+
+/**
+ * Words -> handle pieces. When the name is being spelled ("a b d o l",
+ * "k e m i", "t double o"), letter names become letters; otherwise the words
+ * are kept as said, so "ada obi" stays "adaobi" and is matched later.
+ */
+function spellOut(words: string[]): string[] {
+  const letterish = words.filter(
+    (word) => word.length === 1 || word in LETTER_NAMES || word === "double" || word === "underscore"
+  ).length;
+  const spelled = letterish >= 2 && letterish * 2 >= words.length;
+
+  const pieces: string[] = [];
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    if (word === "underscore") {
+      pieces.push("_");
+    } else if (spelled && word === "double" && words[i + 1] === "you") {
+      pieces.push("w");
+      i += 1;
+    } else if (spelled && word === "double" && words[i + 1] !== undefined) {
+      const letter = LETTER_NAMES[words[i + 1]] ?? words[i + 1];
+      pieces.push(letter + letter);
+      i += 1;
+    } else {
+      pieces.push(spelled ? (LETTER_NAMES[word] ?? word) : word);
+    }
+  }
+  return pieces;
 }
 
 function distance(a: string, b: string): number {

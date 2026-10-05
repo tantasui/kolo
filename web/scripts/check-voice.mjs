@@ -31,6 +31,18 @@ const commands = [
   ["give mama 10000 saying happy birthday", "mama", "10000", null, "happy birthday"],
   ["what is the weather", null, null, null, ""],
   ["tolu 5k", "tolu", "5000", null, ""],
+  // Spelling a handle out, letter by letter
+  ["send 10 dollars to a b d o l", "abdol", "10", "USD", ""],
+  ["send 10 dollars to A.B.D.O.L.", "abdol", "10", "USD", ""],
+  ["send to a b d o l 10 dollars", "abdol", "10", "USD", ""],
+  ["send to k e m i 10 dollars", "kemi", "10", "USD", ""],
+  ["send to a k i n 10 dollars", "akin", "10", "USD", ""],
+  ["send 10 dollars to see h i", "chi", "10", "USD", ""],
+  ["send 10 dollars to t double o", "too", "10", "USD", ""],
+  ["send 10 dollars to a b d o l underscore 2", "abdol_2", "10", "USD", ""],
+  ["send 10 dollars to tolu 2", "tolu2", "10", "USD", ""],
+  ["send ada 5 k", "ada", "5000", null, ""],
+  ["send two hundred thousand to ada", "ada", "200000", null, ""],
 ];
 
 const handles = [
@@ -41,6 +53,7 @@ const handles = [
   ["tolu", ["tolu", "tolu_b"], "tolu"],
   ["chinedu", ["tolu", "ada"], "chinedu"],
   ["ada", ["sos"], "ada"],
+  ["abdul", ["abdol", "tolu"], "abdol"],
 ];
 
 const answers = [
