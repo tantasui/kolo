@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatApprox, formatMoney } from "@/lib/format";
 import { ActivityList } from "../ActivityList";
 import { DueBanner } from "../DueBanner";
@@ -10,13 +10,15 @@ import { SendSheet } from "../send/SendSheet";
 import { Settings } from "./Settings";
 import { CurrencySwitch } from "../ui/CurrencySwitch";
 import { Avatar } from "../ui/Avatar";
-import { ArrowUpRight, Check, Copy, Gear, Plus, Warning } from "../ui/Icons";
+import { ArrowUpRight, Check, Copy, Gear, Mic, Plus, Warning } from "../ui/Icons";
+import { speechSupported } from "@/lib/speech";
 import { Spinner } from "../ui/Spinner";
 
 export function Home() {
   const { handle, balance, activity, addMoney, currency, circles } = useKolo();
 
-  const [sendOpen, setSendOpen] = useState(false);
+  const [sendOpen, setSendOpen] = useState<false | "tap" | "voice">(false);
+  const [canListen, setCanListen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [openCircle, setOpenCircle] = useState<(typeof circles)[number] | null>(null);
   const [adding, setAdding] = useState(false);
@@ -25,6 +27,9 @@ export function Home() {
 
   // A brand-new user has nothing to send, so lead with adding money instead.
   const emptyPurse = balance === 0n;
+
+  // Recognition only exists in the browser, so this is decided after mount.
+  useEffect(() => setCanListen(speechSupported()), []);
 
   async function onAddMoney() {
     setAdding(true);
@@ -78,6 +83,19 @@ export function Home() {
 
           <div className="flex-1" />
 
+          {canListen && (
+            <button
+              type="button"
+              onClick={() => setSendOpen("voice")}
+              disabled={balance === null || emptyPurse}
+              aria-label="Send by voice"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-muted transition
+                         active:scale-95 disabled:opacity-40"
+            >
+              <Mic className="h-[22px] w-[22px]" />
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => setSettingsOpen(true)}
@@ -110,7 +128,7 @@ export function Home() {
         <div className="mt-8 flex gap-3">
           <button
             type="button"
-            onClick={() => setSendOpen(true)}
+            onClick={() => setSendOpen("tap")}
             disabled={balance === null || emptyPurse}
             className={`flex h-[54px] flex-1 items-center justify-center gap-2 rounded-pill
                         text-[17px] font-semibold transition active:scale-[0.98] disabled:opacity-40
@@ -147,7 +165,7 @@ export function Home() {
         </section>
       </div>
 
-      {sendOpen && <SendSheet onClose={() => setSendOpen(false)} />}
+      {sendOpen && <SendSheet voice={sendOpen === "voice"} onClose={() => setSendOpen(false)} />}
       {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
       {openCircle && <CircleDetail circle={openCircle} onClose={() => setOpenCircle(null)} />}
     </>

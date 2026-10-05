@@ -161,3 +161,10 @@ export const Meter = ({ className }: IconProps) => (
     <circle cx="12" cy="16.4" r="1.5" fill="currentColor" />
   </svg>
 );
+
+export const Mic = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" strokeWidth="2.2" />
+    <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+  </svg>
+);
