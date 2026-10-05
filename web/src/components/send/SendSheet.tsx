@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { config } from "@/config";
 import { resolveHandle } from "@/lib/registry";
 import {
@@ -10,20 +10,35 @@ import {
   handleProblem,
   normaliseHandle,
   parseAmount,
+  spokenMoney,
+  toEntry,
 } from "@/lib/format";
 import { CURRENCIES, type Currency } from "@/lib/currency";
 import { useKolo } from "../kolo-provider";
 import { Avatar } from "../ui/Avatar";
 import { Button } from "../ui/Button";
 import { Confetti } from "../ui/Confetti";
-import { Check, LinkIcon, Warning } from "../ui/Icons";
+import { Check, LinkIcon, Mic, Warning } from "../ui/Icons";
 import { Keypad } from "../ui/Keypad";
 import { SheetHeader } from "../ui/SheetHeader";
 import { Spinner } from "../ui/Spinner";
 import { useCreateClaimLink, type CreatedLink } from "@/hooks/useClaimLink";
+import { listen, speak, speechSupported, stopSpeaking, type Listening } from "@/lib/speech";
+import { parseAnswer } from "@/lib/voice";
 import { ShareLink } from "./ShareLink";
+import { VoiceStep, type Heard } from "./VoiceStep";
 
-type Step = "to" | "amount" | "review" | "sending" | "done" | "failed";
+type Step = "voice" | "to" | "amount" | "review" | "sending" | "done" | "failed";
+
+/**
+ * Where a spoken send stands on the review screen. The review is always shown;
+ * voice only decides whether "send" said aloud can stand in for the tap.
+ */
+type VoicePrompt =
+  | { kind: "off" }
+  | { kind: "asking"; overLimit: boolean }
+  | { kind: "listening" }
+  | { kind: "tap"; overLimit: boolean };
 
 /**
  * Two ways to send: to a handle, or onto a link anyone can claim. The link
@@ -36,7 +51,7 @@ interface Recipient {
   address: `0x${string}`;
 }
 
-export function SendSheet({ onClose }: { onClose: () => void }) {
+export function SendSheet({ onClose, voice = false }: { onClose: () => void; voice?: boolean }) {
   const {
     balance,
     handle: myHandle,
@@ -45,19 +60,123 @@ export function SendSheet({ onClose }: { onClose: () => void }) {
     refreshBalance,
     refreshActivity,
     currency,
+    activity,
   } = useKolo();
   const { create: createLink } = useCreateClaimLink();
 
-  const [step, setStep] = useState<Step>("to");
+  const [step, setStep] = useState<Step>(voice ? "voice" : "to");
   const [mode, setMode] = useState<Mode>("handle");
   const [recipient, setRecipient] = useState<Recipient | null>(null);
   const [link, setLink] = useState<CreatedLink | null>(null);
   const [entry, setEntry] = useState("");
   const [note, setNote] = useState("");
+  /** What the handle field starts with when voice heard someone it couldn't find. */
+  const [typed, setTyped] = useState("");
 
   const amount = parseAmount(entry, currency) ?? 0n;
   const available = balance ?? 0n;
   const tooMuch = amount > available;
+
+  // Recognition only exists in the browser, so this is decided after mount.
+  const [canListen, setCanListen] = useState(false);
+  useEffect(() => setCanListen(speechSupported()), []);
+
+  /** People in the feed, most recent first -- who a spoken name most likely means. */
+  const known = useMemo(() => {
+    const seen = new Set<string>();
+    for (const item of activity) {
+      if (item.kind === "payment" && item.counterpartyHandle) seen.add(item.counterpartyHandle);
+    }
+    return Array.from(seen);
+  }, [activity]);
+
+  const [prompt, setPrompt] = useState<VoicePrompt>({ kind: "off" });
+  /** Bumped each time voice fills in a payment, so the review asks once per fill. */
+  const [voiceTicket, setVoiceTicket] = useState(0);
+  const askedRef = useRef(0);
+
+  function onHeard(heard: Heard) {
+    setMode("handle");
+    setNote(trimNote(heard.note));
+
+    let nextEntry = "";
+    if (heard.amount) {
+      // Said "10 dollars" with naira on screen: convert, so the keypad and the
+      // review stay in the currency the person chose.
+      const units = parseAmount(heard.amount, heard.currency ?? currency);
+      if (units) nextEntry = toEntry(units, currency);
+    }
+    setEntry(nextEntry);
+    setRecipient(heard.recipient);
+    setTyped(heard.handle ?? "");
+
+    if (!heard.recipient) {
+      setStep("to");
+      return;
+    }
+
+    const units = parseAmount(nextEntry, currency) ?? 0n;
+    if (units === 0n || units > available) {
+      setStep("amount");
+      return;
+    }
+
+    setVoiceTicket((ticket) => ticket + 1);
+    setStep("review");
+  }
+
+  // Refs, so a re-render of the parent mid-question does not restart it.
+  const confirmRef = useRef<() => Promise<void>>(async () => {});
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  // After a spoken send reaches the review: read it back, then listen for "send".
+  useEffect(() => {
+    if (step !== "review" || !recipient || voiceTicket === 0 || askedRef.current === voiceTicket) return;
+
+    let cancelled = false;
+    let listening: Listening | null = null;
+    const overLimit = amount > config.voice.confirmLimit;
+
+    (async () => {
+      setPrompt({ kind: "asking", overLimit });
+      await speak(
+        `Send ${spokenMoney(amount, currency)} to ${recipient.handle.replace(/_/g, " underscore ")}? ` +
+          (overLimit ? "Tap send to confirm." : "Say send to confirm.")
+      );
+      if (cancelled) return;
+      askedRef.current = voiceTicket;
+
+      if (overLimit) {
+        setPrompt({ kind: "tap", overLimit: true });
+        return;
+      }
+
+      setPrompt({ kind: "listening" });
+      listening = listen();
+      const outcome = await listening.result;
+      if (cancelled) return;
+
+      const answer = outcome.kind === "heard" ? parseAnswer(outcome.text) : "unclear";
+      if (answer === "yes") {
+        setPrompt({ kind: "off" });
+        void confirmRef.current();
+      } else if (answer === "no") {
+        onCloseRef.current();
+      } else {
+        setPrompt({ kind: "tap", overLimit: false });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      listening?.cancel();
+      stopSpeaking();
+      setPrompt({ kind: "off" });
+    };
+  }, [step, recipient, voiceTicket, amount, currency]);
 
   async function confirm() {
     if (mode === "handle" && !recipient) return;
@@ -91,13 +210,27 @@ export function SendSheet({ onClose }: { onClose: () => void }) {
       setStep("failed");
     }
   }
+  confirmRef.current = confirm;
 
   return (
     <div className="fixed inset-0 z-50 animate-sheet-up bg-ink">
       <div className="mx-auto flex h-[100dvh] max-w-md flex-col px-5 pb-8 pt-6">
+        {step === "voice" && (
+          <VoiceStep
+            myHandle={myHandle}
+            known={known}
+            currencySymbol={CURRENCIES[currency].symbol}
+            onHeard={onHeard}
+            onType={() => setStep("to")}
+            onClose={onClose}
+          />
+        )}
+
         {step === "to" && (
           <ToStep
             myHandle={myHandle}
+            initialInput={typed}
+            onVoice={canListen ? () => setStep("voice") : undefined}
             onClose={onClose}
             onPick={(picked) => {
               setMode("handle");
@@ -133,6 +266,7 @@ export function SendSheet({ onClose }: { onClose: () => void }) {
             currency={currency}
             note={note}
             onNote={setNote}
+            voice={prompt}
             onBack={() => setStep("amount")}
             onClose={onClose}
             onConfirm={confirm}
@@ -170,16 +304,21 @@ type Lookup =
 
 function ToStep({
   myHandle,
+  initialInput,
+  onVoice,
   onClose,
   onPick,
   onChooseLink,
 }: {
   myHandle: string | null;
+  initialInput: string;
+  /** Absent where the browser cannot listen. */
+  onVoice?: () => void;
   onClose: () => void;
   onPick: (recipient: Recipient) => void;
   onChooseLink: () => void;
 }) {
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(initialInput);
   const [lookup, setLookup] = useState<Lookup>({ kind: "empty" });
   const requestRef = useRef(0);
 
@@ -235,6 +374,17 @@ function ToStep({
             className="w-full bg-transparent text-[26px] font-semibold tracking-tight text-text
                        outline-none placeholder:text-muted/50"
           />
+          {onVoice && (
+            <button
+              type="button"
+              onClick={onVoice}
+              aria-label="Say it instead"
+              className="-mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted
+                         transition active:scale-95"
+            >
+              <Mic className="h-5 w-5" />
+            </button>
+          )}
         </div>
 
         <div className="mt-4 min-h-[76px]">
@@ -373,6 +523,7 @@ function ReviewStep({
   currency,
   note,
   onNote,
+  voice,
   onBack,
   onClose,
   onConfirm,
@@ -382,6 +533,7 @@ function ReviewStep({
   currency: Currency;
   note: string;
   onNote: (next: string) => void;
+  voice: VoicePrompt;
   onBack: () => void;
   onClose: () => void;
   onConfirm: () => void;
@@ -445,11 +597,46 @@ function ReviewStep({
 
       <div className="flex-1" />
 
+      <VoiceBanner voice={voice} currency={currency} />
+
       <Button full onClick={onConfirm}>
         {recipient ? `Send ${formatMoney(amount, currency)}` : `Create a link for ${formatMoney(amount, currency)}`}
       </Button>
     </>
   );
+}
+
+function VoiceBanner({ voice, currency }: { voice: VoicePrompt; currency: Currency }) {
+  if (voice.kind === "off") return null;
+
+  const limit = formatMoney(config.voice.confirmLimit, currency);
+  const overLimit = "overLimit" in voice && voice.overLimit;
+  const message = overLimit
+    ? `Over ${limit} — tap Send to confirm`
+    : voice.kind === "tap"
+      ? "Didn't catch that — tap Send to confirm"
+      : "Say “send” to confirm, or tap";
+
+  return (
+    <p className="mb-4 flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-[15px] text-muted">
+      <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-raised text-text">
+        {voice.kind === "listening" && (
+          <span className="absolute inset-0 animate-ping rounded-full bg-raised" aria-hidden />
+        )}
+        <Mic className="relative h-4 w-4" />
+      </span>
+      {message}
+    </p>
+  );
+}
+
+/** A spoken note, cut to what fits on chain without splitting a character. */
+function trimNote(note: string): string {
+  let trimmed = note;
+  while (new TextEncoder().encode(trimmed).length > config.maxNoteBytes) {
+    trimmed = Array.from(trimmed).slice(0, -1).join("");
+  }
+  return trimmed;
 }
 
 /* ---------- step 4: in flight ---------- */

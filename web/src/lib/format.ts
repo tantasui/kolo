@@ -98,6 +98,36 @@ export function formatEntry(entry: string, currency: Currency = DEFAULT_CURRENCY
   return entry.includes(".") ? `${symbol}${grouped}.${fraction}` : `${symbol}${grouped}`;
 }
 
+/**
+ * Raw units -> a keypad entry in `currency`: the inverse of `parseAmount`, for
+ * filling the keypad from something other than fingers. Naira floors to whole
+ * naira and dollars round to the cent, the same as `formatMoney` shows them.
+ */
+export function toEntry(amount: bigint, currency: Currency = DEFAULT_CURRENCY): string {
+  const display = toDisplayUnits(amount, currency);
+  if (CURRENCIES[currency].decimals === 0) return (display / DECIMALS).toString();
+
+  const centsScale = DECIMALS / 100n;
+  const cents = (display + centsScale / 2n) / centsScale;
+  const whole = (cents / 100n).toString();
+  const fraction = (cents % 100n).toString().padStart(2, "0").replace(/0+$/, "");
+  return fraction ? `${whole}.${fraction}` : whole;
+}
+
+/**
+ * An amount the way it should be read aloud: "5,000 naira", "10 dollars and
+ * 50 cents". Symbols are read inconsistently by speech engines, words are not.
+ */
+export function spokenMoney(amount: bigint, currency: Currency = DEFAULT_CURRENCY): string {
+  const shown = formatMoney(amount, currency).slice(CURRENCIES[currency].symbol.length);
+  if (currency === "NGN") return `${shown} naira`;
+
+  const [dollars, cents] = shown.split(".");
+  const dollarWords = `${dollars} ${dollars === "1" ? "dollar" : "dollars"}`;
+  if (!cents || cents === "00") return dollarWords;
+  return `${dollarWords} and ${Number(cents)} ${cents === "01" ? "cent" : "cents"}`;
+}
+
 /** "2m ago", "Yesterday", "3 Sep" -- never a raw timestamp. */
 export function formatWhen(unixSeconds: number | null): string {
   if (unixSeconds === null) return "Just now";

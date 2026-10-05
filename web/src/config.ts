@@ -151,6 +151,15 @@ export const config = {
   /** Bound on memo length, mirroring KoloPay.MAX_MEMO_BYTES. */
   maxNoteBytes: 200,
 
+  voice: {
+    /**
+     * The most a spoken "send" can confirm, in raw dollar units ($20, about
+     * ₦32,300). Anyone nearby can say "send", so above this the person has to
+     * tap. The review screen is shown either way.
+     */
+    confirmLimit: BigInt(20_000_000),
+  },
+
   /**
    * Display-only FX. The balance is always dollars on chain; naira is a
    * presentation choice the user makes in Settings.
