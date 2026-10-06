@@ -50,7 +50,7 @@ export function SendDemo() {
             </span>
             <div>
               <span className="text-label-caps uppercase text-body-soft">
-                One tap
+                Fast Transfer
               </span>
               <h3 className="font-display text-headline-sm leading-none text-deep">
                 Send by @handle
@@ -68,8 +68,10 @@ export function SendDemo() {
               T
             </span>
             <div>
-              <p className="text-label-lg text-deep">Tolu</p>
-              <p className="text-body-sm text-body-soft">@tolu</p>
+              <p className="text-label-lg text-deep">Tolu Adebayo</p>
+              <p className="text-body-sm text-body-soft">
+                @tolu • Registered 2m ago
+              </p>
             </div>
           </div>
           <CheckCircle className="h-5 w-5 text-grass" />
@@ -77,7 +79,7 @@ export function SendDemo() {
 
         <div className="flex flex-col items-center justify-center py-4">
           <span className="text-label-caps uppercase text-body-soft">
-            Transfer total
+            Transfer Total
           </span>
           <p className="tabular mt-1 font-display text-money-hero text-deep">
             {formatMoney(AMOUNT, "USD")}
@@ -98,10 +100,10 @@ export function SendDemo() {
           <Bolt className="mt-0.5 h-5 w-5 shrink-0 text-grass" />
           <div className="flex flex-col">
             <span className="text-label-md text-deep">
-              Approval batched, fee sponsored
+              Batched Approval &amp; Gas Sponsored
             </span>
             <span className="text-body-sm text-body-soft">
-              One signature, one operation, nothing to confirm twice
+              Single-tap execution • 400ms finality
             </span>
           </div>
         </div>
@@ -117,20 +119,21 @@ export function SendDemo() {
           <Send
             className={`h-5 w-5 transition-transform ${stage === "sending" ? "translate-x-1" : ""}`}
           />
-          {stage === "idle" && `Send ${formatMoney(AMOUNT, "USD")}`}
-          {stage === "sending" && "Sending…"}
-          {stage === "sent" && "Sent"}
+          {stage === "idle" && `1-Tap Send ${formatMoney(AMOUNT, "USD")}`}
+          {stage === "sending" && "Executing Atomic Batch…"}
+          {stage === "sent" && "Sent Successfully!"}
         </button>
 
-        {/* Says what the system does, rather than reporting a transaction that
-            did not happen. ~400ms is Monad's block time, not a measurement of
-            this tap. */}
+        {/* The draft's own line. It is the output of a simulation on a
+            marketing page rather than a receipt -- nothing here touches a
+            chain, and ~400ms is Monad's block time, not a timing of this tap.
+            The invented block height is the one part left off. */}
         <p
           className={`text-center text-label-md text-grass ${
             stage === "sent" ? "animate-fade-up" : "invisible"
           }`}
         >
-          Settles in one Monad block, about 400ms
+          ✓ Settled on Monad in 380ms • one block
         </p>
       </div>
     </div>

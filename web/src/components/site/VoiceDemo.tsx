@@ -14,10 +14,11 @@ import { Mic } from "./Icons";
  * in. It depends on nothing -- no model, no network -- which is why it can run
  * here at all, and that fact is the point the section is making.
  */
+/* The draft's own prompts, word for word -- and real input besides, since the
+   parser below is the app's rather than an illustration of one. */
 const PROMPTS = [
-  "Send 5000 naira to chidi for dinner",
-  "Pay 25 dollars to kemi for groceries",
-  "Send 10k to tolu",
+  "Send 5000 NGN to @chidi for dinner",
+  "Pay $25 to @kemi for groceries",
 ];
 
 export function VoiceDemo() {
@@ -40,18 +41,16 @@ export function VoiceDemo() {
       <div className="flex flex-col gap-4 lg:col-span-7">
         <span className="flex w-fit items-center gap-2 rounded-full bg-deep-2 px-3 py-1 text-label-caps text-spring">
           <Mic className="h-3.5 w-3.5" />
-          Parsed on your phone
+          On-Device Semantic Parser
         </span>
         <h2 className="font-display text-[32px] font-extrabold leading-[36px] tracking-[-0.025em] sm:text-display-lg">
-          Just say it.
+          Speak naturally.
           <br />
-          <span className="text-spring">We handle the rest.</span>
+          <span className="text-spring">We handle the plumbing.</span>
         </h2>
         <p className="max-w-lg text-body-lg text-deep-quiet">
-          A small grammar reads who, how much and what for, straight out of the
-          sentence. There is no model and no server, so nothing you say is sent
-          anywhere or kept. It only fills in the review screen, which you always
-          see.
+          Tap any prompt below to watch the client grammar extract recipient,
+          currency, and memo parameters instantly.
         </p>
 
         <div className="flex flex-wrap gap-2 pt-2">
@@ -78,7 +77,7 @@ export function VoiceDemo() {
       <div className="flex flex-col gap-4 rounded-2xl bg-card p-6 text-body shadow-xl lg:col-span-5">
         <div className="flex items-center justify-between border-b border-wash-3 pb-3">
           <span className="text-label-caps uppercase text-body-soft">
-            What it filled in
+            Parsed Transaction Payload
           </span>
           <span className="flex items-center gap-1" aria-hidden>
             {[0, 120, 240].map((d) => (
@@ -93,9 +92,9 @@ export function VoiceDemo() {
 
         <dl key={heard} className="flex animate-fade-up flex-col gap-3">
           {[
-            ["Who", parsed.handle ? `@${parsed.handle}` : "—"],
-            ["How much", amount],
-            ["What for", parsed.note || "—"],
+            ["Recipient Handle", parsed.handle ? `@${parsed.handle}` : "—"],
+            ["Execution Amount", amount],
+            ["Batched Memo", parsed.note || "—"],
           ].map(([k, v]) => (
             <div
               key={k}
@@ -110,11 +109,15 @@ export function VoiceDemo() {
         </dl>
 
         <div className="flex items-center justify-between rounded-xl bg-wash-2 p-2.5">
-          <span className="text-label-caps uppercase text-body-soft">Fee</span>
-          <span className="text-label-md text-grass">Nothing</span>
+          <span className="text-label-caps uppercase text-body-soft">
+            Gas Subsidy
+          </span>
+          <span className="text-label-md text-grass">
+            100% Sponsored (0.00 MON)
+          </span>
         </div>
         <span className="w-full rounded-xl bg-deep py-3 text-center font-display text-label-lg text-spring">
-          You confirm, then it sends
+          Execute Batched Intent
         </span>
       </div>
     </div>

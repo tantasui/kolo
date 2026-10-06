@@ -78,8 +78,8 @@ export default function LandingPage() {
 
 const NAV = [
   { href: "#features", label: "Features" },
-  { href: "#how", label: "How it works" },
-  { href: "#voice", label: "Voice" },
+  { href: "#how-it-works", label: "How it Works" },
+  { href: "/about", label: "Security" },
   { href: "/about", label: "Developers" },
 ];
 
@@ -169,7 +169,7 @@ function Hero() {
                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-grass" />
               </span>
               <span className="text-label-md tracking-wide text-deep">
-                Monad Testnet · no fee to send · nothing to install
+                Built on Monad Testnet • 10,000 TPS • Zero Gas Fees
               </span>
             </span>
 
@@ -185,9 +185,9 @@ function Hero() {
             <p className="max-w-xl text-body-lg leading-relaxed text-body-soft">
               Email sign-in, claim your{" "}
               <span className="font-semibold text-deep">@handle</span>, hold
-              dollar balances. No addresses to copy, no gas to buy, no seed
-              phrase to keep safe, and no confirmation pop-ups. Every transfer
-              is sponsored and batched into a single tap.
+              instant dollar balances. No crypto addresses, no gas fees, no seed
+              phrases, and zero confirmation popups. Every transfer is sponsored
+              and batched into a single effortless tap.
             </p>
 
             {/* The draft's claim field was decorative. This one reads
@@ -230,27 +230,27 @@ const STATS: {
   lit: boolean;
 }[] = [
   {
-    label: "Settlement",
+    label: "Settlement Velocity",
     value: <CountUp to={400} suffix="ms" />,
-    note: "One Monad block",
+    note: "Monad consensus finality",
     lit: false,
   },
   {
-    label: "What you pay",
+    label: "User Transaction Fees",
     value: <CountUp to={0} prefix="$" decimals={2} />,
-    note: "Every fee sponsored",
+    note: "100% Protocol paymaster",
     lit: true,
   },
   {
-    label: "Monad throughput",
+    label: "Throughput Capacity",
     value: <CountUp to={10000} />,
-    note: "Monad's published figure",
+    note: "Monad parallelized TPS",
     lit: false,
   },
   {
-    label: "Words to write down",
-    value: "Zero",
-    note: "No seed phrase, ever",
+    label: "Frictionless Sign-On",
+    value: "0 Words",
+    note: "Never save a seed phrase",
     lit: true,
   },
 ];
@@ -286,7 +286,7 @@ const FEATURES = [
     icon: <AtSign className="h-7 w-7" />,
     tone: "spring" as const,
     title: "Send by @handle",
-    body: "Pay a name, not forty-two characters. One event carries both handles, the amount and your note, which is why your feed can tell you who paid whom.",
+    body: "Pay a name, not a 42-character hash. A single Monad state transition carries both handles, the atomic amount, and your note seamlessly.",
     foot: (
       <div className="flex items-center justify-between rounded-2xl bg-wash-2 p-3">
         <span className="flex items-center gap-2">
@@ -295,25 +295,33 @@ const FEATURES = [
           </span>
           <span className="text-label-md text-deep">@kemi → @fola</span>
         </span>
-        <span className="text-label-caps uppercase text-grass">No fee</span>
+        <span className="text-label-caps uppercase text-grass">
+          Direct Route
+        </span>
       </div>
     ),
   },
   {
     icon: <Mic className="h-7 w-7" />,
     tone: "deep" as const,
-    title: "Send by voice",
-    body: '"Send 5k to Tolu for lunch." A grammar on your phone fills in the review screen. No model, no server, nothing recorded. It decides nothing; you still confirm.',
-    badge: "Nothing leaves the phone",
+    title: "Send by Voice",
+    badge: "Zero Telemetry",
+    body: '"Send 5k to Tolu for lunch." A local grammar parser fills the review screen automatically without hitting external servers. It decides nothing; you still confirm.',
     foot: (
       <div className="flex flex-col gap-2 rounded-2xl bg-deep p-3 text-card">
         <div className="flex items-center justify-between">
-          <span className="text-label-caps text-spring">Parsed on device</span>
-          <span className="flex h-3 items-center gap-1">
-            <span className="h-2 w-1 rounded-full bg-spring" />
-            <span className="h-4 w-1 rounded-full bg-spring" />
-            <span className="h-3 w-1 rounded-full bg-spring" />
-            <span className="h-5 w-1 rounded-full bg-spring" />
+          <span className="text-label-caps text-spring">Local Parser Feed</span>
+          {/* The bars move, as they do in the draft. Three heights, offset by
+              delay, so the group reads as one waveform rather than a row of
+              lights blinking together. */}
+          <span className="flex h-3 items-end gap-1" aria-hidden>
+            {[0, 100, 200, 150].map((d, i) => (
+              <span
+                key={d}
+                className="w-1 origin-bottom animate-bar rounded-full bg-spring"
+                style={{ height: [8, 16, 12, 20][i], animationDelay: `${d}ms` }}
+              />
+            ))}
           </span>
         </div>
         <span className="text-body-sm italic text-deep-quiet">
@@ -325,12 +333,12 @@ const FEATURES = [
   {
     icon: <LinkIcon className="h-7 w-7" />,
     tone: "wash" as const,
-    title: "Claim links",
-    body: "Put money behind a link for somebody with no account at all. The secret never leaves your phone. Take it back whenever you like, and it returns on its own after seven days.",
+    title: "Claim Links",
+    body: "Drop money behind a secret link for friends who don't even have a Kolo account yet. Fully reclaimable if unclaimed; auto-expires safely in 7 days.",
     foot: (
       <div className="flex items-center justify-between rounded-2xl bg-wash-2 p-3">
         <span className="truncate text-body-sm font-semibold text-deep">
-          /claim#x98a-44fe
+          kolo.app/c/x98a-44fe
         </span>
         <span className="rounded-full bg-deep px-2 py-0.5 text-label-caps text-spring">
           Reclaimable
@@ -341,8 +349,8 @@ const FEATURES = [
   {
     icon: <Group className="h-7 w-7" />,
     tone: "spring" as const,
-    title: "Circles (ajo / esusu)",
-    body: "Everyone puts in the same each month and one person collects, turn by turn. Deposits scale with position, so nobody can walk away ahead, and nobody is ever thrown out.",
+    title: "Circles (Ajo / Esusu)",
+    body: "Community savings reimagined. Deposits dynamically scale with payout rotation position so nobody walks away ahead, and no member is ever expelled.",
     foot: (
       <div className="flex items-center justify-between rounded-2xl bg-wash p-3">
         <span className="flex -space-x-2">
@@ -361,23 +369,23 @@ const FEATURES = [
             </span>
           ))}
         </span>
-        <span className="text-label-md text-deep">Nobody holds the money</span>
+        <span className="text-label-md text-deep">5 Members • ₦500k Pot</span>
       </div>
     ),
   },
   {
     icon: <Savings className="h-7 w-7" />,
     tone: "wash" as const,
-    title: "Goals, unlocked",
-    body: "Money set aside for what matters, out of the balance you spend from. Take any of it back whenever you want, before or after you get there, with nothing deducted.",
+    title: "Goals • Unlocked",
+    body: "Money set aside towards what matters to you. Withdraw anytime back to your primary balance without locked lockups, penalties, or liquidated interest.",
     foot: (
       <div className="flex flex-col gap-1.5">
         <div className="flex justify-between text-label-caps">
-          <span className="text-deep">Rent</span>
-          <span className="text-grass">64%</span>
+          <span className="text-deep">MacBook Pro M4</span>
+          <span className="text-grass">78%</span>
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-wash-4">
-          <div className="h-full w-[64%] rounded-full bg-grass" />
+          <div className="h-full w-[78%] rounded-full bg-grass" />
         </div>
       </div>
     ),
@@ -385,12 +393,12 @@ const FEATURES = [
   {
     icon: <Pie className="h-7 w-7" />,
     tone: "deep" as const,
-    title: "Pots, shared fairly",
-    body: "A few people fund one thing — a subscription, a generator, the internet — and each pays only for what they used. One member spending can never reach another's money.",
+    title: "Pots (Shared Utility)",
+    body: "Split recurrent subscriptions, shared apartment power bills, or internet. Multiple people fund one pot with strict per-person spending limits.",
     foot: (
       <div className="flex items-center justify-between rounded-2xl bg-wash-2 p-3">
         <span className="text-body-sm font-bold text-deep">
-          Four people, one bill
+          Starlink Internet Bill
         </span>
         <span className="text-label-caps uppercase text-grass">Own share</span>
       </div>
@@ -412,12 +420,12 @@ function Features() {
                 What you can do with Kolo.
               </h2>
               <p className="mt-1 text-body-lg text-body-soft">
-                Six things, each with its own contract, and none of them charges
-                you.
+                Engineered like a modern consumer neo-bank, powered by
+                invisible, hyperspeed ledger architecture.
               </p>
             </div>
             <span className="w-fit rounded-full bg-wash-2 px-3 py-1 text-label-md text-deep">
-              6 ways to move money
+              6 Core Financial Primitives
             </span>
           </div>
         </Reveal>
@@ -473,41 +481,42 @@ function Features() {
  */
 const ROWS = [
   {
-    layer: "Making an account",
-    old: "Write 24 words on paper and never lose them",
-    kolo: "An email, or a passkey",
+    layer: "Account Creation",
+    old: "24-word seed phrase on paper",
+    kolo: "1-Click Email Magic Link / Passkey",
   },
   {
-    layer: "Paying a fee",
-    old: "Buy the network's own coin before you can move yours",
-    kolo: "Nothing. Somebody else pays, every time",
+    layer: "Transaction Fees",
+    old: "Buy native gas token first",
+    kolo: "100% Protocol-Sponsored (0 Gas)",
   },
   {
-    layer: "Who you are paying",
-    old: "0x71C…b29, and a typo loses the money",
-    kolo: "A name: @tola, @dami",
+    layer: "Recipient Addressing",
+    old: "0x71C...b29 (Mistake risks total loss)",
+    kolo: "Simple Human Names (@tola, @dami)",
   },
   {
-    layer: "Sending once",
-    old: "Approve, then confirm, then wait",
+    layer: "Execution Speed",
+    old: "15-45 sec spinning modal",
     kolo: "One tap, batched, no dialog",
   },
 ];
 
 function Comparison() {
   return (
-    <section id="how" className="w-full scroll-mt-24 bg-wash py-24">
+    <section id="how-it-works" className="w-full scroll-mt-24 bg-wash py-24">
       <div className="mx-auto max-w-[1320px] px-5 md:px-12">
         <Reveal>
           <div className="mx-auto mb-10 flex max-w-2xl flex-col gap-2 text-center">
             <span className="text-label-caps uppercase tracking-widest text-grass">
-              The difference
+              Architectural Superiority
             </span>
             <h2 className="font-display text-[32px] leading-[36px] tracking-[-0.025em] text-deep sm:text-display-lg">
-              What everyone else makes you do.
+              Traditional Web3 vs Kolo on Monad
             </h2>
             <p className="text-body-lg text-body-soft">
-              Every row is something you can check by opening any other wallet.
+              We stripped away every painful cryptographic abstraction so
+              everyday users just send money.
             </p>
           </div>
         </Reveal>
@@ -515,13 +524,13 @@ function Comparison() {
         <Reveal>
           <div className="overflow-hidden rounded-3xl bg-card shadow-md">
             <div className="grid grid-cols-12 gap-3 bg-wash-4 p-4 text-label-lg text-deep md:p-6">
-              <div className="col-span-12 md:col-span-4">Doing this</div>
+              <div className="col-span-12 md:col-span-4">Experience Layer</div>
               <div className="col-span-6 text-body-soft md:col-span-4">
-                Anywhere else
+                Traditional Web3
               </div>
               <div className="col-span-6 flex items-center gap-1.5 text-grass md:col-span-4">
                 <CheckCircle className="h-4 w-4" />
-                With Kolo
+                Kolo on Monad
               </div>
             </div>
 
@@ -620,14 +629,14 @@ function FinalCTA() {
           <div className="relative flex flex-col items-center justify-between gap-6 overflow-hidden rounded-3xl bg-spring p-10 text-on-spring shadow-xl md:flex-row md:p-16">
             <div className="z-10 flex max-w-xl flex-col gap-2">
               <span className="text-label-caps uppercase tracking-widest text-on-spring/70">
-                First come, first served
+                Early Monad Network Access
               </span>
               <h2 className="font-display text-[32px] font-extrabold leading-tight tracking-[-0.03em] sm:text-display-xl">
                 Claim your @handle before it&apos;s taken.
               </h2>
               <p className="text-body-lg text-on-spring/80">
-                Free, yours to keep, and nobody can take it back. Your email is
-                the whole setup.
+                Reserve your identity on the Monad testnet ledger today. 100%
+                free, non-custodial, and zero gas fees.
               </p>
             </div>
 
@@ -637,14 +646,14 @@ function FinalCTA() {
                 className="rounded-full bg-deep px-8 py-4 text-center font-display text-headline-sm
                            text-spring shadow-md transition-all hover:bg-deep-2 active:translate-y-0.5"
               >
-                Get started
+                Reserve @handle Now
               </Link>
               <Link
                 href="/about"
                 className="rounded-full bg-card/80 px-8 py-4 text-center font-display text-headline-sm
                            text-deep transition-all hover:bg-card active:translate-y-0.5"
               >
-                How it works
+                Read Docs
               </Link>
             </div>
           </div>

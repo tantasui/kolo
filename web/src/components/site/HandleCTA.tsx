@@ -113,9 +113,7 @@ export function HandleCTA() {
                      text-[16px] font-semibold text-on-spring transition hover:bg-spring-dim
                      active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40"
         >
-          {handle
-            ? `Claim @${handle.slice(0, config.handle.maxLength)}`
-            : "Get started"}
+          {handle ? "Claim Free" : "Claim Free"}
         </button>
       </form>
 
@@ -141,16 +139,16 @@ function Status({ state }: { state: State }) {
 function hint(state: State, handle: string): string {
   switch (state.kind) {
     case "empty":
-      return "Letters, numbers and underscores. Your email is all it takes to sign in.";
+      return "Instant Claim • Sub-second";
     case "invalid":
       return state.message;
     case "checking":
-      return "Checking…";
+      return "Checking the registry…";
     case "available":
-      return `@${handle} is free. Nobody has claimed it.`;
+      return `@${handle} is currently available • 0.00 MON fee`;
     case "taken":
-      return `@${handle} is taken. Try another.`;
+      return `@${handle} is already claimed • try another`;
     case "unknown":
-      return "Couldn't check just now. Carry on and the app will tell you.";
+      return "Couldn't reach the registry • carry on anyway";
   }
 }
