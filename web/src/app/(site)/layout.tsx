@@ -1,15 +1,26 @@
-import { JetBrains_Mono } from "next/font/google";
+import { Epilogue, Inter } from "next/font/google";
 
 /**
- * The two public pages -- the landing page and the long answer behind it --
- * are the only surfaces outside the app, and the only ones that load a second
- * family. Scoped to this route group rather than put in the root layout,
- * because the app itself has one typeface and should not pay for another.
+ * The two public pages are the only surfaces outside the app, and the only
+ * ones that load a second and third family. Scoped to this route group rather
+ * than the root layout, because the app has one typeface and should not pay
+ * for two more.
+ *
+ * Epilogue carries the display sizes and Inter everything else, which is the
+ * pairing the design is built on: Epilogue's tighter counters hold up at 56px
+ * where Inter goes slack, and Inter reads better than Epilogue below 18px.
  */
-const mono = JetBrains_Mono({
+const epilogue = Epilogue({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-mono",
+  weight: ["600", "700", "800"],
+  variable: "--font-epilogue",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -18,5 +29,9 @@ export default function SiteLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className={mono.variable}>{children}</div>;
+  return (
+    <div className={`${epilogue.variable} ${inter.variable} font-ui`}>
+      {children}
+    </div>
+  );
 }

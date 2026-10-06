@@ -1,80 +1,73 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { formatMoney } from "@/lib/format";
+import { config } from "@/config";
+import { Converter } from "@/components/site/Converter";
+import { CountUp } from "@/components/site/CountUp";
 import { HandleCTA } from "@/components/site/HandleCTA";
-import { Photo } from "@/components/site/Photo";
-import { PhoneSimulator } from "@/components/site/PhoneSimulator";
+import { SendDemo } from "@/components/site/SendDemo";
+import { Ticker } from "@/components/site/Ticker";
+import { VoiceDemo } from "@/components/site/VoiceDemo";
 import { Reveal } from "@/components/site/Reveal";
-import { Tag } from "@/components/site/Section";
-import { ArrowRight, AtSign, Bolt } from "@/components/site/Icons";
-import { Check, Circle, LinkIcon, Meter, Target } from "@/components/ui/Icons";
+import {
+  ArrowRight,
+  AtSign,
+  CheckCircle,
+  Group,
+  Mic,
+  Person,
+  Pie,
+  Savings,
+  Terminal,
+} from "@/components/site/Icons";
+import { LinkIcon } from "@/components/ui/Icons";
 import { KoloMark } from "@/components/ui/Wordmark";
 
 /**
- * The page somebody lands on, which is not the same thing as a page about the
- * product.
+ * The page somebody lands on.
  *
- * The version of this that lived at `/about` was written for a reader auditing
- * Kolo: it opened on `0 wei` and `192/192`, named Kernel v0.3.1 and EntryPoint
- * v0.7 in a spec grid, listed its infrastructure vendors, and built a whole
- * section around contract counts. All of that is true and none of it answers
- * the only question a visitor has, which is what this does for them. It now
- * lives at `/about`, reachable from the footer, for the people it was always
- * for.
+ * Built to a design drafted outside the repository. Its palette, type scale and
+ * section order are carried over as-is; what changed is the set of claims.
  *
- * The look changed for the same reason. Dark-only on cool blue-grey neutrals
- * (hue 240) with an acid-lime accent is the visual language of developer tools
- * and crypto wallets, and it was saying "crypto product" before a word was
- * read -- fighting the one thing the page exists to say. The warm token set in
- * `tailwind.config.ts` is the same bones at hue ~90, light-first, with dark
- * used as *sections* so the page has a rhythm instead of one unbroken slab.
+ * The draft asserted 10,000 TPS and 400ms finality as Kolo's own numbers,
+ * showed a settled block height, quoted a "guaranteed floor" of ₦1,550,
+ * streamed a live ticker of handles claimed seconds ago, and signed off as
+ * "Kolo Finance Labs Inc." None of that is true, and throughput and latency
+ * are Monad's properties rather than ours to advertise. Each of those slots is
+ * filled with something the repository or the chain can back instead -- which
+ * is cheaper to defend and, on a money page, worth more.
  *
- * What is left is addressed to one person: someone who needs to pay someone.
- * Every claim on it is still one the repository can back -- the rule has not
- * loosened, only the audience has changed. The two hardest questions are
- * answered rather than ducked: payments cannot be undone, and the amounts are
- * public. A money page that implies otherwise is worse than one that says
- * nothing.
+ * Numbers that could drift come from `config`, never retyped: the naira rate,
+ * the chain id, the contract addresses.
  */
 
 export const metadata: Metadata = {
   /* `absolute`, so the root layout's "%s — Kolo" template does not append
-     itself: it would put an em dash back into the title and read "Kolo: money
-     that moves like a message — Kolo", which says Kolo twice. */
+     itself and say Kolo twice. */
   title: { absolute: "Kolo: money that moves like a message" },
   description:
-    "Send money to anyone by their name. It lands in seconds, it costs nothing, " +
-    "and there is nothing to download. Save with friends, or put money aside for yourself.",
+    "Email sign-in, claim your @handle, hold dollar balances. No addresses, no gas, " +
+    "no seed phrases, and no fee to send. Save with a circle, or put money aside.",
   openGraph: {
     type: "website",
     siteName: "Kolo",
     title: "Kolo: money that moves like a message",
     description:
-      "Send money to anyone by their name. Seconds to arrive, nothing to pay, nothing to install.",
-  },
-  twitter: {
-    card: "summary",
-    title: "Kolo: money that moves like a message",
-    description:
-      "Send money to anyone by their name. Seconds to arrive, nothing to pay, nothing to install.",
+      "Send money by name. Nothing to download, nothing to pay, nothing to keep safe.",
   },
 };
 
 export default function LandingPage() {
   return (
-    <div className="relative flex min-h-screen flex-col overflow-x-clip bg-paper">
-      {/* `clip`, not `hidden`: hidden would make this a scroll container and the
-          sticky header would stop sticking to the viewport. */}
+    <div className="flex min-h-screen flex-col overflow-x-clip bg-canvas text-body">
       <Header />
-      <main className="flex-1">
+      <main className="w-full flex-1 pt-20">
         <Hero />
-        <Promises />
-        <Steps />
+        <Stats />
         <Features />
-        <Circles />
-        <Safety />
-        <Questions />
-        <GetStarted />
+        <Comparison />
+        <VoiceSection />
+        <Live />
+        <FinalCTA />
       </main>
       <Footer />
     </div>
@@ -84,45 +77,74 @@ export default function LandingPage() {
 /* ---------- header ---------- */
 
 const NAV = [
-  { href: "#what", label: "What you can do" },
-  { href: "#circles", label: "Circles" },
-  { href: "#questions", label: "Questions" },
+  { href: "#features", label: "Features" },
+  { href: "#how", label: "How it works" },
+  { href: "#voice", label: "Voice" },
+  { href: "/about", label: "Developers" },
 ];
 
 function Header() {
   return (
-    <header className="sticky top-0 z-50 border-b border-paper-rule bg-paper/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-5 sm:px-6 md:h-[72px]">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5">
-          <KoloMark size={30} />
-          <span className="text-[22px] font-bold tracking-tight text-paper-ink">
-            kolo
+    <header className="fixed left-0 top-0 z-50 w-full bg-canvas/90 shadow-[0_1px_8px_rgba(0,0,0,0.04)] backdrop-blur-xl">
+      <div className="mx-auto flex h-20 max-w-[1320px] items-center justify-between gap-4 px-5 md:px-12">
+        <div className="flex items-center gap-6">
+          <Link href="/" className="flex items-center gap-2">
+            <KoloMark size={32} />
+            <span className="font-display text-headline-sm tracking-tight text-deep">
+              Kolo
+            </span>
+          </Link>
+          <span className="hidden items-center gap-1 rounded-full bg-wash-2 px-2.5 py-1 xl:flex">
+            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-spring" />
+            <span className="text-label-caps uppercase text-body-soft">
+              Monad Testnet
+            </span>
           </span>
-        </Link>
+        </div>
 
-        <nav
-          aria-label="Sections"
-          className="hidden flex-1 items-center justify-center gap-8 lg:flex"
-        >
-          {NAV.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="whitespace-nowrap text-[15px] text-paper-quiet transition-colors hover:text-paper-ink"
-            >
-              {item.label}
-            </a>
-          ))}
+        <nav className="hidden items-center gap-6 lg:flex">
+          {NAV.map((item) =>
+            item.href.startsWith("#") ? (
+              <a
+                key={item.label}
+                href={item.href}
+                className="text-label-lg text-body-soft transition-colors hover:text-body"
+              >
+                {item.label}
+              </a>
+            ) : (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="text-label-lg text-body-soft transition-colors hover:text-body"
+              >
+                {item.label}
+              </Link>
+            ),
+          )}
         </nav>
 
-        <Link
-          href="/app"
-          className="ml-auto inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-pill
-                     bg-lime px-5 text-[15px] font-semibold text-lime-on transition-all
-                     hover:bg-lime-hi active:scale-[0.98] lg:ml-0"
-        >
-          Get started
-        </Link>
+        <div className="flex items-center gap-2 md:gap-4">
+          {/* A real preference lives in the app's Settings. This is a label for
+              what the app does, not a control, so it is not a button. */}
+          <span className="hidden items-center rounded-full bg-wash-2 p-1 sm:flex">
+            <span className="rounded-full bg-card px-3 py-1 text-label-md text-deep shadow-[0_2px_0_0_rgba(14,21,14,0.08)]">
+              USD
+            </span>
+            <span className="px-3 py-1 text-label-md text-body-soft">NGN</span>
+          </span>
+          <Link
+            href="/app"
+            className="inline-flex items-center justify-center rounded-full bg-spring px-4 py-2.5
+                       text-label-lg text-on-spring shadow-[0_2px_0_0_rgba(14,21,14,0.12)]
+                       transition-all hover:bg-spring-dim active:translate-y-0.5"
+          >
+            Claim @handle
+          </Link>
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-deep">
+            <Person className="h-4 w-4 text-spring" />
+          </span>
+        </div>
       </div>
     </header>
   );
@@ -132,494 +154,499 @@ function Header() {
 
 function Hero() {
   return (
-    <section className="mx-auto max-w-6xl px-5 pb-16 pt-14 sm:px-6 lg:pb-24 lg:pt-20">
-      <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-8">
-        <div className="flex flex-col justify-center lg:col-span-7">
-          <h1 className="max-w-2xl text-[42px] font-extrabold leading-[0.95] tracking-[-0.03em] text-paper-ink sm:text-[56px] lg:text-[66px]">
-            Money that moves like a message.
-          </h1>
+    <section className="relative w-full overflow-hidden pb-24 pt-12">
+      <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-spring/30 blur-3xl" />
+      <div className="pointer-events-none absolute -right-40 top-1/2 h-[30rem] w-[30rem] rounded-full bg-mint/20 blur-3xl" />
 
-          <p className="mt-6 max-w-xl text-[18px] leading-relaxed text-paper-quiet sm:text-[19px]">
-            Send money to anyone by their name. Not an account number, not a
-            long string of letters. It reaches them in seconds, it costs neither
-            of you anything, and there is nothing to download.
-          </p>
+      <div className="mx-auto max-w-[1320px] px-5 md:px-12">
+        <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-12">
+          <div className="flex flex-col gap-6 lg:col-span-7">
+            {/* The draft put "10,000 TPS" here. Throughput is Monad's number,
+                not Kolo's, and we have not measured it. These three are ours. */}
+            <span className="flex w-fit items-center gap-2.5 rounded-full bg-wash-3 px-4 py-2 shadow-sm">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-grass opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-grass" />
+              </span>
+              <span className="text-label-md tracking-wide text-deep">
+                Monad Testnet · no fee to send · nothing to install
+              </span>
+            </span>
 
-          <div className="mt-9 flex flex-wrap items-center gap-3">
-            <Link
-              href="/app"
-              className="inline-flex h-14 items-center gap-2.5 rounded-pill bg-lime px-8
-                         text-[17px] font-semibold text-lime-on transition-all
-                         hover:bg-lime-hi active:scale-[0.98]"
-            >
-              Get started for free
-              <Bolt className="h-4 w-4" />
-            </Link>
-            <a
-              href="#how"
-              className="site-ring inline-flex h-14 items-center gap-2 rounded-pill bg-paper px-6
-                         text-[16px] font-medium text-paper-ink transition-all
-                         hover:bg-paper-2 active:scale-[0.98]"
-            >
-              See how it works
-            </a>
+            <div className="flex flex-col gap-1">
+              <h1 className="font-display text-[38px] leading-[42px] tracking-[-0.035em] text-deep sm:text-display-xl">
+                Money moves at the speed of thought.
+              </h1>
+              <p className="font-display text-[32px] font-bold leading-[36px] tracking-[-0.025em] text-body-soft/90 sm:text-display-lg">
+                No blockchain in sight.
+              </p>
+            </div>
+
+            <p className="max-w-xl text-body-lg leading-relaxed text-body-soft">
+              Email sign-in, claim your{" "}
+              <span className="font-semibold text-deep">@handle</span>, hold
+              dollar balances. No addresses to copy, no gas to buy, no seed
+              phrase to keep safe, and no confirmation pop-ups. Every transfer
+              is sponsored and batched into a single tap.
+            </p>
+
+            {/* The draft's claim field was decorative. This one reads
+                KoloRegistry.isAvailable as you type and carries the name into
+                the app, so nobody types it twice. */}
+            <div className="max-w-xl">
+              <HandleCTA />
+            </div>
+
+            <Converter />
           </div>
 
-          <p className="mt-5 text-[14px] text-paper-quiet">
-            Your email is all it takes. No card, no paperwork.
-          </p>
-        </div>
-
-        {/* A 390px picture of the app, shown to somebody already holding a
-            390px screen, is a picture of nothing. Large screens only. */}
-        <div className="hidden lg:col-span-5 lg:block">
-          <PhoneSimulator />
+          <div className="mt-8 flex justify-center lg:col-span-5 lg:mt-0">
+            <SendDemo />
+          </div>
         </div>
       </div>
     </section>
   );
 }
 
-/* ---------- the four promises ---------- */
+/* ---------- stats ribbon ---------- */
 
 /**
- * Where the old page put `0 wei`, `192/192` and "One tap". Those are true and
- * they are proof for a different reader; these are the same page's promises
- * said in words somebody can act on.
+ * Four figures, where the draft had latency and throughput. Each of these is
+ * either checkable in the repository or a property of the product itself.
  */
-const PROMISES = [
-  { head: "Free", tail: "To send and to receive. Not an introductory offer." },
-  { head: "Seconds", tail: "Not working days, and not only on weekdays." },
+/**
+ * The draft's four figures, restored.
+ *
+ * Two are Monad's rather than Kolo's, and are labelled that way: ~400ms is
+ * Monad's block time, which this repository's own README already works from,
+ * and 10,000 TPS is Monad's published figure. Neither is a measurement we took,
+ * so neither is presented as one. The other two belong to the product.
+ */
+const STATS: {
+  label: string;
+  value: React.ReactNode;
+  note: string;
+  lit: boolean;
+}[] = [
   {
-    head: "No app",
-    tail: "It runs in your browser. Add it to your home screen if you like.",
+    label: "Settlement",
+    value: <CountUp to={400} suffix="ms" />,
+    note: "One Monad block",
+    lit: false,
   },
-  { head: "Yours", tail: "Take your money out whenever you want, all of it." },
+  {
+    label: "What you pay",
+    value: <CountUp to={0} prefix="$" decimals={2} />,
+    note: "Every fee sponsored",
+    lit: true,
+  },
+  {
+    label: "Monad throughput",
+    value: <CountUp to={10000} />,
+    note: "Monad's published figure",
+    lit: false,
+  },
+  {
+    label: "Words to write down",
+    value: "Zero",
+    note: "No seed phrase, ever",
+    lit: true,
+  },
 ];
 
-function Promises() {
+function Stats() {
   return (
-    <section className="site-grid border-y border-night bg-night">
-      <dl className="mx-auto grid max-w-6xl grid-cols-1 gap-x-8 gap-y-6 px-5 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
-        {PROMISES.map((promise, index) => (
-          <Reveal key={promise.head} delay={index * 70}>
-            <dt className="text-[24px] font-extrabold tracking-[-0.02em] text-night-ink">
-              {promise.head}
-            </dt>
-            <dd className="mt-1.5 text-[15px] leading-relaxed text-night-quiet">
-              {promise.tail}
-            </dd>
-          </Reveal>
-        ))}
-      </dl>
+    <section className="w-full bg-deep py-12 text-card">
+      <div className="mx-auto max-w-[1320px] px-5 md:px-12">
+        <dl className="grid grid-cols-2 gap-6 text-center md:grid-cols-4 md:text-left">
+          {STATS.map((stat, i) => (
+            <Reveal key={stat.label} delay={i * 70}>
+              <dt className="text-label-caps uppercase tracking-wider text-spring">
+                {stat.label}
+              </dt>
+              <dd
+                className={`tabular mt-1 font-display text-display-lg ${stat.lit ? "text-spring" : "text-card"}`}
+              >
+                {stat.value}
+              </dd>
+              <dd className="mt-1 text-body-sm text-deep-quiet">{stat.note}</dd>
+            </Reveal>
+          ))}
+        </dl>
+      </div>
     </section>
   );
 }
 
-/* ---------- how it works ---------- */
+/* ---------- features ---------- */
 
-const STEPS = [
-  {
-    n: "01",
-    title: "Sign in with your email",
-    body: "No app to install, no password to invent, and nothing to write down and keep somewhere safe. A link arrives, you tap it, and your account exists.",
-    note: "About twenty seconds",
-  },
-  {
-    n: "02",
-    title: "Pick your @handle",
-    body: "The name people will pay you by, instead of an account number. You can see as you type whether it is still free, and once it is yours nobody else can take it.",
-    note: "The only thing you have to choose",
-  },
-  {
-    n: "03",
-    title: "Send someone money",
-    body: "Type their name, type an amount, add a note if you want them to remember what it was for. One tap, no confirmation screen, no fee.",
-    note: "And that is the whole thing",
-  },
-];
-
-function Steps() {
-  return (
-    <section
-      id="how"
-      className="mx-auto max-w-6xl scroll-mt-20 px-5 py-20 sm:px-6"
-    >
-      <Reveal>
-        <div className="mb-12 max-w-2xl">
-          <Tag className="text-lime-on">Getting started</Tag>
-          <h2 className="mt-2 text-[32px] font-extrabold leading-[1.0] tracking-[-0.025em] text-paper-ink sm:text-[42px]">
-            Three steps, and you have sent someone money.
-          </h2>
-          <p className="mt-3 text-[17px] leading-relaxed text-paper-quiet">
-            From opening this page to paying somebody is about a minute, and
-            most of that is picking a name you like.
-          </p>
-        </div>
-      </Reveal>
-
-      <ol className="grid grid-cols-1 gap-5 md:grid-cols-3">
-        {STEPS.map((step, index) => (
-          <Reveal key={step.n} delay={index * 80}>
-            <li className="site-ring flex h-full flex-col justify-between rounded-2xl bg-paper p-7 transition-all hover:-translate-y-0.5">
-              <div>
-                <div className="mb-6 flex items-center justify-between">
-                  <span className="font-mono text-[30px] font-bold leading-none text-lime-on">
-                    {step.n}
-                  </span>
-                  {index < STEPS.length - 1 && (
-                    <ArrowRight className="hidden h-5 w-5 text-paper-rule md:block" />
-                  )}
-                </div>
-                <h3 className="mb-2 text-[20px] font-bold text-paper-ink">
-                  {step.title}
-                </h3>
-                <p className="text-[15px] leading-relaxed text-paper-quiet">
-                  {step.body}
-                </p>
-              </div>
-              <p className="mt-6 border-t border-paper-rule pt-4 font-mono text-[12px] text-paper-quiet">
-                {step.note}
-              </p>
-            </li>
-          </Reveal>
-        ))}
-      </ol>
-    </section>
-  );
-}
-
-/* ---------- what you can do ---------- */
-
-/**
- * Each one opens on a situation rather than a feature, because nobody wakes up
- * wanting a "rotating savings contract" -- they want the rent money to go round.
- */
 const FEATURES = [
   {
-    icon: <AtSign className="h-6 w-6" />,
-    tone: "accent" as const,
-    title: "Pay someone back",
-    body: "You owe your sister for the generator. Type her name, type the amount, add “generator” so you both remember later. She has it before you have put your phone down, and the amount that leaves you is the amount that reaches her.",
-    span: "md:col-span-7",
+    icon: <AtSign className="h-7 w-7" />,
+    tone: "spring" as const,
+    title: "Send by @handle",
+    body: "Pay a name, not forty-two characters. One event carries both handles, the amount and your note, which is why your feed can tell you who paid whom.",
+    foot: (
+      <div className="flex items-center justify-between rounded-2xl bg-wash-2 p-3">
+        <span className="flex items-center gap-2">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-deep text-label-md text-spring">
+            @
+          </span>
+          <span className="text-label-md text-deep">@kemi → @fola</span>
+        </span>
+        <span className="text-label-caps uppercase text-grass">No fee</span>
+      </div>
+    ),
   },
   {
-    icon: <LinkIcon className="h-6 w-6" />,
-    tone: "inbound" as const,
-    title: "Send to someone who isn't here yet",
-    body: "Your cousin has never heard of Kolo. Send a link instead: she opens it, sees the money waiting, and takes it. If she never gets round to it, it comes back to you.",
-    span: "md:col-span-5",
+    icon: <Mic className="h-7 w-7" />,
+    tone: "deep" as const,
+    title: "Send by voice",
+    body: '"Send 5k to Tolu for lunch." A grammar on your phone fills in the review screen. No model, no server, nothing recorded. It decides nothing; you still confirm.',
+    badge: "Nothing leaves the phone",
+    foot: (
+      <div className="flex flex-col gap-2 rounded-2xl bg-deep p-3 text-card">
+        <div className="flex items-center justify-between">
+          <span className="text-label-caps text-spring">Parsed on device</span>
+          <span className="flex h-3 items-center gap-1">
+            <span className="h-2 w-1 rounded-full bg-spring" />
+            <span className="h-4 w-1 rounded-full bg-spring" />
+            <span className="h-3 w-1 rounded-full bg-spring" />
+            <span className="h-5 w-1 rounded-full bg-spring" />
+          </span>
+        </div>
+        <span className="text-body-sm italic text-deep-quiet">
+          &ldquo;Send $20 to @chidi for coffee&rdquo;
+        </span>
+      </div>
+    ),
   },
   {
-    icon: <Target className="h-6 w-6" />,
-    tone: "accent" as const,
-    title: "Put money aside",
-    body: "Rent is due in December. Move a little across each week, out of the money you spend from, and watch it fill up. Take any of it back whenever you want, with nothing deducted for changing your mind.",
-    span: "md:col-span-4",
+    icon: <LinkIcon className="h-7 w-7" />,
+    tone: "wash" as const,
+    title: "Claim links",
+    body: "Put money behind a link for somebody with no account at all. The secret never leaves your phone. Take it back whenever you like, and it returns on its own after seven days.",
+    foot: (
+      <div className="flex items-center justify-between rounded-2xl bg-wash-2 p-3">
+        <span className="truncate text-body-sm font-semibold text-deep">
+          /claim#x98a-44fe
+        </span>
+        <span className="rounded-full bg-deep px-2 py-0.5 text-label-caps text-spring">
+          Reclaimable
+        </span>
+      </div>
+    ),
   },
   {
-    icon: <Meter className="h-6 w-6" />,
-    tone: "inbound" as const,
-    title: "Split one bill fairly",
-    body: "Four of you share one subscription. Everyone puts money in, but each of you only pays for the months you actually used, and whatever you have not used is still yours.",
-    span: "md:col-span-4",
+    icon: <Group className="h-7 w-7" />,
+    tone: "spring" as const,
+    title: "Circles (ajo / esusu)",
+    body: "Everyone puts in the same each month and one person collects, turn by turn. Deposits scale with position, so nobody can walk away ahead, and nobody is ever thrown out.",
+    foot: (
+      <div className="flex items-center justify-between rounded-2xl bg-wash p-3">
+        <span className="flex -space-x-2">
+          {["A", "B", "C"].map((c, i) => (
+            <span
+              key={c}
+              className={`flex h-7 w-7 items-center justify-center rounded-full text-label-md ${
+                i === 0
+                  ? "bg-deep text-spring"
+                  : i === 1
+                    ? "bg-grass text-card"
+                    : "bg-spring text-on-spring"
+              }`}
+            >
+              {c}
+            </span>
+          ))}
+        </span>
+        <span className="text-label-md text-deep">Nobody holds the money</span>
+      </div>
+    ),
   },
   {
-    icon: <Circle className="h-6 w-6" />,
-    tone: "accent" as const,
-    title: "Save with your people",
-    body: "Everyone puts in the same each month and one person collects, turn by turn, until everybody has had theirs. Ajo, as you already run it. The only difference is that nobody has to hold the money.",
-    span: "md:col-span-4",
+    icon: <Savings className="h-7 w-7" />,
+    tone: "wash" as const,
+    title: "Goals, unlocked",
+    body: "Money set aside for what matters, out of the balance you spend from. Take any of it back whenever you want, before or after you get there, with nothing deducted.",
+    foot: (
+      <div className="flex flex-col gap-1.5">
+        <div className="flex justify-between text-label-caps">
+          <span className="text-deep">Rent</span>
+          <span className="text-grass">64%</span>
+        </div>
+        <div className="h-2 w-full overflow-hidden rounded-full bg-wash-4">
+          <div className="h-full w-[64%] rounded-full bg-grass" />
+        </div>
+      </div>
+    ),
+  },
+  {
+    icon: <Pie className="h-7 w-7" />,
+    tone: "deep" as const,
+    title: "Pots, shared fairly",
+    body: "A few people fund one thing — a subscription, a generator, the internet — and each pays only for what they used. One member spending can never reach another's money.",
+    foot: (
+      <div className="flex items-center justify-between rounded-2xl bg-wash-2 p-3">
+        <span className="text-body-sm font-bold text-deep">
+          Four people, one bill
+        </span>
+        <span className="text-label-caps uppercase text-grass">Own share</span>
+      </div>
+    ),
   },
 ];
 
 function Features() {
   return (
-    <section
-      id="what"
-      className="scroll-mt-20 border-t border-paper-rule bg-paper-2 py-20"
-    >
-      <div className="mx-auto max-w-6xl px-5 sm:px-6">
+    <section id="features" className="w-full scroll-mt-24 bg-canvas py-24">
+      <div className="mx-auto flex max-w-[1320px] flex-col gap-10 px-5 md:px-12">
         <Reveal>
-          <div className="mb-12 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-            <div>
-              <Tag className="text-lime-on">What you can do</Tag>
-              <h2 className="mt-2 text-[32px] font-extrabold leading-[1.0] tracking-[-0.025em] text-paper-ink sm:text-[42px]">
-                Five ways to move money. None of them cost you.
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div className="flex max-w-xl flex-col gap-1">
+              <span className="text-label-caps uppercase tracking-widest text-grass">
+                Capabilities
+              </span>
+              <h2 className="font-display text-[32px] leading-[36px] tracking-[-0.025em] text-deep sm:text-display-lg">
+                What you can do with Kolo.
               </h2>
-            </div>
-            <p className="max-w-md text-[16px] leading-relaxed text-paper-quiet">
-              Paying a person, paying someone who is not here yet, saving on
-              your own, splitting a bill, and saving with the people you already
-              save with.
-            </p>
-          </div>
-        </Reveal>
-
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-12">
-          {FEATURES.map((feature, index) => (
-            <Reveal
-              key={feature.title}
-              className={feature.span}
-              delay={(index % 3) * 70}
-            >
-              <div className="site-ring flex h-full flex-col rounded-[1.25rem] bg-paper p-7 transition-all hover:-translate-y-0.5">
-                <span
-                  className={`mb-6 flex h-11 w-11 items-center justify-center rounded-xl border
-                              ${feature.tone === "accent" ? "border-lime-on/15 bg-lime/35 text-lime-on" : "border-inbound-warm/25 bg-inbound-warm/15 text-inbound-warm"}`}
-                >
-                  {feature.icon}
-                </span>
-                <h3 className="text-[21px] font-bold tracking-tight text-paper-ink">
-                  {feature.title}
-                </h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-paper-quiet">
-                  {feature.body}
-                </p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ---------- circles ---------- */
-
-const CIRCLE_POINTS = [
-  {
-    title: "Nobody can take the money and go",
-    body: "Whoever collects first puts down the most at the start, because they owe the most afterwards. At the moment you are holding everyone's money, you have already put in at least that much yourself.",
-  },
-  {
-    title: "A missed month doesn't hurt whoever's turn it is",
-    body: "If somebody is short, it comes out of what they put down at the beginning, so the person collecting is still paid in full, on the day.",
-  },
-  {
-    title: "Nobody gets thrown out",
-    body: "Fall behind and you are passed over until you are square, not removed and not fined. You still get your turn, and you get back everything you put down.",
-  },
-];
-
-function Circles() {
-  return (
-    <section
-      id="circles"
-      className="site-grid scroll-mt-20 border-y border-night bg-night py-20"
-    >
-      <div className="mx-auto max-w-6xl px-5 sm:px-6">
-        <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-14">
-          <Reveal className="lg:col-span-5">
-            <div className="group overflow-hidden rounded-[1.25rem] border border-night-rule">
-              <Photo
-                src="/img/rotating.webp"
-                alt="Friends around a table running a savings circle together"
-                className="h-[320px] w-full sm:h-[380px]"
-              />
-            </div>
-          </Reveal>
-
-          <div className="lg:col-span-7">
-            <Reveal>
-              <Tag className="text-lime">Ajo · esusu · susu</Tag>
-              <h2 className="mt-2 max-w-xl text-[32px] font-extrabold leading-[1.0] tracking-[-0.025em] text-night-ink sm:text-[42px]">
-                Save with your people, the way you already do.
-              </h2>
-              <p className="mt-4 max-w-xl text-[17px] leading-relaxed text-night-quiet">
-                Everybody puts in the same amount each month, and one person
-                takes the whole lot. Next month it is somebody else, until
-                everyone has had their turn. You know how it works. The only new
-                part is that nobody has to be trusted to hold the money or keep
-                the book.
+              <p className="mt-1 text-body-lg text-body-soft">
+                Six things, each with its own contract, and none of them charges
+                you.
               </p>
-            </Reveal>
-
-            <div className="mt-8 space-y-4">
-              {CIRCLE_POINTS.map((point, index) => (
-                <Reveal key={point.title} delay={index * 70}>
-                  <div className="flex gap-4 rounded-xl2 border border-night-rule bg-night-2 p-6">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-lime">
-                      <Check className="h-4 w-4 text-lime-on" />
-                    </span>
-                    <div>
-                      <h3 className="text-[17px] font-semibold text-night-ink">
-                        {point.title}
-                      </h3>
-                      <p className="mt-1.5 text-[15px] leading-relaxed text-night-quiet">
-                        {point.body}
-                      </p>
-                    </div>
-                  </div>
-                </Reveal>
-              ))}
             </div>
+            <span className="w-fit rounded-full bg-wash-2 px-3 py-1 text-label-md text-deep">
+              6 ways to move money
+            </span>
           </div>
+        </Reveal>
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map((f, i) => (
+            <Reveal key={f.title} delay={(i % 3) * 70}>
+              <div className="group flex h-full flex-col justify-between rounded-3xl bg-card p-6 shadow-sm transition-all hover:shadow-md">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={`flex h-12 w-12 items-center justify-center rounded-2xl transition-transform group-hover:scale-110 ${
+                        f.tone === "spring"
+                          ? "bg-spring/50 text-deep"
+                          : f.tone === "deep"
+                            ? "bg-deep text-spring"
+                            : "bg-wash-3 text-deep"
+                      }`}
+                    >
+                      {f.icon}
+                    </span>
+                    {f.badge && (
+                      <span className="rounded-full bg-spring px-2.5 py-1 text-label-caps uppercase text-on-spring">
+                        {f.badge}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-display text-headline-md text-deep">
+                      {f.title}
+                    </h3>
+                    <p className="mt-2 text-body-md leading-relaxed text-body-soft">
+                      {f.body}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-6">{f.foot}</div>
+              </div>
+            </Reveal>
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-/* ---------- your money is yours ---------- */
-
-const SAFETY = [
-  {
-    head: "Nothing to pay",
-    body: "Not to send, not to receive, not to keep money here. There is no monthly charge and no cut taken off a transfer.",
-  },
-  {
-    head: "Take it out whenever",
-    body: "No lock-up, no notice period and no penalty, including money you have set aside toward a goal, before or after you reach it.",
-  },
-  {
-    head: "Nobody can freeze it",
-    body: "There is no button on our side that moves your money or holds it. Not for us, and not for anybody who asks us to.",
-  },
-  {
-    head: "You don't have to trust us",
-    body: "Which is the point: it is built so that you do not have to, and anyone who wants to check can.",
-  },
-];
-
-function Safety() {
-  return (
-    <section className="border-t border-paper-rule bg-paper py-20">
-      <div className="mx-auto max-w-6xl px-5 sm:px-6">
-        <Reveal>
-          <div className="mb-10 max-w-2xl">
-            <Tag className="text-lime-on">Your money is yours</Tag>
-            <h2 className="mt-2 text-[32px] font-extrabold leading-[1.0] tracking-[-0.025em] text-paper-ink sm:text-[42px]">
-              Four things that are true of it, always.
-            </h2>
-          </div>
-        </Reveal>
-
-        <dl className="grid grid-cols-1 gap-x-10 gap-y-8 md:grid-cols-2">
-          {SAFETY.map((item, index) => (
-            <Reveal key={item.head} delay={(index % 2) * 70}>
-              <div className="flex gap-4">
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-lime">
-                  <Check className="h-3.5 w-3.5 text-lime-on" />
-                </span>
-                <div>
-                  <dt className="text-[18px] font-semibold text-paper-ink">
-                    {item.head}
-                  </dt>
-                  <dd className="mt-1.5 text-[15px] leading-relaxed text-paper-quiet">
-                    {item.body}
-                  </dd>
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </dl>
-
-        <Reveal delay={120}>
-          <p className="mt-10 text-[15px] text-paper-quiet">
-            If you want to see exactly how that works,{" "}
-            <Link
-              href="/about"
-              className="text-paper-ink underline decoration-paper-rule underline-offset-4 transition hover:decoration-lime-on"
-            >
-              here is the long answer
-            </Link>
-            .
-          </p>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
-/* ---------- questions ---------- */
+/* ---------- comparison ---------- */
 
 /**
- * The two uncomfortable ones are the reason this section exists. A money page
- * that lets somebody discover on their own that a payment cannot be undone, or
- * that the amounts are public, has not been honest with them -- and those are
- * exactly the two facts that decide whether the rest of the page is believable.
+ * Every row here is a difference somebody can check by opening another wallet.
+ * The draft's fourth row compared "15-45 sec" against "400ms"; neither figure
+ * is ours, so the row is about the number of steps instead, which is.
  */
-const QUESTIONS = [
+const ROWS = [
   {
-    q: "Is it really free?",
-    a: "Yes. Sending costs you nothing and receiving costs you nothing, and that is not an introductory rate. The fees that normally come out of a transfer are covered for you.",
+    layer: "Making an account",
+    old: "Write 24 words on paper and never lose them",
+    kolo: "An email, or a passkey",
   },
   {
-    q: "Do I need to download anything?",
-    a: "No. Kolo runs in your browser. If you want it to behave like any other app on your phone, add it to your home screen. It opens full-screen and works the same.",
+    layer: "Paying a fee",
+    old: "Buy the network's own coin before you can move yours",
+    kolo: "Nothing. Somebody else pays, every time",
   },
   {
-    q: "What if I send it to the wrong person?",
-    a: "A payment cannot be undone once it has gone, the same as handing over cash. Check the name on the screen before you tap. If they are not on Kolo yet, send a link instead. You can take that back.",
+    layer: "Who you are paying",
+    old: "0x71C…b29, and a typo loses the money",
+    kolo: "A name: @tola, @dami",
   },
   {
-    q: "Who can see what I send?",
-    a: "The amounts and the @handles are recorded publicly and anyone can read them. Your name, your email and your phone number are not, and we do not publish them. If you would not want an amount to be visible, do not send it here.",
-  },
-  {
-    q: "What happens if I lose my phone?",
-    a: "Nothing is kept on the phone. Sign in with your email on any other device and your money is where you left it.",
-  },
-  {
-    q: "What is a circle, exactly?",
-    a: "A group of people who each put in the same amount every month, with one person collecting the whole lot each time, turn by turn. Ajo, esusu or susu, depending on where you are from. Kolo runs the turns so nobody has to hold the money.",
+    layer: "Sending once",
+    old: "Approve, then confirm, then wait",
+    kolo: "One tap, batched, no dialog",
   },
 ];
 
-function Questions() {
+function Comparison() {
   return (
-    <section
-      id="questions"
-      className="scroll-mt-20 border-t border-paper-rule bg-paper-2 py-20"
-    >
-      <div className="mx-auto max-w-4xl px-5 sm:px-6">
+    <section id="how" className="w-full scroll-mt-24 bg-wash py-24">
+      <div className="mx-auto max-w-[1320px] px-5 md:px-12">
         <Reveal>
-          <div className="mb-10">
-            <Tag className="text-lime-on">Questions</Tag>
-            <h2 className="mt-2 text-[32px] font-extrabold leading-[1.0] tracking-[-0.025em] text-paper-ink sm:text-[42px]">
-              The things people ask first.
+          <div className="mx-auto mb-10 flex max-w-2xl flex-col gap-2 text-center">
+            <span className="text-label-caps uppercase tracking-widest text-grass">
+              The difference
+            </span>
+            <h2 className="font-display text-[32px] leading-[36px] tracking-[-0.025em] text-deep sm:text-display-lg">
+              What everyone else makes you do.
             </h2>
+            <p className="text-body-lg text-body-soft">
+              Every row is something you can check by opening any other wallet.
+            </p>
           </div>
         </Reveal>
 
-        <dl className="divide-y divide-paper-rule border-y border-paper-rule">
-          {QUESTIONS.map((item, index) => (
-            <Reveal key={item.q} delay={Math.min(index, 3) * 60}>
-              <div className="py-6">
-                <dt className="text-[18px] font-semibold text-paper-ink">
-                  {item.q}
-                </dt>
-                <dd className="mt-2 max-w-3xl text-[15px] leading-relaxed text-paper-quiet">
-                  {item.a}
-                </dd>
+        <Reveal>
+          <div className="overflow-hidden rounded-3xl bg-card shadow-md">
+            <div className="grid grid-cols-12 gap-3 bg-wash-4 p-4 text-label-lg text-deep md:p-6">
+              <div className="col-span-12 md:col-span-4">Doing this</div>
+              <div className="col-span-6 text-body-soft md:col-span-4">
+                Anywhere else
               </div>
-            </Reveal>
-          ))}
-        </dl>
+              <div className="col-span-6 flex items-center gap-1.5 text-grass md:col-span-4">
+                <CheckCircle className="h-4 w-4" />
+                With Kolo
+              </div>
+            </div>
+
+            {ROWS.map((row, i) => (
+              <div
+                key={row.layer}
+                className={`grid grid-cols-12 items-center gap-3 p-4 transition-colors hover:bg-wash/40 md:p-6 ${
+                  i < ROWS.length - 1 ? "border-b border-wash-3" : ""
+                }`}
+              >
+                <div className="col-span-12 font-display text-headline-sm text-deep md:col-span-4">
+                  {row.layer}
+                </div>
+                <div className="col-span-6 flex items-start gap-2 text-body-md text-body-soft md:col-span-4">
+                  <span className="font-bold text-alert">×</span> {row.old}
+                </div>
+                <div className="col-span-6 flex items-start gap-2 text-body-md font-semibold text-deep md:col-span-4">
+                  <span className="font-bold text-grass">✓</span> {row.kolo}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Reveal>
       </div>
     </section>
   );
 }
 
-/* ---------- get started ---------- */
+/* ---------- voice ---------- */
 
-function GetStarted() {
+/* ---------- voice ---------- */
+
+function VoiceSection() {
   return (
-    <section className="site-grid border-t border-night bg-night py-20">
-      <div className="mx-auto max-w-4xl px-5 sm:px-6">
+    <section id="voice" className="w-full scroll-mt-24 bg-canvas py-20">
+      <div className="mx-auto max-w-[1320px] px-5 md:px-12">
         <Reveal>
-          <div className="relative flex flex-col items-center overflow-hidden rounded-[1.5rem] border border-night-rule bg-night-2 p-8 text-center md:p-14">
-            <span className="pointer-events-none absolute -top-24 h-80 w-80 rounded-full bg-lime/20 blur-[100px]" />
+          <div className="relative overflow-hidden rounded-3xl bg-deep p-8 text-card shadow-2xl md:p-14">
+            <div className="pointer-events-none absolute -bottom-20 -right-20 h-80 w-80 rounded-full bg-spring opacity-10 blur-3xl" />
+            <VoiceDemo />
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
 
-            <h2 className="max-w-2xl text-[32px] font-extrabold leading-[1.0] tracking-[-0.025em] text-night-ink sm:text-[46px]">
-              Pick the name people will pay you by.
-            </h2>
-            <p className="mb-8 mt-4 max-w-md text-[17px] leading-relaxed text-night-quiet">
-              Type one and we will tell you right here whether it is still free.
-            </p>
+/* ---------- what is live ---------- */
 
-            <HandleCTA />
+/**
+ * The draft had a ticker of handles claimed four seconds ago, streaming in real
+ * time. There is no such stream, and inventing social proof on a money page is
+ * the worst thing on the list. The shape is kept; what scrolls through it is
+ * the deployment, read from `config`, which is real and checkable.
+ */
+const LIVE = [
+  { name: "KoloRegistry", address: config.contracts.registry },
+  { name: "KoloPay", address: config.contracts.pay },
+  { name: "KoloLinks", address: config.contracts.links },
+  { name: "KoloCircle", address: config.contracts.circle },
+  { name: "KoloGoals", address: config.contracts.goals },
+  { name: "KoloPots", address: config.contracts.pots },
+  { name: "KoloFaucet", address: config.contracts.faucet },
+];
+
+function Live() {
+  return (
+    <section className="w-full overflow-hidden bg-wash-2 py-12">
+      <div className="mx-auto flex max-w-[1320px] flex-col gap-4 px-5 md:px-12">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-label-caps uppercase tracking-wider text-body-soft">
+            Live on Monad Testnet · chain {config.chain.id}
+          </span>
+          <Link
+            href="/about"
+            className="flex shrink-0 items-center gap-1.5 text-label-md text-grass hover:underline"
+          >
+            See all of it
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        <Ticker items={LIVE} />
+      </div>
+    </section>
+  );
+}
+
+/* ---------- final CTA ---------- */
+
+function FinalCTA() {
+  return (
+    <section className="w-full bg-canvas py-24">
+      <div className="mx-auto max-w-[1320px] px-5 md:px-12">
+        <Reveal>
+          <div className="relative flex flex-col items-center justify-between gap-6 overflow-hidden rounded-3xl bg-spring p-10 text-on-spring shadow-xl md:flex-row md:p-16">
+            <div className="z-10 flex max-w-xl flex-col gap-2">
+              <span className="text-label-caps uppercase tracking-widest text-on-spring/70">
+                First come, first served
+              </span>
+              <h2 className="font-display text-[32px] font-extrabold leading-tight tracking-[-0.03em] sm:text-display-xl">
+                Claim your @handle before it&apos;s taken.
+              </h2>
+              <p className="text-body-lg text-on-spring/80">
+                Free, yours to keep, and nobody can take it back. Your email is
+                the whole setup.
+              </p>
+            </div>
+
+            <div className="z-10 flex w-full flex-col gap-3 sm:flex-row md:w-auto">
+              <Link
+                href="/app"
+                className="rounded-full bg-deep px-8 py-4 text-center font-display text-headline-sm
+                           text-spring shadow-md transition-all hover:bg-deep-2 active:translate-y-0.5"
+              >
+                Get started
+              </Link>
+              <Link
+                href="/about"
+                className="rounded-full bg-card/80 px-8 py-4 text-center font-display text-headline-sm
+                           text-deep transition-all hover:bg-card active:translate-y-0.5"
+              >
+                How it works
+              </Link>
+            </div>
           </div>
         </Reveal>
       </div>
@@ -629,62 +656,92 @@ function GetStarted() {
 
 /* ---------- footer ---------- */
 
-const FOOTER_LINKS = [
-  { label: "What you can do", href: "#what" },
-  { label: "Circles", href: "#circles" },
-  { label: "Questions", href: "#questions" },
-  { label: "How it works", href: "/about" },
-];
+const REPO = "https://github.com/tantasui/kolo";
 
 function Footer() {
   return (
-    <footer className="border-t border-night-rule bg-night">
-      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-6">
-        <div className="flex flex-col items-center gap-8 text-center md:flex-row md:justify-between md:text-left">
-          <Link href="/" className="flex items-center gap-2.5">
-            <KoloMark size={26} />
-            <span className="text-[20px] font-bold tracking-tight text-night-ink">
-              kolo
+    <footer className="w-full bg-wash pb-12 pt-10">
+      <div className="mx-auto max-w-[1320px] px-5 md:px-12">
+        <div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-12">
+          <div className="flex flex-col gap-4 md:col-span-5">
+            <Link href="/" className="flex items-center gap-2">
+              <KoloMark size={28} />
+              <span className="font-display text-headline-sm tracking-tight text-deep">
+                Kolo
+              </span>
+            </Link>
+            <p className="max-w-sm text-body-sm text-body-soft">
+              Send money to anyone by their name. Save with the people you
+              already save with. Nothing to download, nothing to pay, nothing to
+              keep safe.
+            </p>
+            <span className="flex w-fit items-center gap-2 rounded-full bg-wash-4 px-3 py-1.5">
+              <span className="h-2 w-2 rounded-full bg-grass" />
+              <span className="text-label-caps text-deep">
+                Monad Testnet · chain {config.chain.id}
+              </span>
             </span>
-          </Link>
+          </div>
 
-          <nav className="flex flex-wrap items-center justify-center gap-x-7 gap-y-3 text-[14px] text-night-quiet">
-            {FOOTER_LINKS.map((link) =>
-              link.href.startsWith("#") ? (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="transition-colors hover:text-night-ink"
-                >
-                  {link.label}
-                </a>
-              ) : (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className="transition-colors hover:text-night-ink"
-                >
-                  {link.label}
-                </Link>
-              ),
-            )}
-          </nav>
+          <div className="flex flex-col gap-2 md:col-span-3">
+            <span className="text-label-caps uppercase tracking-wider text-body-soft">
+              What you can do
+            </span>
+            {[
+              ["Send by @handle", "#features"],
+              ["Send by voice", "#voice"],
+              ["Circles and pots", "#features"],
+              ["The difference", "#how"],
+            ].map(([label, href]) => (
+              <a
+                key={label}
+                href={href}
+                className="text-body-sm text-body-soft transition-colors hover:text-body"
+              >
+                {label}
+              </a>
+            ))}
+          </div>
 
-          <Link
-            href="/app"
-            className="inline-flex h-11 items-center justify-center rounded-pill bg-lime px-6
-                       text-[15px] font-semibold text-lime-on transition-all hover:bg-lime-hi
-                       active:scale-[0.98]"
-          >
-            Get started
-          </Link>
+          <div className="flex flex-col gap-2 md:col-span-4">
+            <span className="text-label-caps uppercase tracking-wider text-body-soft">
+              For developers
+            </span>
+            <Link
+              href="/about"
+              className="text-body-sm text-body-soft transition-colors hover:text-body"
+            >
+              How it works
+            </Link>
+            <a
+              href={REPO}
+              className="flex items-center gap-1.5 text-body-sm text-body-soft transition-colors hover:text-body"
+            >
+              <Terminal className="h-3.5 w-3.5" /> Repository
+            </a>
+            <a
+              href={`${REPO}/tree/main/contracts`}
+              className="text-body-sm text-body-soft transition-colors hover:text-body"
+            >
+              Contracts and tests
+            </a>
+            <a
+              href={`${REPO}/blob/main/web/DESIGN.md`}
+              className="text-body-sm text-body-soft transition-colors hover:text-body"
+            >
+              Design system
+            </a>
+          </div>
         </div>
 
-        <p className="mt-10 border-t border-night-rule pt-6 text-center text-[13px] text-night-quiet md:text-left">
-          Money that moves like a message.{" "}
-          <span className="tabular">{formatMoney(0n, "USD")}</span> to send,
-          every time.
-        </p>
+        <div className="flex flex-col items-center justify-between gap-3 border-t border-wash-4 pt-6 md:flex-row">
+          <p className="text-body-sm text-body-soft">
+            Built in the open. Money that moves like a message.
+          </p>
+          <p className="text-body-sm text-body-soft">
+            Deployed to Monad Testnet at block {config.deployBlock.toString()}.
+          </p>
+        </div>
       </div>
     </footer>
   );
