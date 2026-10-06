@@ -38,7 +38,7 @@ export function Landing() {
             Get started. */}
         <p className="text-center text-[13px]">
           <Link
-            href="/about"
+            href="/"
             className="text-muted underline decoration-line underline-offset-4"
           >
             What is Kolo?

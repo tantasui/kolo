@@ -63,14 +63,14 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
-   `/about` only. The app is flat surfaces and one bloom; a public page gets a
-   little more depth, and these are the three treatments it uses. Kept here
-   rather than inline so they are findable, and prefixed so nothing in the app
-   picks them up by accident.
+   The public pages only. The app is flat surfaces and one bloom; these get a
+   little more depth, and these are the treatments they use. Kept here rather
+   than inline so they are findable, and prefixed so nothing in the app picks
+   them up by accident.
    --------------------------------------------------------------------------- */
 
 /* A faint 32px rule grid, to stop a tall dark page reading as a void. */
-.about-grid {
+.site-grid {
   background-size: 32px 32px;
   background-image:
     linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
@@ -79,10 +79,10 @@ body {
 
 /* A one-pixel border that fades from accent at the top to nothing at the
    bottom. Masked rather than drawn, so it follows the element's radius. */
-.about-lit-border {
+.site-lit-border {
   position: relative;
 }
-.about-lit-border::before {
+.site-lit-border::before {
   content: "";
   position: absolute;
   inset: -1px;
@@ -113,7 +113,7 @@ body {
  * translucent panel reading as a flat grey rectangle. `saturate` keeps the
  * accent behind it from going muddy under the blur.
  */
-.about-pane {
+.site-pane {
   background: linear-gradient(
     180deg,
     rgba(28, 28, 35, 0.72) 0%,
@@ -128,7 +128,7 @@ body {
 }
 
 /* The sticky header, which sits over everything the page scrolls past. */
-.about-bar {
+.site-bar {
   background: rgba(10, 10, 12, 0.72);
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
@@ -138,7 +138,7 @@ body {
 }
 
 /* The phone shell: lit from the top, with a hairline edge. */
-.about-glass {
+.site-glass {
   background: radial-gradient(circle at 50% 0%, #1a1a22 0%, #141419 75%);
   box-shadow:
     0 25px 60px -15px rgba(0, 0, 0, 0.9),
