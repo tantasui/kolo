@@ -5,7 +5,7 @@ import { HandleCTA } from "@/components/site/HandleCTA";
 import { Photo } from "@/components/site/Photo";
 import { PhoneSimulator } from "@/components/site/PhoneSimulator";
 import { Reveal } from "@/components/site/Reveal";
-import { Card, Tag } from "@/components/site/Section";
+import { Tag } from "@/components/site/Section";
 import { ArrowRight, AtSign, Bolt } from "@/components/site/Icons";
 import { Check, Circle, LinkIcon, Meter, Target } from "@/components/ui/Icons";
 import { KoloMark } from "@/components/ui/Wordmark";
@@ -21,6 +21,13 @@ import { KoloMark } from "@/components/ui/Wordmark";
  * the only question a visitor has, which is what this does for them. It now
  * lives at `/about`, reachable from the footer, for the people it was always
  * for.
+ *
+ * The look changed for the same reason. Dark-only on cool blue-grey neutrals
+ * (hue 240) with an acid-lime accent is the visual language of developer tools
+ * and crypto wallets, and it was saying "crypto product" before a word was
+ * read -- fighting the one thing the page exists to say. The warm token set in
+ * `tailwind.config.ts` is the same bones at hue ~90, light-first, with dark
+ * used as *sections* so the page has a rhythm instead of one unbroken slab.
  *
  * What is left is addressed to one person: someone who needs to pay someone.
  * Every claim on it is still one the repository can back -- the rule has not
@@ -52,13 +59,11 @@ export const metadata: Metadata = {
 
 export default function LandingPage() {
   return (
-    <div className="relative flex min-h-screen flex-col overflow-x-clip bg-ink">
+    <div className="relative flex min-h-screen flex-col overflow-x-clip bg-paper">
       {/* `clip`, not `hidden`: hidden would make this a scroll container and the
           sticky header would stop sticking to the viewport. */}
-      <div className="pointer-events-none fixed left-1/2 top-0 -z-10 h-[350px] w-full max-w-[900px] -translate-x-1/2 rounded-full bg-accent/5 blur-[140px]" />
-
       <Header />
-      <main className="site-grid flex-1">
+      <main className="flex-1">
         <Hero />
         <Promises />
         <Steps />
@@ -83,11 +88,11 @@ const NAV = [
 
 function Header() {
   return (
-    <header className="site-bar sticky top-0 z-50 border-b border-line/60">
+    <header className="sticky top-0 z-50 border-b border-paper-rule bg-paper/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-5 sm:px-6 md:h-[72px]">
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
           <KoloMark size={30} />
-          <span className="text-[22px] font-bold tracking-tight text-text">
+          <span className="text-[22px] font-bold tracking-tight text-paper-ink">
             kolo
           </span>
         </Link>
@@ -100,7 +105,7 @@ function Header() {
             <a
               key={item.href}
               href={item.href}
-              className="whitespace-nowrap text-[15px] text-muted transition-colors hover:text-text"
+              className="whitespace-nowrap text-[15px] text-paper-quiet transition-colors hover:text-paper-ink"
             >
               {item.label}
             </a>
@@ -110,9 +115,8 @@ function Header() {
         <Link
           href="/app"
           className="ml-auto inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-pill
-                     bg-accent px-5 text-[15px] font-semibold text-ink
-                     shadow-[0_0_24px_-4px_rgba(210,255,58,0.3)] transition-all
-                     hover:bg-accent-dim active:scale-[0.98] lg:ml-0"
+                     bg-lime px-5 text-[15px] font-semibold text-lime-on transition-all
+                     hover:bg-lime-hi active:scale-[0.98] lg:ml-0"
         >
           Get started
         </Link>
@@ -128,11 +132,11 @@ function Hero() {
     <section className="mx-auto max-w-6xl px-5 pb-16 pt-14 sm:px-6 lg:pb-24 lg:pt-20">
       <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-8">
         <div className="flex flex-col justify-center lg:col-span-7">
-          <h1 className="max-w-2xl text-[40px] font-bold leading-[1.03] tracking-tight sm:text-[52px] lg:text-[60px]">
+          <h1 className="max-w-2xl text-[42px] font-extrabold leading-[0.95] tracking-[-0.03em] text-paper-ink sm:text-[56px] lg:text-[66px]">
             Money that moves like a message.
           </h1>
 
-          <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-muted sm:text-[19px]">
+          <p className="mt-6 max-w-xl text-[18px] leading-relaxed text-paper-quiet sm:text-[19px]">
             Send money to anyone by their name — not an account number, not a
             long string of letters. It reaches them in seconds, it costs neither
             of you anything, and there is nothing to download.
@@ -141,24 +145,24 @@ function Hero() {
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <Link
               href="/app"
-              className="inline-flex h-14 items-center gap-2.5 rounded-pill bg-accent px-8
-                         text-[17px] font-semibold text-ink shadow-lg shadow-accent/15
-                         transition-all hover:bg-accent-dim active:scale-[0.98]"
+              className="inline-flex h-14 items-center gap-2.5 rounded-pill bg-lime px-8
+                         text-[17px] font-semibold text-lime-on transition-all
+                         hover:bg-lime-hi active:scale-[0.98]"
             >
               Get started — it&apos;s free
               <Bolt className="h-4 w-4" />
             </Link>
             <a
               href="#how"
-              className="inline-flex h-14 items-center gap-2 rounded-pill border border-line
-                         bg-raised px-6 text-[16px] transition-all hover:bg-surface
-                         active:scale-[0.98]"
+              className="site-ring inline-flex h-14 items-center gap-2 rounded-pill bg-paper px-6
+                         text-[16px] font-medium text-paper-ink transition-all
+                         hover:bg-paper-2 active:scale-[0.98]"
             >
               See how it works
             </a>
           </div>
 
-          <p className="mt-5 text-[14px] text-muted">
+          <p className="mt-5 text-[14px] text-paper-quiet">
             Your email is all it takes. No card, no paperwork.
           </p>
         </div>
@@ -192,14 +196,14 @@ const PROMISES = [
 
 function Promises() {
   return (
-    <section className="border-y border-line/60 bg-surface/30">
+    <section className="site-grid border-y border-night bg-night">
       <dl className="mx-auto grid max-w-6xl grid-cols-1 gap-x-8 gap-y-6 px-5 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
         {PROMISES.map((promise, index) => (
           <Reveal key={promise.head} delay={index * 70}>
-            <dt className="text-[22px] font-bold tracking-tight text-text">
+            <dt className="text-[24px] font-extrabold tracking-[-0.02em] text-night-ink">
               {promise.head}
             </dt>
-            <dd className="mt-1.5 text-[15px] leading-relaxed text-muted">
+            <dd className="mt-1.5 text-[15px] leading-relaxed text-night-quiet">
               {promise.tail}
             </dd>
           </Reveal>
@@ -240,11 +244,11 @@ function Steps() {
     >
       <Reveal>
         <div className="mb-12 max-w-2xl">
-          <Tag tone="accent">Getting started</Tag>
-          <h2 className="mt-2 text-[30px] font-bold leading-[1.08] tracking-tight sm:text-[38px]">
+          <Tag className="text-lime-on">Getting started</Tag>
+          <h2 className="mt-2 text-[32px] font-extrabold leading-[1.0] tracking-[-0.025em] text-paper-ink sm:text-[42px]">
             Three steps, and you have sent someone money.
           </h2>
-          <p className="mt-3 text-[17px] leading-relaxed text-muted">
+          <p className="mt-3 text-[17px] leading-relaxed text-paper-quiet">
             From opening this page to paying somebody is about a minute, and
             most of that is picking a name you like.
           </p>
@@ -254,22 +258,24 @@ function Steps() {
       <ol className="grid grid-cols-1 gap-5 md:grid-cols-3">
         {STEPS.map((step, index) => (
           <Reveal key={step.n} delay={index * 80}>
-            <li className="site-pane flex h-full flex-col justify-between rounded-2xl border border-line p-7 transition-all hover:border-accent/30">
+            <li className="site-ring flex h-full flex-col justify-between rounded-2xl bg-paper p-7 transition-all hover:-translate-y-0.5">
               <div>
                 <div className="mb-6 flex items-center justify-between">
-                  <span className="font-mono text-[30px] font-bold leading-none text-accent">
+                  <span className="font-mono text-[30px] font-bold leading-none text-lime-on">
                     {step.n}
                   </span>
                   {index < STEPS.length - 1 && (
-                    <ArrowRight className="hidden h-5 w-5 text-line md:block" />
+                    <ArrowRight className="hidden h-5 w-5 text-paper-rule md:block" />
                   )}
                 </div>
-                <h3 className="mb-2 text-[20px] font-bold">{step.title}</h3>
-                <p className="text-[15px] leading-relaxed text-muted">
+                <h3 className="mb-2 text-[20px] font-bold text-paper-ink">
+                  {step.title}
+                </h3>
+                <p className="text-[15px] leading-relaxed text-paper-quiet">
                   {step.body}
                 </p>
               </div>
-              <p className="mt-6 border-t border-line/60 pt-4 font-mono text-[12px] text-muted">
+              <p className="mt-6 border-t border-paper-rule pt-4 font-mono text-[12px] text-paper-quiet">
                 {step.note}
               </p>
             </li>
@@ -328,18 +334,18 @@ function Features() {
   return (
     <section
       id="what"
-      className="scroll-mt-20 border-t border-line bg-surface/20 py-20"
+      className="scroll-mt-20 border-t border-paper-rule bg-paper-2 py-20"
     >
       <div className="mx-auto max-w-6xl px-5 sm:px-6">
         <Reveal>
           <div className="mb-12 flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
-              <Tag tone="accent">What you can do</Tag>
-              <h2 className="mt-2 text-[30px] font-bold leading-[1.08] tracking-tight sm:text-[38px]">
+              <Tag className="text-lime-on">What you can do</Tag>
+              <h2 className="mt-2 text-[32px] font-extrabold leading-[1.0] tracking-[-0.025em] text-paper-ink sm:text-[42px]">
                 Five ways to move money. None of them cost you.
               </h2>
             </div>
-            <p className="max-w-md text-[16px] leading-relaxed text-muted">
+            <p className="max-w-md text-[16px] leading-relaxed text-paper-quiet">
               Paying a person, paying someone who is not here yet, saving on
               your own, splitting a bill, and saving with the people you already
               save with.
@@ -354,17 +360,17 @@ function Features() {
               className={feature.span}
               delay={(index % 3) * 70}
             >
-              <div className="site-pane flex h-full flex-col rounded-[1.25rem] border border-line p-7 transition-all hover:border-accent/30">
+              <div className="site-ring flex h-full flex-col rounded-[1.25rem] bg-paper p-7 transition-all hover:-translate-y-0.5">
                 <span
                   className={`mb-6 flex h-11 w-11 items-center justify-center rounded-xl border
-                              ${feature.tone === "accent" ? "border-accent/20 bg-accent/10 text-accent" : "border-inbound/20 bg-inbound/10 text-inbound"}`}
+                              ${feature.tone === "accent" ? "border-lime-on/15 bg-lime/35 text-lime-on" : "border-inbound-warm/25 bg-inbound-warm/15 text-inbound-warm"}`}
                 >
                   {feature.icon}
                 </span>
-                <h3 className="text-[21px] font-bold tracking-tight">
+                <h3 className="text-[21px] font-bold tracking-tight text-paper-ink">
                   {feature.title}
                 </h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-muted">
+                <p className="mt-2 text-[15px] leading-relaxed text-paper-quiet">
                   {feature.body}
                 </p>
               </div>
@@ -395,11 +401,14 @@ const CIRCLE_POINTS = [
 
 function Circles() {
   return (
-    <section id="circles" className="scroll-mt-20 border-t border-line py-20">
+    <section
+      id="circles"
+      className="site-grid scroll-mt-20 border-y border-night bg-night py-20"
+    >
       <div className="mx-auto max-w-6xl px-5 sm:px-6">
         <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-14">
           <Reveal className="lg:col-span-5">
-            <div className="group overflow-hidden rounded-[1.25rem] border border-line">
+            <div className="group overflow-hidden rounded-[1.25rem] border border-night-rule">
               <Photo
                 src="/img/rotating.webp"
                 alt="Friends around a table running a savings circle together"
@@ -410,11 +419,11 @@ function Circles() {
 
           <div className="lg:col-span-7">
             <Reveal>
-              <Tag tone="accent">Ajo · esusu · susu</Tag>
-              <h2 className="mt-2 max-w-xl text-[30px] font-bold leading-[1.08] tracking-tight sm:text-[38px]">
+              <Tag className="text-lime">Ajo · esusu · susu</Tag>
+              <h2 className="mt-2 max-w-xl text-[32px] font-extrabold leading-[1.0] tracking-[-0.025em] text-night-ink sm:text-[42px]">
                 Save with your people, the way you already do.
               </h2>
-              <p className="mt-4 max-w-xl text-[17px] leading-relaxed text-muted">
+              <p className="mt-4 max-w-xl text-[17px] leading-relaxed text-night-quiet">
                 Everybody puts in the same amount each month, and one person
                 takes the whole lot. Next month it is somebody else, until
                 everyone has had their turn. You know how it works — the only
@@ -426,19 +435,19 @@ function Circles() {
             <div className="mt-8 space-y-4">
               {CIRCLE_POINTS.map((point, index) => (
                 <Reveal key={point.title} delay={index * 70}>
-                  <Card className="flex gap-4">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent">
-                      <Check className="h-4 w-4 text-ink" />
+                  <div className="flex gap-4 rounded-xl2 border border-night-rule bg-night-2 p-6">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-lime">
+                      <Check className="h-4 w-4 text-lime-on" />
                     </span>
                     <div>
-                      <h3 className="text-[17px] font-semibold">
+                      <h3 className="text-[17px] font-semibold text-night-ink">
                         {point.title}
                       </h3>
-                      <p className="mt-1.5 text-[15px] leading-relaxed text-muted">
+                      <p className="mt-1.5 text-[15px] leading-relaxed text-night-quiet">
                         {point.body}
                       </p>
                     </div>
-                  </Card>
+                  </div>
                 </Reveal>
               ))}
             </div>
@@ -472,12 +481,12 @@ const SAFETY = [
 
 function Safety() {
   return (
-    <section className="border-t border-line bg-surface/30 py-20">
+    <section className="border-t border-paper-rule bg-paper py-20">
       <div className="mx-auto max-w-6xl px-5 sm:px-6">
         <Reveal>
           <div className="mb-10 max-w-2xl">
-            <Tag tone="accent">Your money is yours</Tag>
-            <h2 className="mt-2 text-[30px] font-bold leading-[1.08] tracking-tight sm:text-[38px]">
+            <Tag className="text-lime-on">Your money is yours</Tag>
+            <h2 className="mt-2 text-[32px] font-extrabold leading-[1.0] tracking-[-0.025em] text-paper-ink sm:text-[42px]">
               Four things that are true of it, always.
             </h2>
           </div>
@@ -487,12 +496,14 @@ function Safety() {
           {SAFETY.map((item, index) => (
             <Reveal key={item.head} delay={(index % 2) * 70}>
               <div className="flex gap-4">
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-accent/30 bg-accent/10">
-                  <Check className="h-3.5 w-3.5 text-accent" />
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-lime">
+                  <Check className="h-3.5 w-3.5 text-lime-on" />
                 </span>
                 <div>
-                  <dt className="text-[18px] font-semibold">{item.head}</dt>
-                  <dd className="mt-1.5 text-[15px] leading-relaxed text-muted">
+                  <dt className="text-[18px] font-semibold text-paper-ink">
+                    {item.head}
+                  </dt>
+                  <dd className="mt-1.5 text-[15px] leading-relaxed text-paper-quiet">
                     {item.body}
                   </dd>
                 </div>
@@ -502,11 +513,11 @@ function Safety() {
         </dl>
 
         <Reveal delay={120}>
-          <p className="mt-10 text-[15px] text-muted">
+          <p className="mt-10 text-[15px] text-paper-quiet">
             If you want to see exactly how that works —{" "}
             <Link
               href="/about"
-              className="text-text underline decoration-line underline-offset-4 transition hover:decoration-accent"
+              className="text-paper-ink underline decoration-paper-rule underline-offset-4 transition hover:decoration-lime-on"
             >
               here is the long answer
             </Link>
@@ -555,23 +566,28 @@ const QUESTIONS = [
 
 function Questions() {
   return (
-    <section id="questions" className="scroll-mt-20 border-t border-line py-20">
+    <section
+      id="questions"
+      className="scroll-mt-20 border-t border-paper-rule bg-paper-2 py-20"
+    >
       <div className="mx-auto max-w-4xl px-5 sm:px-6">
         <Reveal>
           <div className="mb-10">
-            <Tag tone="accent">Questions</Tag>
-            <h2 className="mt-2 text-[30px] font-bold leading-[1.08] tracking-tight sm:text-[38px]">
+            <Tag className="text-lime-on">Questions</Tag>
+            <h2 className="mt-2 text-[32px] font-extrabold leading-[1.0] tracking-[-0.025em] text-paper-ink sm:text-[42px]">
               The things people ask first.
             </h2>
           </div>
         </Reveal>
 
-        <dl className="divide-y divide-line border-y border-line">
+        <dl className="divide-y divide-paper-rule border-y border-paper-rule">
           {QUESTIONS.map((item, index) => (
             <Reveal key={item.q} delay={Math.min(index, 3) * 60}>
               <div className="py-6">
-                <dt className="text-[18px] font-semibold">{item.q}</dt>
-                <dd className="mt-2 max-w-3xl text-[15px] leading-relaxed text-muted">
+                <dt className="text-[18px] font-semibold text-paper-ink">
+                  {item.q}
+                </dt>
+                <dd className="mt-2 max-w-3xl text-[15px] leading-relaxed text-paper-quiet">
                   {item.a}
                 </dd>
               </div>
@@ -587,16 +603,16 @@ function Questions() {
 
 function GetStarted() {
   return (
-    <section className="border-t border-line py-20">
+    <section className="site-grid border-t border-night bg-night py-20">
       <div className="mx-auto max-w-4xl px-5 sm:px-6">
         <Reveal>
-          <div className="site-pane relative flex flex-col items-center overflow-hidden rounded-[1.5rem] border border-line p-8 text-center md:p-14">
-            <span className="pointer-events-none absolute -top-24 h-80 w-80 rounded-full bg-accent/20 blur-[100px]" />
+          <div className="relative flex flex-col items-center overflow-hidden rounded-[1.5rem] border border-night-rule bg-night-2 p-8 text-center md:p-14">
+            <span className="pointer-events-none absolute -top-24 h-80 w-80 rounded-full bg-lime/20 blur-[100px]" />
 
-            <h2 className="max-w-2xl text-[30px] font-bold leading-tight tracking-tight sm:text-[42px]">
+            <h2 className="max-w-2xl text-[32px] font-extrabold leading-[1.0] tracking-[-0.025em] text-night-ink sm:text-[46px]">
               Pick the name people will pay you by.
             </h2>
-            <p className="mb-8 mt-4 max-w-md text-[17px] leading-relaxed text-muted">
+            <p className="mb-8 mt-4 max-w-md text-[17px] leading-relaxed text-night-quiet">
               Type one and we will tell you right here whether it is still free.
             </p>
 
@@ -619,23 +635,23 @@ const FOOTER_LINKS = [
 
 function Footer() {
   return (
-    <footer className="border-t border-line bg-ink">
+    <footer className="border-t border-night-rule bg-night">
       <div className="mx-auto max-w-6xl px-5 py-12 sm:px-6">
         <div className="flex flex-col items-center gap-8 text-center md:flex-row md:justify-between md:text-left">
           <Link href="/" className="flex items-center gap-2.5">
             <KoloMark size={26} />
-            <span className="text-[20px] font-bold tracking-tight text-text">
+            <span className="text-[20px] font-bold tracking-tight text-night-ink">
               kolo
             </span>
           </Link>
 
-          <nav className="flex flex-wrap items-center justify-center gap-x-7 gap-y-3 text-[14px] text-muted">
+          <nav className="flex flex-wrap items-center justify-center gap-x-7 gap-y-3 text-[14px] text-night-quiet">
             {FOOTER_LINKS.map((link) =>
               link.href.startsWith("#") ? (
                 <a
                   key={link.label}
                   href={link.href}
-                  className="transition-colors hover:text-text"
+                  className="transition-colors hover:text-night-ink"
                 >
                   {link.label}
                 </a>
@@ -643,7 +659,7 @@ function Footer() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="transition-colors hover:text-text"
+                  className="transition-colors hover:text-night-ink"
                 >
                   {link.label}
                 </Link>
@@ -653,15 +669,15 @@ function Footer() {
 
           <Link
             href="/app"
-            className="inline-flex h-11 items-center justify-center rounded-pill bg-accent px-6
-                       text-[15px] font-semibold text-ink transition-all hover:bg-accent-dim
+            className="inline-flex h-11 items-center justify-center rounded-pill bg-lime px-6
+                       text-[15px] font-semibold text-lime-on transition-all hover:bg-lime-hi
                        active:scale-[0.98]"
           >
             Get started
           </Link>
         </div>
 
-        <p className="mt-10 border-t border-line pt-6 text-center text-[13px] text-muted md:text-left">
+        <p className="mt-10 border-t border-night-rule pt-6 text-center text-[13px] text-night-quiet md:text-left">
           Money that moves like a message.{" "}
           <span className="tabular">{formatMoney(0n, "USD")}</span> to send,
           every time.

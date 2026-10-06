@@ -15,6 +15,45 @@ const config: Config = {
         "accent-dim": "#A8CC2E",
         inbound: "#5CE39B",
         danger: "#FF6B6B",
+
+        /**
+         * The public pages (`/` and `/about`) only.
+         *
+         * The app's palette above is dark-only and cool: its neutrals sit at
+         * hue 240, which is the blue-grey of developer tooling. On a page whose
+         * whole job is to tell an ordinary person this is not a crypto product,
+         * that temperature was doing the opposite.
+         *
+         * So these are the same bones, turned warm. The neutrals move to hue
+         * ~90 (a green undertone rather than a blue one), the ground becomes
+         * light with dark used as *sections*, and the accent comes off acid
+         * without losing Kolo's lime. Every pair that carries text was checked
+         * against WCAG AA before it landed here; the tightest is muted-on-paper
+         * at 5.4:1 and the red was darkened from #D2453E to clear 4.5:1.
+         *
+         * Named for the surface they belong to, so `paper-quiet` on a dark
+         * section is obviously wrong at the call site.
+         */
+        paper: "#FAFBF6",
+        "paper-2": "#EDF0E6",
+        "paper-ink": "#0E1210",
+        "paper-quiet": "#5A6356",
+        "paper-rule": "#DBE0D1",
+
+        night: "#0D1109",
+        "night-2": "#151A12",
+        "night-ink": "#F4F7F0",
+        "night-quiet": "#96A18F",
+        "night-rule": "#232A1F",
+
+        /** Green-on-green: the text on the button is dark green, not black. */
+        lime: "#CBF24E",
+        "lime-on": "#1B3307",
+        /** Hover goes *lighter*, not darker -- contrast up, never down. */
+        "lime-hi": "#DCFA7A",
+
+        "inbound-warm": "#2FB673",
+        "danger-warm": "#C0392F",
       },
       fontFamily: {
         sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
