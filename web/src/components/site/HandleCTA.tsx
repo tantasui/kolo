@@ -149,7 +149,7 @@ function hint(state: State, handle: string): string {
     case "available":
       return `@${handle} is free. Nobody has claimed it.`;
     case "taken":
-      return `@${handle} is taken — try another.`;
+      return `@${handle} is taken. Try another.`;
     case "unknown":
       return "Couldn't check just now. Carry on and the app will tell you.";
   }

@@ -38,20 +38,23 @@ import { KoloMark } from "@/components/ui/Wordmark";
  */
 
 export const metadata: Metadata = {
-  title: "Kolo — money that moves like a message",
+  /* `absolute`, so the root layout's "%s — Kolo" template does not append
+     itself: it would put an em dash back into the title and read "Kolo: money
+     that moves like a message — Kolo", which says Kolo twice. */
+  title: { absolute: "Kolo: money that moves like a message" },
   description:
     "Send money to anyone by their name. It lands in seconds, it costs nothing, " +
     "and there is nothing to download. Save with friends, or put money aside for yourself.",
   openGraph: {
     type: "website",
     siteName: "Kolo",
-    title: "Kolo — money that moves like a message",
+    title: "Kolo: money that moves like a message",
     description:
       "Send money to anyone by their name. Seconds to arrive, nothing to pay, nothing to install.",
   },
   twitter: {
     card: "summary",
-    title: "Kolo — money that moves like a message",
+    title: "Kolo: money that moves like a message",
     description:
       "Send money to anyone by their name. Seconds to arrive, nothing to pay, nothing to install.",
   },
@@ -137,7 +140,7 @@ function Hero() {
           </h1>
 
           <p className="mt-6 max-w-xl text-[18px] leading-relaxed text-paper-quiet sm:text-[19px]">
-            Send money to anyone by their name — not an account number, not a
+            Send money to anyone by their name. Not an account number, not a
             long string of letters. It reaches them in seconds, it costs neither
             of you anything, and there is nothing to download.
           </p>
@@ -149,7 +152,7 @@ function Hero() {
                          text-[17px] font-semibold text-lime-on transition-all
                          hover:bg-lime-hi active:scale-[0.98]"
             >
-              Get started — it&apos;s free
+              Get started for free
               <Bolt className="h-4 w-4" />
             </Link>
             <a
@@ -297,7 +300,7 @@ const FEATURES = [
     icon: <AtSign className="h-6 w-6" />,
     tone: "accent" as const,
     title: "Pay someone back",
-    body: "You owe your sister for the generator. Type her name, type the amount, add “generator” so you both remember later. She has it before you have put your phone down — and the amount that leaves you is the amount that reaches her.",
+    body: "You owe your sister for the generator. Type her name, type the amount, add “generator” so you both remember later. She has it before you have put your phone down, and the amount that leaves you is the amount that reaches her.",
     span: "md:col-span-7",
   },
   {
@@ -318,14 +321,14 @@ const FEATURES = [
     icon: <Meter className="h-6 w-6" />,
     tone: "inbound" as const,
     title: "Split one bill fairly",
-    body: "Four of you share one subscription. Everyone puts money in, but each of you only pays for the months you actually used — and whatever you have not used is still yours.",
+    body: "Four of you share one subscription. Everyone puts money in, but each of you only pays for the months you actually used, and whatever you have not used is still yours.",
     span: "md:col-span-4",
   },
   {
     icon: <Circle className="h-6 w-6" />,
     tone: "accent" as const,
     title: "Save with your people",
-    body: "Everyone puts in the same each month and one person collects, turn by turn, until everybody has had theirs. Ajo, as you already run it — only nobody has to hold the money.",
+    body: "Everyone puts in the same each month and one person collects, turn by turn, until everybody has had theirs. Ajo, as you already run it. The only difference is that nobody has to hold the money.",
     span: "md:col-span-4",
   },
 ];
@@ -391,7 +394,7 @@ const CIRCLE_POINTS = [
   },
   {
     title: "A missed month doesn't hurt whoever's turn it is",
-    body: "If somebody is short, it comes out of what they put down at the beginning — so the person collecting is still paid in full, on the day.",
+    body: "If somebody is short, it comes out of what they put down at the beginning, so the person collecting is still paid in full, on the day.",
   },
   {
     title: "Nobody gets thrown out",
@@ -426,9 +429,9 @@ function Circles() {
               <p className="mt-4 max-w-xl text-[17px] leading-relaxed text-night-quiet">
                 Everybody puts in the same amount each month, and one person
                 takes the whole lot. Next month it is somebody else, until
-                everyone has had their turn. You know how it works — the only
-                new part is that nobody has to be trusted to hold the money or
-                keep the book.
+                everyone has had their turn. You know how it works. The only new
+                part is that nobody has to be trusted to hold the money or keep
+                the book.
               </p>
             </Reveal>
 
@@ -467,7 +470,7 @@ const SAFETY = [
   },
   {
     head: "Take it out whenever",
-    body: "No lock-up, no notice period and no penalty — including money you have set aside toward a goal, before or after you reach it.",
+    body: "No lock-up, no notice period and no penalty, including money you have set aside toward a goal, before or after you reach it.",
   },
   {
     head: "Nobody can freeze it",
@@ -514,7 +517,7 @@ function Safety() {
 
         <Reveal delay={120}>
           <p className="mt-10 text-[15px] text-paper-quiet">
-            If you want to see exactly how that works —{" "}
+            If you want to see exactly how that works,{" "}
             <Link
               href="/about"
               className="text-paper-ink underline decoration-paper-rule underline-offset-4 transition hover:decoration-lime-on"
@@ -544,11 +547,11 @@ const QUESTIONS = [
   },
   {
     q: "Do I need to download anything?",
-    a: "No. Kolo runs in your browser. If you want it to behave like any other app on your phone, add it to your home screen — it opens full-screen and works the same.",
+    a: "No. Kolo runs in your browser. If you want it to behave like any other app on your phone, add it to your home screen. It opens full-screen and works the same.",
   },
   {
     q: "What if I send it to the wrong person?",
-    a: "A payment cannot be undone once it has gone, the same as handing over cash. Check the name on the screen before you tap. If they are not on Kolo yet, send a link instead — you can take that back.",
+    a: "A payment cannot be undone once it has gone, the same as handing over cash. Check the name on the screen before you tap. If they are not on Kolo yet, send a link instead. You can take that back.",
   },
   {
     q: "Who can see what I send?",
@@ -560,7 +563,7 @@ const QUESTIONS = [
   },
   {
     q: "What is a circle, exactly?",
-    a: "A group of people who each put in the same amount every month, with one person collecting the whole lot each time, turn by turn. Ajo, esusu, susu — depending on where you are from. Kolo runs the turns so nobody has to hold the money.",
+    a: "A group of people who each put in the same amount every month, with one person collecting the whole lot each time, turn by turn. Ajo, esusu or susu, depending on where you are from. Kolo runs the turns so nobody has to hold the money.",
   },
 ];
 
