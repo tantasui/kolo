@@ -1,7 +1,7 @@
 import Image from "next/image";
 
 /**
- * A photograph in a section of `/about`.
+ * A photograph in a section of the public page at `/`.
  *
  * The draft this page came from hotlinked its images from a Google CDN. These
  * are served from `public/img/` instead: the URLs there expire, and an image we
