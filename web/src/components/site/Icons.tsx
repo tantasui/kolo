@@ -251,3 +251,98 @@ export const Clock = ({ className }: IconProps) => (
     />
   </svg>
 );
+
+/* ---------- added for the landing page ---------- */
+
+/** A microphone, for send-by-voice. */
+export const Mic = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <rect
+      x="9"
+      y="3"
+      width="6"
+      height="11"
+      rx="3"
+      stroke="currentColor"
+      strokeWidth="1.9"
+    />
+    <path
+      d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+/** A speech bubble, for the note that rides along with a payment. */
+export const Chat = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <path
+      d="M20 12.5a7.5 7.5 0 0 1-7.5 7.5c-1.2 0-2.3-.3-3.3-.8L4 21l1.4-4.2A7.5 7.5 0 1 1 20 12.5Z"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+/** A paper plane. The send action. */
+export const Send = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <path
+      d="M21 3 10.5 13.5M21 3l-6.8 18-3.7-7.5L3 9.8 21 3Z"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+/** A ring of people: a circle, in the ajo sense. */
+export const Group = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <circle cx="12" cy="7" r="3" stroke="currentColor" strokeWidth="1.8" />
+    <circle cx="5" cy="16" r="2.6" stroke="currentColor" strokeWidth="1.8" />
+    <circle cx="19" cy="16" r="2.6" stroke="currentColor" strokeWidth="1.8" />
+    <path
+      d="M9.4 9.6 7 13.4M14.6 9.6 17 13.4M7.6 17.6h8.8"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+/** A pie, for the share of a pot each member holds. */
+export const Pie = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+    <path
+      d="M12 3v9h9"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+/** A jar with a coin: money put aside. */
+export const Savings = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <path
+      d="M5 9h14l-1.2 10.2A2 2 0 0 1 15.8 21H8.2a2 2 0 0 1-2-1.8L5 9Z"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M4 6.5h16"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+    />
+    <circle cx="12" cy="14.5" r="2.2" stroke="currentColor" strokeWidth="1.7" />
+  </svg>
+);

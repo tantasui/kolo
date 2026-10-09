@@ -191,22 +191,26 @@ export function ClaimLink() {
  */
 function Mascot() {
   return (
-    <div aria-hidden className="relative mx-auto mb-3 h-64 w-64 shrink-0">
+    /* No `mx-auto`: every other thing on this screen -- the mark, "Someone
+       sent you", the amount, the copy -- starts at the gutter, and a centred
+       illustration above left-aligned text reads as a mistake.
+       The asset is cropped to the character (570x798), so "left-aligned" means
+       the character's own edge sits on the gutter rather than 65px of empty
+       frame sitting there instead. The box keeps that aspect ratio. */
+    <div aria-hidden className="relative mb-4 h-64 w-[183px] shrink-0">
       {/* Behind the coin, not behind the character. */}
-      <span className="absolute left-[74%] top-[29%] h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/50 blur-2xl" />
+      <span className="absolute left-[89%] top-[23%] h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/50 blur-2xl" />
       <Image
         src="/img/mascot.webp"
         alt=""
         fill
         priority
-        sizes="256px"
-        /* `mix-blend-screen` so the art's own black contributes nothing and
-           there is no box around it -- the drawing sits on the page rather
-           than in a panel on it. Over near-black the character itself is
-           unchanged, so only the seam disappears. */
-        className="relative object-contain mix-blend-screen
-                   [mask-image:radial-gradient(closest-side,#000_72%,transparent_100%)]
-                   [-webkit-mask-image:radial-gradient(closest-side,#000_72%,transparent_100%)]"
+        sizes="183px"
+        /* `mix-blend-screen` plus an asset whose background has been flattened
+           to pure black: screen with #000 is a no-op, so the frame contributes
+           nothing and there is provably no box -- over flat ink and over the
+           bloom alike. The character's own pixels are untouched. */
+        className="relative object-contain mix-blend-screen"
       />
     </div>
   );

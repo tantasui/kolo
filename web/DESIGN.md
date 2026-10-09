@@ -284,30 +284,50 @@ _"Your money hasn't moved."_
 
 ---
 
-## Outside the app: `/about`
+## Outside the app: the public pages
 
-Everything above governs the app — the phone-width surface behind sign-in.
-[`/about`](src/app/about/page.tsx) is the one page that is not the app, and it
-is the one place the rules above are deliberately bent. They are written down
-here so the bends stay bounded and nobody has to guess which way to go next
-time.
+Everything above governs **the app**, which now lives at `/app` — the
+phone-width surface behind sign-in. Two pages are not the app, and they are
+where the rules above are deliberately bent. The bends are written down so they
+stay bounded and nobody has to guess next time.
 
-| Rule                    | What `/about` does instead                       | Why                                                                                                                                                                                                                                                                                                                         |
-| ----------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 390px phone column      | `max-w-7xl` desktop grid, single column at 390px | It is a web page, read on a laptop as often as a phone. The phone column lives in `app/(app)/layout.tsx` so the root layout no longer imposes it.                                                                                                                                                                           |
-| One typeface            | Adds JetBrains Mono, for tags and figures only   | A measurement should read as a measurement. Loaded in `app/about/layout.tsx`, scoped to that route, so the app pays nothing for it.                                                                                                                                                                                         |
-| Four animations         | Adds `reveal-up`, on the same curve              | Section-entry on scroll, via `about/Reveal.tsx`. Fires once, never hides anything in the markup, and collapses to nothing under `prefers-reduced-motion`.                                                                                                                                                                   |
-| Hand-rolled icons       | Still hand-rolled, in `about/Icons.tsx`          | The page needed sixteen the app does not have. **The no-icon-font rule does not bend**: a webfont for glyphs costs a round trip and renders as tofu before it lands.                                                                                                                                                        |
-| The vocabulary ban-list | Narrowed, not waived                             | Above the architecture section the page may say what you do _not_ have to deal with — _no addresses, no gas, no seed phrase_ — and may name the network where it is being honest that this is a testnet. It never names the machinery as something you operate. `0 wei` belongs below the divider, and that is where it is. |
+|                                             |                                                                                                       |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| [`/`](<src/app/(site)/page.tsx>)            | The landing page. Written for one person: somebody who needs to pay somebody.                         |
+| [`/about`](<src/app/(site)/about/page.tsx>) | The long answer. Written for somebody auditing Kolo, and linked once, from the landing page's footer. |
 
-Two things on that page are **not** negotiable, and the header comment in
-`page.tsx` says so at more length:
+**Which page a thing belongs on is the first question, not the last.** `/about`
+began life as the landing page and failed at it, because it opened on `0 wei`
+and `192/192`, named Kernel v0.3.1 in a spec grid, and built a section around
+contract counts. All of that is true, and none of it answers the only question
+a visitor has. If a sentence is proof rather than a promise, it belongs on
+`/about`.
+
+| Rule                    | What the public pages do instead               | Why                                                                                                                                                                                                          |
+| ----------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 390px phone column      | A desktop grid, single column on a phone       | They are web pages, read on a laptop as often as a phone. The phone column lives in `app/(app)/layout.tsx`, so the root layout no longer imposes it on everything.                                           |
+| One typeface            | Adds JetBrains Mono, for tags and figures only | A measurement should read as a measurement. Loaded in `app/(site)/layout.tsx`, scoped to the route group, so the app pays nothing for it.                                                                    |
+| Four animations         | Adds `reveal-up`, on the same curve            | Section entry on scroll, via `site/Reveal.tsx`. Fires once, never hides anything in the markup, and collapses to nothing under `prefers-reduced-motion`.                                                     |
+| Hand-rolled icons       | Still hand-rolled, in `site/Icons.tsx`         | The pages needed seventeen the app does not have. **The no-icon-font rule does not bend**: a webfont for glyphs costs a round trip and renders as tofu before it lands.                                      |
+| The vocabulary ban-list | Held on `/`, waived on `/about`                | The landing page keeps the app's vocabulary — it is addressed to the same person the app is. `/about` names the machinery freely, because a reader who has clicked through to it has asked for exactly that. |
+
+Three things are **not** negotiable, and the header comment on each page says so
+at more length:
 
 1. **No claim the repository or the chain cannot back.** No funding, no
    auditors, no press, no user counts, no latency or throughput figures, no
-   feature that is not built. It does not volunteer caveats either -- the
-   README carries the limitations in full, and the app's own button says "Add
-   demo funds" to whoever taps it. The page states what is true; it is not the
-   apology.
-2. **Addresses and amounts are read from `config`**, never retyped, so the page
-   cannot drift from the deployment.
+   feature that is not built.
+2. **Addresses and amounts are read from `config`**, never retyped, so neither
+   page can drift from the deployment.
+3. **The two uncomfortable answers stay on `/`.** A payment cannot be undone,
+   and the amounts are public. They sit in the questions section rather than
+   being left for somebody to discover, because they are the two facts that
+   decide whether the rest of the page is believable.
+
+### Routing
+
+`/` and `/about` are the public pages. `/app` is the product. `/claim`,
+`/circle/join` and `/pot/join` keep their URLs because they are links people
+have already been sent. `manifest.json` points `start_url` at `/app` so an
+installed home-screen icon opens the product and not the advertisement, while
+`scope` stays `/` so the share links still open inside the installed app.

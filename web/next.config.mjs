@@ -9,9 +9,4 @@ const withSerwist = withSerwistInit({
 
 export default withSerwist({
   reactStrictMode: true,
-  // The public page used to live at /about and the app at /. Links to the
-  // old address should still land on the page they were sent for.
-  async redirects() {
-    return [{ source: "/about", destination: "/", permanent: true }];
-  },
 });

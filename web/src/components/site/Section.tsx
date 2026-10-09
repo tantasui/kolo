@@ -20,16 +20,19 @@ export function Tag({
   children,
   tone = "muted",
   mono = false,
+  className = "",
 }: {
   children: React.ReactNode;
   tone?: "muted" | "accent";
   mono?: boolean;
+  /** For the light sections, which need a colour the dark tones cannot give. */
+  className?: string;
 }) {
   return (
     <span
       className={`text-[11px] font-semibold uppercase tracking-[0.16em]
                   ${mono ? "font-mono" : ""}
-                  ${tone === "accent" ? "text-accent" : "text-muted"}`}
+                  ${className || (tone === "accent" ? "text-accent" : "text-muted")}`}
     >
       {children}
     </span>

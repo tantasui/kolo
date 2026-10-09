@@ -81,13 +81,13 @@ export function HandleCTA() {
           event.preventDefault();
           if (!blocked) go();
         }}
-        className="flex flex-col gap-2 rounded-xl2 border border-line bg-surface p-2
-                   transition focus-within:border-muted sm:flex-row sm:items-center sm:rounded-pill"
+        className="flex flex-col gap-2 rounded-xl2 border border-rule-soft bg-card p-2
+                   transition focus-within:border-grass sm:flex-row sm:items-center sm:rounded-pill"
       >
-        <div className="flex min-w-0 flex-1 items-center gap-1 px-3">
+        <div className="flex min-w-0 flex-1 items-center gap-1 px-3 sm:px-3">
           <span
             aria-hidden
-            className="font-mono text-[18px] font-semibold text-muted"
+            className="font-mono text-[18px] font-semibold text-body-soft"
           >
             @
           </span>
@@ -100,8 +100,8 @@ export function HandleCTA() {
             autoCorrect="off"
             spellCheck={false}
             maxLength={config.handle.maxLength + 4}
-            className="w-full min-w-0 bg-transparent py-2.5 text-[18px] text-text outline-none
-                       placeholder:text-muted"
+            className="h-11 w-full min-w-0 bg-transparent text-[18px] text-deep outline-none
+                       placeholder:text-body-soft"
           />
           <Status state={state} />
         </div>
@@ -109,17 +109,15 @@ export function HandleCTA() {
         <button
           type="submit"
           disabled={blocked}
-          className="flex h-12 shrink-0 items-center justify-center rounded-pill bg-accent px-6
-                     text-[16px] font-semibold text-ink transition hover:bg-accent-dim
+          className="flex h-12 shrink-0 items-center justify-center rounded-pill bg-spring px-6
+                     text-[16px] font-semibold text-on-spring transition hover:bg-spring-dim
                      active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40"
         >
-          {handle
-            ? `Claim @${handle.slice(0, config.handle.maxLength)}`
-            : "Get started"}
+          Claim Free
         </button>
       </form>
 
-      <p className="mt-3 min-h-[1.25rem] text-[13px] text-muted">
+      <p className="mt-3 min-h-[1.25rem] text-[13px] text-body-soft">
         {hint(state, handle)}
       </p>
     </div>
@@ -128,29 +126,29 @@ export function HandleCTA() {
 
 function Status({ state }: { state: State }) {
   if (state.kind === "checking")
-    return <Spinner className="h-4 w-4 shrink-0 text-muted" />;
+    return <Spinner className="h-4 w-4 shrink-0 text-body-soft" />;
   if (state.kind === "available")
-    return <Check className="h-5 w-5 shrink-0 text-accent" />;
+    return <Check className="h-5 w-5 shrink-0 text-grass" />;
   if (state.kind === "taken")
-    return <Close className="h-5 w-5 shrink-0 text-danger" />;
+    return <Close className="h-5 w-5 shrink-0 text-alert" />;
   if (state.kind === "unknown")
-    return <Warning className="h-5 w-5 shrink-0 text-muted" />;
+    return <Warning className="h-5 w-5 shrink-0 text-body-soft" />;
   return null;
 }
 
 function hint(state: State, handle: string): string {
   switch (state.kind) {
     case "empty":
-      return "Letters, numbers and underscores. Your email is all it takes to sign in.";
+      return "Instant Claim • Sub-second";
     case "invalid":
       return state.message;
     case "checking":
-      return "Checking…";
+      return "Checking the registry…";
     case "available":
-      return `@${handle} is free. Nobody has claimed it.`;
+      return `@${handle} is currently available • 0.00 MON fee`;
     case "taken":
-      return `@${handle} is taken — try another.`;
+      return `@${handle} is already claimed • try another`;
     case "unknown":
-      return "Couldn't check just now. Carry on and the app will tell you.";
+      return "Couldn't reach the registry • carry on anyway";
   }
 }
