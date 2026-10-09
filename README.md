@@ -1,19 +1,32 @@
 # Kolo
 
-Send money to anyone by their **@handle**. It lands in seconds, and it never costs
-a thing.
+Send money to anyone by their **@handle**. It lands in seconds, and it never
+costs a thing.
 
-Kolo is a consumer payments app on Monad Testnet. The premise is that the user
-never sees a blockchain: they sign in with an email, pick a handle, and hold a
-dollar balance. There are no addresses to copy, no gas to buy, no seed phrase to
-write down, and no confirmation dialogs. Every transaction is sponsored, and the
-send flow batches its approval so a payment is one tap.
+**[usekolo.finance](https://usekolo.finance)** — the pitch is at `/`, the app
+is at [`/app`](https://usekolo.finance/app).
 
-Five things are built on top of that, each with its own contract on Monad
-Testnet: **send by @handle**, **claim links** for people who are not on Kolo
-yet, **circles** (ajo/esusu, where a group takes turns collecting the pot),
-**saving goals**, and **pots**, where a few people fund one service and each
-pays only for what they use themselves.
+Kolo is a consumer payments app on Monad Testnet. The whole bet is that the
+person sending money never has to learn anything first: they sign in with an
+email, pick a name, and have a dollar balance. Nothing to download, nothing to
+buy before the first send, and no dialog asking them to confirm something they
+did not ask for.
+
+Keeping that promise is what the rest of this repository is about. "No address
+to copy, no gas to buy, no seed phrase to write down" means a paymaster
+sponsors every operation and the send flow batches its approval, so a payment
+is one tap -- and the word *wallet* never reaches a screen.
+
+Six things are built on that, each with its own contract on Monad Testnet.
+
+| | |
+| --- | --- |
+| **Send by @handle** | Pay a name. One tap, no fee |
+| **Send by voice** | "Send 5k to Tolu for lunch" fills in the review screen. Parsed on the phone; the words never leave it |
+| **Claim links** | Money parked behind a secret link, for someone who is not on Kolo yet. Reclaimable, and it expires after seven days |
+| **Circles** | Ajo/esusu: a group takes turns collecting the pot. Deposits are sized by position so nobody can walk away ahead, and nobody is ever thrown out |
+| **Goals** | Money set aside toward something, withdrawable in full at any time, with no penalty |
+| **Pots** | A few people fund one service, and each pays only for what they used themselves |
 
 ---
 
@@ -24,8 +37,10 @@ pays only for what they use themselves.
 | Contracts | **192 tests passing**; seven deployed to Monad Testnet (see the addresses at the end) |
 | Money rules | Checked on chain, not only in tests: a circle settled a missed round unattended and paid in full; a pot refused one member spending past their own share while another got every cent back (`npm run verify:pots`); a goal filled, was recorded as reached, and was withdrawn anyway (`npm run verify:goals`) |
 | Sponsored transactions | **Verified on Monad Testnet** — every operation sponsored, account balance 0 wei throughout (`npm run verify:sponsorship`) |
-| App | Live on Netlify: send, claim links, circles, goals and pots, with type-check, lint and build clean |
+| App | Live at [usekolo.finance](https://usekolo.finance): send, send by voice, claim links, circles, goals and pots, with type-check, lint and build clean |
 | Rounding | `npm run check:money` proves the naira rule over ~1.8m amounts, and fails if either rounding direction is flipped back |
+| Voice | `npm run check:voice` pins what the parser understands: 46 checks over the sentences people actually say |
+| Public pages | `/` explains Kolo to somebody who has never heard of it; `/about` is the same product for somebody who wants to check it. The app is at `/app` |
 | Not built yet | The mock service page a pot pays, so nothing in the app records a *use* yet — a pot's "used" column only moves from `verify:pots` |
 
 ---
@@ -56,16 +71,21 @@ web/                Next.js PWA -- the entire user-facing app
   src/abi/              contract ABIs
   src/hooks/            smart account, handle, balance, activity, send
   src/lib/activity/     the data layer the UI reads through
-  src/app/claim/        where a claim link opens
-  src/app/circle/join/  where a circle invitation opens
-  src/app/pot/join/     where a pot invitation opens
   src/lib/money.ts      the naira/dollar rounding rule, on its own so it can be checked
+  src/lib/voice.ts      a spoken sentence -> a filled-in review screen, on its own too
+  src/app/(site)/       the public pages: the landing page at /, and /about
+  src/app/(app)/app/    the app itself, at /app
+  src/app/(app)/claim/  where a claim link opens
+  src/app/(app)/circle/ where a circle invitation opens (/circle/join)
+  src/app/(app)/pot/    where a pot invitation opens (/pot/join)
+  src/components/site/  the landing page's own pieces, used nowhere else
   src/components/       screens and UI primitives
 
 scripts/deploy.sh       deploys and writes the addresses into web/.env.local
 scripts/fund-faucet.sh  tops the demo faucet up from Agora's
 web/scripts/            keeper.mjs (closes circle rounds), and the checks:
-                        check:money, verify:goals, verify:pots, verify:sponsorship
+                        check:money, check:voice, verify:goals, verify:pots,
+                        verify:sponsorship
 ```
 
 ---
@@ -467,8 +487,9 @@ settings — it builds from `web/` with the Next.js runtime, on Node 20.
    These are `NEXT_PUBLIC_*`, so they are baked in at **build** time — set them
    before the first build, and redeploy after changing either. The contract
    addresses default to the live deployment, so nothing else is required.
-3. Add the resulting `https://<site>.netlify.app` origin to **Allowed origins**
-   in the Privy dashboard, or sign-in will be rejected.
+3. Add the resulting origin to **Allowed origins** in the Privy dashboard, or
+   sign-in will be rejected. Both the Netlify URL and any custom domain need
+   to be listed — ours is `https://usekolo.finance`.
 
 The HTTPS origin matters for more than Privy: service workers and passkeys
 only work in a secure context, so installing Kolo to a phone's home screen
@@ -478,7 +499,9 @@ needs the deployed URL, not a `http://<lan-ip>:3000` address.
 
 ## Demo script
 
-Two phones, or two browser profiles. Needs the Privy and Pimlico values set.
+Two phones, or two browser profiles. On the live site that is
+[usekolo.finance/app](https://usekolo.finance/app); locally it needs the Privy
+and Pimlico values set.
 
 1. **Amara** opens Kolo, taps **Get started**, signs in with her email.
 2. She picks `@amara` — availability updates as she types — and taps
@@ -497,6 +520,13 @@ Two phones, or two browser profiles. Needs the Privy and Pimlico values set.
 
 Nothing in that flow mentions crypto, and neither user pays for gas.
 
+To do steps 5 and 6 by voice instead, Amara taps the microphone on Home and
+says *"send 10 dollars to tunde for lunch"*. The review screen comes up filled
+in, Kolo reads it back — *"Send ten dollars to tunde?"* — and she answers
+**"send"**. Above $20 it asks her to tap instead, because anyone standing
+nearby can say the word. Either way she sees the review screen, and the parser
+runs on her phone: it fills the form and decides nothing.
+
 ### Install it as an app
 
 Open the site on a phone and use **Add to Home Screen** (the app offers this
@@ -510,6 +540,19 @@ The UI is held to a vocabulary. It says: Balance, Send, Add demo funds,
 @handle, No fee, Note, Sending…. It never says wallet, gas, transaction, hash, blockchain,
 Monad, token, approve, sign, smart account, or wei. Failures say
 *"Something went wrong — try again"* and the real error goes to the console.
+
+**The landing page is held to it too.** It used to open with "10,000 TPS • Zero
+Gas Fees" and compare "Traditional Web3" against "Kolo on Monad", which asked a
+visitor to already know what we were sparing them. It now says what each thing
+does for the person reading: *Lands in seconds · Never a fee · Nothing to
+download*; *Twenty-four words to copy down and never lose* against *Your email.
+Ten seconds, nothing to keep safe*.
+
+The stack is not hidden — it is kept where it is wanted. The header badge, the
+strip of deployed contract addresses, the footer and `/about` are all for
+somebody who came to check rather than to send, and they name Monad, Pimlico,
+Privy, Kernel, Agora and Foundry plainly. Everything a first-time visitor reads
+on the way to claiming a handle is in their own words.
 
 That rule, and the rest of the visual system — colour, type, shape, motion,
 state modelling — is written up in [`web/DESIGN.md`](web/DESIGN.md). Read it

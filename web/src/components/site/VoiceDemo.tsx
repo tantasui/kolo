@@ -41,16 +41,16 @@ export function VoiceDemo() {
       <div className="flex flex-col gap-4 lg:col-span-7">
         <span className="flex w-fit items-center gap-2 rounded-full bg-deep-2 px-3 py-1 text-label-caps text-spring">
           <Mic className="h-3.5 w-3.5" />
-          On-Device Semantic Parser
+          Stays on your phone
         </span>
         <h2 className="font-display text-[32px] font-extrabold leading-[36px] tracking-[-0.025em] sm:text-display-lg">
-          Speak naturally.
+          Just say it.
           <br />
-          <span className="text-spring">We handle the plumbing.</span>
+          <span className="text-spring">We fill in the rest.</span>
         </h2>
         <p className="max-w-lg text-body-md text-deep-quiet sm:text-body-lg">
-          Tap any prompt below to watch the client grammar extract recipient,
-          currency, and memo parameters instantly.
+          Tap one and watch it work out who, how much, and what for. Your words
+          never leave your phone, and nothing moves until you say so.
         </p>
 
         <div className="flex flex-wrap gap-2 pt-2">
@@ -77,7 +77,7 @@ export function VoiceDemo() {
       <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 text-body shadow-xl sm:gap-4 sm:p-6 lg:col-span-5">
         <div className="flex items-center justify-between gap-2 border-b border-wash-3 pb-3">
           <span className="text-label-caps uppercase text-body-soft">
-            Parsed Transaction Payload
+            What we heard
           </span>
           <span className="flex shrink-0 items-center gap-1" aria-hidden>
             {[0, 120, 240].map((d) => (
@@ -92,9 +92,9 @@ export function VoiceDemo() {
 
         <dl key={heard} className="flex animate-fade-up flex-col gap-3">
           {[
-            ["Recipient Handle", parsed.handle ? `@${parsed.handle}` : "—"],
-            ["Execution Amount", amount],
-            ["Batched Memo", parsed.note || "—"],
+            ["To", parsed.handle ? `@${parsed.handle}` : "—"],
+            ["Amount", amount],
+            ["What for", parsed.note || "—"],
           ].map(([k, v]) => (
             <div
               key={k}
@@ -110,14 +110,14 @@ export function VoiceDemo() {
 
         <div className="flex items-center justify-between gap-2 rounded-xl bg-wash-2 p-2.5">
           <span className="text-label-caps uppercase text-body-soft">
-            Gas Subsidy
+            Fee
           </span>
           <span className="shrink-0 text-right text-label-md text-grass">
-            100% Sponsored (0.00 MON)
+            None, as always
           </span>
         </div>
         <span className="w-full rounded-xl bg-deep py-3 text-center font-display text-label-lg text-spring">
-          Execute Batched Intent
+          Send it
         </span>
       </div>
     </div>

@@ -113,7 +113,7 @@ export function HandleCTA() {
                      text-[16px] font-semibold text-on-spring transition hover:bg-spring-dim
                      active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40"
         >
-          Claim Free
+          Claim it
         </button>
       </form>
 
@@ -139,16 +139,16 @@ function Status({ state }: { state: State }) {
 function hint(state: State, handle: string): string {
   switch (state.kind) {
     case "empty":
-      return "Instant Claim • Sub-second";
+      return "Yours in one tap, free";
     case "invalid":
       return state.message;
     case "checking":
-      return "Checking the registry…";
+      return "Checking…";
     case "available":
-      return `@${handle} is currently available • 0.00 MON fee`;
+      return `@${handle} is free — it is yours`;
     case "taken":
-      return `@${handle} is already claimed • try another`;
+      return `@${handle} is taken — try another`;
     case "unknown":
-      return "Couldn't reach the registry • carry on anyway";
+      return "Could not check just now — carry on anyway";
   }
 }

@@ -50,15 +50,17 @@ export function SendDemo() {
             </span>
             <div>
               <span className="text-label-caps uppercase text-body-soft">
-                Fast Transfer
+                Sending
               </span>
               <h3 className="whitespace-nowrap font-display text-[17px] font-semibold leading-none text-deep sm:text-headline-sm">
                 Send by @handle
               </h3>
             </div>
           </div>
+          {/* The app itself never names a chain on a send screen, and this is
+              a picture of the app. What it is honest about is being a demo. */}
           <span className="shrink-0 whitespace-nowrap rounded-full bg-wash-2 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.06em] text-body-soft">
-            Monad Testnet
+            Demo
           </span>
         </div>
 
@@ -70,7 +72,7 @@ export function SendDemo() {
             <div className="min-w-0">
               <p className="truncate text-label-lg text-deep">Tolu Adebayo</p>
               <p className="truncate text-body-sm text-body-soft">
-                @tolu • Registered 2m ago
+                @tolu • on Kolo
               </p>
             </div>
           </div>
@@ -79,7 +81,7 @@ export function SendDemo() {
 
         <div className="flex flex-col items-center justify-center py-4">
           <span className="text-label-caps uppercase text-body-soft">
-            Transfer Total
+            You are sending
           </span>
           <p className="tabular mt-1 font-display text-money-hero text-deep">
             {formatMoney(AMOUNT, "USD")}
@@ -100,10 +102,10 @@ export function SendDemo() {
           <Bolt className="mt-0.5 h-5 w-5 shrink-0 text-grass" />
           <div className="flex flex-col">
             <span className="text-label-md text-deep">
-              Batched Approval &amp; Gas Sponsored
+              No fee, and no steps in between
             </span>
             <span className="text-body-sm text-body-soft">
-              Single-tap execution • 400ms finality
+              One tap, and it is with them
             </span>
           </div>
         </div>
@@ -119,9 +121,9 @@ export function SendDemo() {
           <Send
             className={`h-5 w-5 transition-transform ${stage === "sending" ? "translate-x-1" : ""}`}
           />
-          {stage === "idle" && `1-Tap Send ${formatMoney(AMOUNT, "USD")}`}
-          {stage === "sending" && "Executing Atomic Batch…"}
-          {stage === "sent" && "Sent Successfully!"}
+          {stage === "idle" && `Send ${formatMoney(AMOUNT, "USD")}`}
+          {stage === "sending" && "Sending…"}
+          {stage === "sent" && "Sent"}
         </button>
 
         {/* The draft's own line. It is the output of a simulation on a
@@ -133,7 +135,7 @@ export function SendDemo() {
             stage === "sent" ? "animate-fade-up" : "invisible"
           }`}
         >
-          ✓ Settled on Monad in 380ms • one block
+          ✓ That is it. Tolu has the money.
         </p>
       </div>
     </div>
