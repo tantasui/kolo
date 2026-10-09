@@ -551,8 +551,8 @@ Ten seconds, nothing to keep safe*.
 The stack is not hidden — it is kept where it is wanted. The header badge, the
 strip of deployed contract addresses, the footer and `/about` are all for
 somebody who came to check rather than to send, and they name Monad, Pimlico,
-Privy, Kernel, Agora and Foundry plainly, each with its own mark, used
-unchanged and served from `public/logos/` rather than hotlinked. Everything a first-time visitor reads
+Privy and Agora plainly, each with its own mark, used unchanged and served
+from `public/logos/` rather than hotlinked. Everything a first-time visitor reads
 on the way to claiming a handle is in their own words.
 
 That rule, and the rest of the visual system — colour, type, shape, motion,

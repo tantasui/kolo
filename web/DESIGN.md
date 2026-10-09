@@ -312,7 +312,7 @@ a visitor has. If a sentence is proof rather than a promise, it belongs on
 | The vocabulary ban-list | Held on `/`, waived on `/about`                | The landing page keeps the app's vocabulary — it is addressed to the same person the app is. `/about` names the machinery freely, because a reader who has clicked through to it has asked for exactly that. |
 
 **Other people's logos are the one exception to hand-rolled artwork.** The
-"what Kolo actually runs on" row on both pages ships six marks we did not
+"what Kolo actually runs on" row on both pages ships four marks we did not
 draw, in [`site/Stack.tsx`](src/components/site/Stack.tsx), and the rule for
 them is the opposite of the rule for ours: **used unchanged**. Not recoloured,
 not redrawn, not stretched, not tinted to our palette — several of those brand

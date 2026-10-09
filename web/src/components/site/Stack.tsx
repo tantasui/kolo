@@ -12,10 +12,8 @@
  *   monad.png    monad.xyz favicon (256px)
  *   pimlico.png  github.com/pimlicolabs organisation avatar
  *   privy.png    github.com/privy-io organisation avatar
- *   zerodev.png  github.com/zerodevapp organisation avatar -- Kernel is theirs
  *   agora.svg    the mark out of agora.finance's own nav wordmark, filled with
  *                their `--ausd-green` (#476352) rather than a colour we picked
- *   foundry.png  getfoundry.sh/foundry-logo.png
  *
  * They are files in `public/logos/`, not hotlinks: a logo that 404s because
  * somebody else reorganised their site is a broken page on ours.
@@ -25,31 +23,21 @@ export const STACK = [
   { name: "MONAD", src: "/logos/monad.png", href: "https://monad.xyz" },
   { name: "PIMLICO", src: "/logos/pimlico.png", href: "https://pimlico.io" },
   { name: "PRIVY", src: "/logos/privy.png", href: "https://privy.io" },
-  {
-    name: "KERNEL v0.3",
-    src: "/logos/zerodev.png",
-    href: "https://zerodev.app",
-  },
   { name: "AGORA AUSD", src: "/logos/agora.svg", href: "https://agora.finance" },
-  { name: "FOUNDRY", src: "/logos/foundry.png", href: "https://getfoundry.sh" },
 ];
 
 /**
- * Two of the six are line art with no background of their own, and the other
- * four bring a dark or coloured tile. So on a light background the marks sit
- * straight on it, and on a dark one they all get the same white tile -- which
- * is what a brand guideline asks for anyway, rather than a black mark
- * disappearing into a black section.
+ * Agora's mark is line art with no background of its own; the other three
+ * bring a coloured tile. So on a light background the marks sit straight on
+ * it, and on a dark one they all get the same white tile -- which is what a
+ * brand guideline asks for anyway, rather than a dark mark disappearing into
+ * a dark section.
  */
 export function StackRow({ on = "light" }: { on?: "light" | "dark" }) {
   const dark = on === "dark";
 
   return (
-    <div
-      className={`grid grid-cols-2 items-center justify-items-center gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-6 ${
-        dark ? "md:grid-cols-3" : ""
-      }`}
-    >
+    <div className="grid grid-cols-2 items-center justify-items-center gap-x-4 gap-y-6 sm:grid-cols-4">
       {STACK.map((item) => (
         <a
           key={item.name}
