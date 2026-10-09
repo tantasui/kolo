@@ -47,7 +47,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       {/* The phone-width column lives in `(app)/layout.tsx`, not here, so
-          `/about` can use the full viewport. */}
+          the public page at `/` can use the full viewport. */}
       <body className={`${geistSans.variable} font-sans antialiased`}>
         {children}
       </body>

@@ -1,7 +1,7 @@
 import { Reveal } from "./Reveal";
 
 /**
- * The parts every section of `/about` is built from.
+ * The parts every section of the public page at `/` is built from.
  *
  * One set of primitives rather than markup repeated nine times, so the rhythm
  * -- tag, heading, lede, content -- and the vertical spacing are the same all

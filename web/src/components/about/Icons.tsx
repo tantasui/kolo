@@ -1,7 +1,7 @@
 type IconProps = { className?: string };
 
 /**
- * Icons `/about` needs that the app does not.
+ * Icons the public page at `/` needs that the app does not.
  *
  * The page this was built from used the Material Symbols icon font. These are
  * hand-rolled in the same 24x24 stroke style as `ui/Icons.tsx`, because

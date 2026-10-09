@@ -6,7 +6,7 @@
   "orientation": "portrait",
   "background_color": "#0A0A0C",
   "theme_color": "#0A0A0C",
-  "start_url": "/",
+  "start_url": "/app",
   "scope": "/",
   "id": "/",
   "categories": ["finance"],

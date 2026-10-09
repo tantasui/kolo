@@ -100,7 +100,7 @@ export function JoinPot() {
             stays available to withdraw.
           </p>
           <a
-            href="/"
+            href="/app"
             className="mt-10 flex h-14 w-full max-w-xs items-center justify-center rounded-pill
                        bg-accent text-[17px] font-semibold text-ink transition active:scale-[0.98]"
           >
