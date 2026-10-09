@@ -311,6 +311,19 @@ a visitor has. If a sentence is proof rather than a promise, it belongs on
 | Hand-rolled icons       | Still hand-rolled, in `site/Icons.tsx`         | The pages needed seventeen the app does not have. **The no-icon-font rule does not bend**: a webfont for glyphs costs a round trip and renders as tofu before it lands.                                      |
 | The vocabulary ban-list | Held on `/`, waived on `/about`                | The landing page keeps the app's vocabulary — it is addressed to the same person the app is. `/about` names the machinery freely, because a reader who has clicked through to it has asked for exactly that. |
 
+**Other people's logos are the one exception to hand-rolled artwork.** The
+"what Kolo actually runs on" row on both pages ships six marks we did not
+draw, in [`site/Stack.tsx`](src/components/site/Stack.tsx), and the rule for
+them is the opposite of the rule for ours: **used unchanged**. Not recoloured,
+not redrawn, not stretched, not tinted to our palette — several of those brand
+guidelines forbid exactly that, and a logo bent to fit a page reads as careless
+rather than as design. Each file is committed under `public/logos/` with its
+source in the component's header comment, never hotlinked, because a mark that
+404s when somebody else reorganises their site is a broken page on ours. On a
+light background the marks sit straight on it; on a dark one they all get the
+same white tile, which is what the guidelines ask for and stops the black ones
+vanishing.
+
 Three things are **not** negotiable, and the header comment on each page says so
 at more length:
 

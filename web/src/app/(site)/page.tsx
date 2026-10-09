@@ -20,6 +20,7 @@ import {
   Savings,
 } from "@/components/site/Icons";
 import { LinkIcon } from "@/components/ui/Icons";
+import { StackRow } from "@/components/site/Stack";
 import { KoloMark } from "@/components/ui/Wordmark";
 
 /**
@@ -795,23 +796,6 @@ function FinalCTA() {
 
 /* ---------- footer ---------- */
 
-/**
- * What Kolo actually runs on.
- *
- * Six names rather than six logos: a wordmark somebody else owns, redrawn by
- * us and tinted to our own palette, is worse than the name set in our type.
- * The marks are initials in each project's colour, which is enough to read the
- * row as a row of things and costs nobody a trademark.
- */
-const POWERED = [
-  { name: "MONAD", mark: "M", tone: "bg-[#836EF9] text-card" },
-  { name: "PIMLICO", mark: "P", tone: "bg-[#F35532] text-card" },
-  { name: "PRIVY", mark: "Pr", tone: "bg-deep text-card" },
-  { name: "KERNEL v0.3", mark: "K", tone: "bg-spring text-on-spring" },
-  { name: "AGORA AUSD", mark: "A", tone: "bg-[#0052FF] text-card" },
-  { name: "FOUNDRY", mark: "F", tone: "bg-deep text-card" },
-];
-
 function Footer() {
   return (
     <footer className="w-full bg-wash pb-12 pt-10">
@@ -863,21 +847,7 @@ function Footer() {
           <p className="mb-6 text-center text-label-caps uppercase tracking-widest text-body-soft">
             What Kolo actually runs on
           </p>
-          <div className="grid grid-cols-2 items-center justify-items-center gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-6">
-            {POWERED.map((item) => (
-              <span
-                key={item.name}
-                className="flex items-center gap-2 whitespace-nowrap text-[15px] font-bold tracking-tight text-deep sm:text-[17px]"
-              >
-                <span
-                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-mono text-[11px] ${item.tone}`}
-                >
-                  {item.mark}
-                </span>
-                {item.name}
-              </span>
-            ))}
-          </div>
+          <StackRow />
         </div>
 
         <div className="flex flex-col items-center justify-between gap-2 border-t border-wash-4 pt-6 text-center md:flex-row md:gap-3 md:text-left">

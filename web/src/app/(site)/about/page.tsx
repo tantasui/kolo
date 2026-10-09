@@ -3,6 +3,7 @@ import Link from "next/link";
 import { config } from "@/config";
 import { Photo } from "@/components/site/Photo";
 import { Reveal } from "@/components/site/Reveal";
+import { StackRow } from "@/components/site/Stack";
 import { Code, Tag } from "@/components/site/Section";
 import { ArrowRight } from "@/components/site/Icons";
 import { Check } from "@/components/ui/Icons";
@@ -104,23 +105,6 @@ function Intro() {
 
 /* ---------- the stack ---------- */
 
-const STACK = [
-  { name: "MONAD", mark: "M", tone: "bg-[#836EF9] text-card" },
-  { name: "PIMLICO", mark: "P", tone: "bg-[#F35532] text-card" },
-  {
-    name: "PRIVY",
-    mark: "Pr",
-    tone: "border border-deep-2 bg-deep-2 text-card",
-  },
-  { name: "KERNEL v0.3", mark: "K", tone: "bg-spring text-on-spring" },
-  { name: "AGORA AUSD", mark: "A", tone: "bg-[#0052FF] text-card" },
-  {
-    name: "FOUNDRY",
-    mark: "F",
-    tone: "border border-deep-2 bg-deep-2 text-card",
-  },
-];
-
 function Stack() {
   return (
     <section className="border-y border-deep-2 bg-deep-2 py-12">
@@ -128,21 +112,7 @@ function Stack() {
         <p className="mb-8 text-center font-mono text-[12px] uppercase tracking-widest text-deep-quiet">
           What Kolo actually runs on
         </p>
-        <div className="grid grid-cols-2 items-center justify-items-center gap-8 opacity-70 md:grid-cols-3 lg:grid-cols-6">
-          {STACK.map((item) => (
-            <div
-              key={item.name}
-              className="flex items-center gap-2 text-[17px] font-bold tracking-tight text-card"
-            >
-              <span
-                className={`flex h-6 w-6 items-center justify-center rounded-full font-mono text-[11px] ${item.tone}`}
-              >
-                {item.mark}
-              </span>
-              <span>{item.name}</span>
-            </div>
-          ))}
-        </div>
+        <StackRow on="dark" />
       </div>
     </section>
   );
