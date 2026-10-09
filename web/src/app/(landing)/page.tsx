@@ -154,7 +154,7 @@ function Header() {
             Source
           </a>
           <Link
-            href="/"
+            href="/app"
             className="inline-flex h-10 items-center whitespace-nowrap rounded-pill bg-accent px-5 text-[15px] font-semibold text-ink shadow-[0_0_24px_-4px_rgba(210,255,58,0.3)] transition-all hover:bg-accent-dim active:scale-[0.98]"
           >
             Launch app
@@ -206,7 +206,7 @@ function Hero() {
 
           <div className="mb-12 flex flex-wrap items-center gap-4">
             <Link
-              href="/"
+              href="/app"
               className="inline-flex h-14 items-center gap-2.5 rounded-pill bg-accent px-8 text-[16px]
                          font-semibold text-ink shadow-lg shadow-accent/15 transition-all
                          hover:bg-accent-dim active:scale-[0.98]"
@@ -642,7 +642,7 @@ function HowItWorks() {
               </div>
             </div>
             <Link
-              href="/"
+              href="/app"
               className="inline-flex h-12 shrink-0 items-center justify-center rounded-pill bg-accent
                          px-6 text-[15px] font-semibold text-ink transition-all hover:bg-accent-dim
                          active:scale-[0.98]"
@@ -1162,7 +1162,7 @@ function Footer() {
           </nav>
 
           <Link
-            href="/"
+            href="/app"
             className="inline-flex h-11 items-center justify-center rounded-pill bg-accent px-6
                        text-[15px] font-semibold text-ink transition-all hover:bg-accent-dim
                        active:scale-[0.98]"

@@ -33,7 +33,7 @@ export function ClaimHandle() {
   // Guards against a slow check overwriting a newer one.
   const requestRef = useRef(0);
 
-  /* If they typed a name on /about before signing in, start with it. Read in
+  /* If they typed a name on the public page before signing in, start with it. Read in
      an effect rather than in useState so the server and the first client
      render agree. */
   useEffect(() => {

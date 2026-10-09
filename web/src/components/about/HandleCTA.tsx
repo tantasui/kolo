@@ -69,7 +69,7 @@ export function HandleCTA() {
 
   function go() {
     if (handle) rememberWantedHandle(handle);
-    router.push("/");
+    router.push("/app");
   }
 
   const blocked = state.kind === "invalid" || state.kind === "taken";
