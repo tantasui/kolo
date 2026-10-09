@@ -18,7 +18,6 @@ import {
   Person,
   Pie,
   Savings,
-  Terminal,
 } from "@/components/site/Icons";
 import { LinkIcon } from "@/components/ui/Icons";
 import { KoloMark } from "@/components/ui/Wordmark";
@@ -166,11 +165,7 @@ function Hero() {
           <div className="flex flex-col gap-6 lg:col-span-7">
             {/* The draft put "10,000 TPS" here. Throughput is Monad's number,
                 not Kolo's, and we have not measured it. These three are ours. */}
-            <span className="flex w-fit items-start gap-2.5 rounded-full bg-wash-3 px-3.5 py-2 shadow-sm sm:items-center sm:px-4">
-              <span className="relative mt-[3px] flex h-2.5 w-2.5 shrink-0 sm:mt-0">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-grass opacity-75" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-grass" />
-              </span>
+            <span className="flex w-fit items-center rounded-full bg-wash-3 px-3.5 py-2 shadow-sm sm:px-4">
               <span className="text-[11px] leading-[15px] tracking-wide text-deep sm:text-label-md">
                 Built on Monad Testnet • 10,000 TPS • Zero Gas Fees
               </span>
@@ -699,14 +694,29 @@ function FinalCTA() {
 
 /* ---------- footer ---------- */
 
-const REPO = "https://github.com/tantasui/kolo";
+/**
+ * What Kolo actually runs on.
+ *
+ * Six names rather than six logos: a wordmark somebody else owns, redrawn by
+ * us and tinted to our own palette, is worse than the name set in our type.
+ * The marks are initials in each project's colour, which is enough to read the
+ * row as a row of things and costs nobody a trademark.
+ */
+const POWERED = [
+  { name: "MONAD", mark: "M", tone: "bg-[#836EF9] text-card" },
+  { name: "PIMLICO", mark: "P", tone: "bg-[#F35532] text-card" },
+  { name: "PRIVY", mark: "Pr", tone: "bg-deep text-card" },
+  { name: "KERNEL v0.3", mark: "K", tone: "bg-spring text-on-spring" },
+  { name: "AGORA AUSD", mark: "A", tone: "bg-[#0052FF] text-card" },
+  { name: "FOUNDRY", mark: "F", tone: "bg-deep text-card" },
+];
 
 function Footer() {
   return (
     <footer className="w-full bg-wash pb-12 pt-10">
       <div className="mx-auto max-w-[1320px] px-4 sm:px-5 md:px-12">
         <div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-12">
-          <div className="flex flex-col gap-4 md:col-span-5">
+          <div className="flex flex-col gap-4 md:col-span-7">
             <Link href="/" className="-m-2 flex w-fit items-center gap-2 p-2">
               <KoloMark size={28} />
               <span className="font-display text-headline-sm tracking-tight text-deep">
@@ -726,7 +736,7 @@ function Footer() {
             </span>
           </div>
 
-          <div className="flex flex-col md:col-span-3">
+          <div className="flex flex-col md:col-span-5">
             <span className="mb-2 text-label-caps uppercase tracking-wider text-body-soft">
               What you can do
             </span>
@@ -745,35 +755,26 @@ function Footer() {
               </a>
             ))}
           </div>
+        </div>
 
-          <div className="flex flex-col md:col-span-4">
-            <span className="mb-2 text-label-caps uppercase tracking-wider text-body-soft">
-              For developers
-            </span>
-            <Link
-              href="/about"
-              className="-mx-2 flex min-h-[40px] items-center rounded-lg px-2 text-body-sm text-body-soft transition-colors hover:text-body"
-            >
-              How it works
-            </Link>
-            <a
-              href={REPO}
-              className="-mx-2 flex min-h-[40px] items-center gap-1.5 rounded-lg px-2 text-body-sm text-body-soft transition-colors hover:text-body"
-            >
-              <Terminal className="h-3.5 w-3.5" /> Repository
-            </a>
-            <a
-              href={`${REPO}/tree/main/contracts`}
-              className="-mx-2 flex min-h-[40px] items-center rounded-lg px-2 text-body-sm text-body-soft transition-colors hover:text-body"
-            >
-              Contracts and tests
-            </a>
-            <a
-              href={`${REPO}/blob/main/web/DESIGN.md`}
-              className="-mx-2 flex min-h-[40px] items-center rounded-lg px-2 text-body-sm text-body-soft transition-colors hover:text-body"
-            >
-              Design system
-            </a>
+        <div className="mb-10 border-t border-wash-4 pt-8">
+          <p className="mb-6 text-center text-label-caps uppercase tracking-widest text-body-soft">
+            What Kolo actually runs on
+          </p>
+          <div className="grid grid-cols-2 items-center justify-items-center gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-6">
+            {POWERED.map((item) => (
+              <span
+                key={item.name}
+                className="flex items-center gap-2 whitespace-nowrap text-[15px] font-bold tracking-tight text-deep sm:text-[17px]"
+              >
+                <span
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-mono text-[11px] ${item.tone}`}
+                >
+                  {item.mark}
+                </span>
+                {item.name}
+              </span>
+            ))}
           </div>
         </div>
 
