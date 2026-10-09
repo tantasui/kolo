@@ -14,6 +14,9 @@ const APP_DESCRIPTION =
   "Send money to anyone by their @handle. Instantly, with no fee.";
 
 export const metadata: Metadata = {
+  /* Every other URL in here is resolved against this one. Without it Next
+     falls back to localhost, and the card Twitter fetches is a 404. */
+  metadataBase: new URL("https://usekolo.finance"),
   applicationName: APP_NAME,
   title: { default: APP_TITLE, template: "%s — Kolo" },
   description: APP_DESCRIPTION,
@@ -28,6 +31,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: APP_NAME,
+    title: APP_TITLE,
+    description: APP_DESCRIPTION,
+  },
+  /* The image itself is `opengraph-image.png` / `twitter-image.png` next to
+     this file; Next picks those up by name and fills in the url, dimensions
+     and alt text. This is the part it cannot infer: without the card type,
+     Twitter renders a thumbnail the size of a stamp. */
+  twitter: {
+    card: "summary_large_image",
     title: APP_TITLE,
     description: APP_DESCRIPTION,
   },

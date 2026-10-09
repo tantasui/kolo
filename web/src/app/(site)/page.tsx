@@ -57,12 +57,27 @@ export const metadata: Metadata = {
     "Sign in with your email, pick your @handle, and send money to anyone by name. " +
     "It lands in seconds, it costs nothing, and there is nothing to download. " +
     "Save together in a circle, or put money aside for later.",
+  /* Spelled out rather than inherited: the root's card carries the app's
+     title, and this is the page people actually paste into a chat.
+
+     `images` has to be named here. A page that exports its own `openGraph`
+     replaces the parent's rather than merging into it, so leaving it out does
+     not inherit `opengraph-image.png` -- it drops the picture, on the one
+     page that needs it. Checked in the built HTML, not assumed. */
   openGraph: {
     type: "website",
     siteName: "Kolo",
     title: "Kolo: money that moves like a message",
     description:
       "Send money by name. Nothing to download, nothing to pay, nothing to keep safe.",
+    images: ["/opengraph-image.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Kolo: money that moves like a message",
+    description:
+      "Send money by name. Nothing to download, nothing to pay, nothing to keep safe.",
+    images: ["/twitter-image.png"],
   },
 };
 

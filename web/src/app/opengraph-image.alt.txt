@@ -1,0 +1,1 @@
+Kolo: money that moves like a message. Send it to a name, not a number.
