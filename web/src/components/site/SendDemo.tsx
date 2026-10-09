@@ -42,39 +42,39 @@ export function SendDemo() {
   return (
     <div className="relative w-full max-w-[380px]">
       <div className="absolute inset-0 translate-x-2 translate-y-3 rotate-2 rounded-3xl bg-deep-2 opacity-95" />
-      <div className="relative flex flex-col gap-4 overflow-hidden rounded-3xl bg-card p-6 shadow-xl">
+      <div className="relative flex flex-col gap-3.5 overflow-hidden rounded-3xl bg-card p-5 shadow-xl sm:gap-4 sm:p-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-spring">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-spring">
               <Bolt className="h-4 w-4 text-on-spring" />
             </span>
             <div>
               <span className="text-label-caps uppercase text-body-soft">
                 Fast Transfer
               </span>
-              <h3 className="font-display text-headline-sm leading-none text-deep">
+              <h3 className="whitespace-nowrap font-display text-[17px] font-semibold leading-none text-deep sm:text-headline-sm">
                 Send by @handle
               </h3>
             </div>
           </div>
-          <span className="rounded-full bg-wash-2 px-2 py-1 text-label-caps text-body-soft">
+          <span className="shrink-0 whitespace-nowrap rounded-full bg-wash-2 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.06em] text-body-soft">
             Monad Testnet
           </span>
         </div>
 
-        <div className="flex items-center justify-between rounded-2xl bg-wash p-3">
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-deep font-display text-lg text-spring">
+        <div className="flex items-center justify-between gap-2 rounded-2xl bg-wash p-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-deep font-display text-lg text-spring">
               T
             </span>
-            <div>
-              <p className="text-label-lg text-deep">Tolu Adebayo</p>
-              <p className="text-body-sm text-body-soft">
+            <div className="min-w-0">
+              <p className="truncate text-label-lg text-deep">Tolu Adebayo</p>
+              <p className="truncate text-body-sm text-body-soft">
                 @tolu • Registered 2m ago
               </p>
             </div>
           </div>
-          <CheckCircle className="h-5 w-5 text-grass" />
+          <CheckCircle className="h-5 w-5 shrink-0 text-grass" />
         </div>
 
         <div className="flex flex-col items-center justify-center py-4">
@@ -112,8 +112,8 @@ export function SendDemo() {
           type="button"
           onClick={run}
           disabled={stage !== "idle"}
-          className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4 font-display
-                      text-headline-sm transition-all active:scale-95 disabled:cursor-default
+          className={`flex min-h-[56px] w-full items-center justify-center gap-3 rounded-2xl py-4
+                      font-display text-headline-sm transition-all active:scale-95 disabled:cursor-default
                       ${stage === "sent" ? "bg-grass text-card" : "bg-deep text-spring"}`}
         >
           <Send

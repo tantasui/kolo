@@ -59,7 +59,7 @@ function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-deep-2 bg-deep/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-6 px-5 sm:px-6 md:h-[72px]">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5">
+        <Link href="/" className="-m-2 flex shrink-0 items-center gap-2.5 p-2">
           <KoloMark size={30} />
           <span className="text-[22px] font-bold tracking-tight text-card">
             kolo
@@ -372,7 +372,7 @@ function Contracts() {
                   key={contract.address}
                   className="border-b border-deep-2 transition-colors last:border-b-0 hover:bg-deep/40"
                 >
-                  <td className="px-5 py-3.5 align-top text-[14px] font-semibold text-card">
+                  <td className="px-3 py-2 align-top text-[14px] font-semibold text-card sm:px-5 sm:py-3.5">
                     {contract.name}
                     <span className="mt-1 block text-[12px] font-normal text-deep-quiet sm:hidden">
                       {contract.blurb}
@@ -381,12 +381,14 @@ function Contracts() {
                   <td className="hidden px-5 py-3.5 align-top text-[13px] text-deep-quiet sm:table-cell">
                     {contract.blurb}
                   </td>
-                  <td className="px-5 py-3.5 text-right align-top">
+                  <td className="px-3 py-2 text-right align-top sm:px-5 sm:py-3.5">
                     <a
                       href={`${EXPLORER}/address/${contract.address}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="tabular text-[12px] text-deep-quiet underline decoration-deep-2 underline-offset-4 transition hover:text-spring"
+                      className="tabular -my-1 inline-flex min-h-[40px] items-center justify-end
+                                 text-[12px] text-deep-quiet underline decoration-deep-2
+                                 underline-offset-4 transition hover:text-spring"
                     >
                       {shorten(contract.address)}
                     </a>
@@ -422,23 +424,27 @@ function Footer() {
       <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-5 px-5 py-10 text-center sm:px-6 md:flex-row md:text-left">
         <Link
           href="/"
-          className="text-[14px] text-deep-quiet transition-colors hover:text-card"
+          className="-m-2 inline-flex min-h-[40px] items-center p-2 text-[14px] text-deep-quiet
+                     transition-colors hover:text-card"
         >
           ← Back to Kolo
         </Link>
         <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[14px] text-deep-quiet">
-          <a href={REPO} className="transition-colors hover:text-card">
+          <a
+            href={REPO}
+            className="-my-2 inline-flex min-h-[40px] items-center transition-colors hover:text-card"
+          >
             Repository
           </a>
           <a
             href={`${REPO}/blob/main/web/DESIGN.md`}
-            className="transition-colors hover:text-card"
+            className="-my-2 inline-flex min-h-[40px] items-center transition-colors hover:text-card"
           >
             Design system
           </a>
           <a
             href={`${REPO}/tree/main/contracts`}
-            className="transition-colors hover:text-card"
+            className="-my-2 inline-flex min-h-[40px] items-center transition-colors hover:text-card"
           >
             Contracts
           </a>

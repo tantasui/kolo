@@ -26,23 +26,25 @@ export function Converter() {
 
   return (
     <div className="flex max-w-xl flex-col gap-2 rounded-2xl bg-wash p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
         <span className="text-label-caps uppercase tracking-wider text-body-soft">
           Dual Balance Realtime Peg
         </span>
-        <span className="flex items-center gap-1.5 rounded-full bg-wash-4 px-2.5 py-0.5 text-label-md text-deep">
+        <span className="flex w-fit shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-wash-4 px-2.5 py-1 text-[11px] font-semibold text-deep sm:text-label-md">
           <span className="h-1.5 w-1.5 rounded-full bg-grass" />
           Guaranteed Floor: 1 USD = ₦{getRate().toLocaleString("en-US")}
         </span>
       </div>
 
-      <div className="grid grid-cols-2 items-center gap-2">
-        <label className="flex cursor-text flex-col rounded-xl bg-card p-3.5 shadow-sm transition focus-within:ring-2 focus-within:ring-grass/40">
+      <div className="grid grid-cols-1 items-stretch gap-2 min-[400px]:grid-cols-2">
+        <label className="flex min-h-[72px] cursor-text flex-col justify-center rounded-xl bg-card p-3.5 shadow-sm transition focus-within:ring-2 focus-within:ring-grass/40">
           <span className="text-label-caps uppercase text-body-soft">
             You Hold
           </span>
           <span className="mt-1 flex items-baseline gap-0.5">
-            <span className="font-display text-headline-md text-deep">$</span>
+            <span className="font-display text-[20px] font-bold leading-[26px] text-deep sm:text-headline-md">
+              $
+            </span>
             <input
               value={dollars}
               onChange={(event) =>
@@ -50,16 +52,16 @@ export function Converter() {
               }
               inputMode="decimal"
               aria-label="Amount in dollars"
-              className="tabular w-full min-w-0 bg-transparent font-display text-headline-md text-deep outline-none"
+              className="tabular h-9 w-full min-w-0 bg-transparent font-display text-[20px] font-bold leading-[26px] text-deep outline-none sm:text-headline-md"
             />
           </span>
         </label>
 
-        <div className="flex flex-col rounded-xl bg-card p-3.5 shadow-sm">
+        <div className="flex min-h-[72px] flex-col justify-center rounded-xl bg-card p-3.5 shadow-sm">
           <span className="text-label-caps uppercase text-body-soft">
             Instant Spendable Floor
           </span>
-          <p className="tabular mt-1 truncate font-display text-headline-md text-deep">
+          <p className="tabular mt-1 truncate font-display text-[20px] font-bold leading-[26px] text-deep sm:text-headline-md">
             {formatMoney(held, "NGN")}
           </p>
         </div>

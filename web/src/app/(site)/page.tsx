@@ -4,6 +4,7 @@ import { config } from "@/config";
 import { Converter } from "@/components/site/Converter";
 import { CountUp } from "@/components/site/CountUp";
 import { HandleCTA } from "@/components/site/HandleCTA";
+import { MobileNav } from "@/components/site/MobileNav";
 import { SendDemo } from "@/components/site/SendDemo";
 import { Ticker } from "@/components/site/Ticker";
 import { VoiceDemo } from "@/components/site/VoiceDemo";
@@ -60,7 +61,7 @@ export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col overflow-x-clip bg-canvas text-body">
       <Header />
-      <main className="w-full flex-1 pt-20">
+      <main className="w-full flex-1 pt-[72px] md:pt-20">
         <Hero />
         <Stats />
         <Features />
@@ -86,9 +87,9 @@ const NAV = [
 function Header() {
   return (
     <header className="fixed left-0 top-0 z-50 w-full bg-canvas/90 shadow-[0_1px_8px_rgba(0,0,0,0.04)] backdrop-blur-xl">
-      <div className="mx-auto flex h-20 max-w-[1320px] items-center justify-between gap-4 px-5 md:px-12">
+      <div className="mx-auto flex h-[72px] max-w-[1320px] items-center justify-between gap-3 px-4 sm:px-5 md:h-20 md:px-12">
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="-m-2 flex items-center gap-2 p-2">
             <KoloMark size={32} />
             <span className="font-display text-headline-sm tracking-tight text-deep">
               Kolo
@@ -135,15 +136,17 @@ function Header() {
           </span>
           <Link
             href="/app"
-            className="inline-flex items-center justify-center rounded-full bg-spring px-4 py-2.5
-                       text-label-lg text-on-spring shadow-[0_2px_0_0_rgba(14,21,14,0.12)]
-                       transition-all hover:bg-spring-dim active:translate-y-0.5"
+            className="inline-flex h-11 items-center justify-center whitespace-nowrap rounded-full
+                       bg-spring px-4 text-label-lg text-on-spring
+                       shadow-[0_2px_0_0_rgba(14,21,14,0.12)] transition-all hover:bg-spring-dim
+                       active:translate-y-0.5 sm:px-5"
           >
             Claim @handle
           </Link>
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-deep">
+          <span className="hidden h-9 w-9 items-center justify-center rounded-full bg-deep sm:flex">
             <Person className="h-4 w-4 text-spring" />
           </span>
+          <MobileNav items={NAV} />
         </div>
       </div>
     </header>
@@ -154,35 +157,35 @@ function Header() {
 
 function Hero() {
   return (
-    <section className="relative w-full overflow-hidden pb-24 pt-12">
+    <section className="relative w-full overflow-hidden pb-16 pt-8 md:pb-24 md:pt-12">
       <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-spring/30 blur-3xl" />
       <div className="pointer-events-none absolute -right-40 top-1/2 h-[30rem] w-[30rem] rounded-full bg-mint/20 blur-3xl" />
 
-      <div className="mx-auto max-w-[1320px] px-5 md:px-12">
+      <div className="mx-auto max-w-[1320px] px-4 sm:px-5 md:px-12">
         <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-12">
           <div className="flex flex-col gap-6 lg:col-span-7">
             {/* The draft put "10,000 TPS" here. Throughput is Monad's number,
                 not Kolo's, and we have not measured it. These three are ours. */}
-            <span className="flex w-fit items-center gap-2.5 rounded-full bg-wash-3 px-4 py-2 shadow-sm">
-              <span className="relative flex h-2.5 w-2.5">
+            <span className="flex w-fit items-start gap-2.5 rounded-full bg-wash-3 px-3.5 py-2 shadow-sm sm:items-center sm:px-4">
+              <span className="relative mt-[3px] flex h-2.5 w-2.5 shrink-0 sm:mt-0">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-grass opacity-75" />
                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-grass" />
               </span>
-              <span className="text-label-md tracking-wide text-deep">
+              <span className="text-[11px] leading-[15px] tracking-wide text-deep sm:text-label-md">
                 Built on Monad Testnet • 10,000 TPS • Zero Gas Fees
               </span>
             </span>
 
             <div className="flex flex-col gap-1">
-              <h1 className="font-display text-[38px] leading-[42px] tracking-[-0.035em] text-deep sm:text-display-xl">
+              <h1 className="font-display text-[34px] leading-[37px] tracking-[-0.035em] text-deep sm:text-display-xl">
                 Money moves at the speed of thought.
               </h1>
-              <p className="font-display text-[32px] font-bold leading-[36px] tracking-[-0.025em] text-body-soft/90 sm:text-display-lg">
+              <p className="font-display text-[26px] font-bold leading-[30px] tracking-[-0.025em] text-body-soft/90 sm:text-display-lg">
                 No blockchain in sight.
               </p>
             </div>
 
-            <p className="max-w-xl text-body-lg leading-relaxed text-body-soft">
+            <p className="max-w-xl text-body-md leading-relaxed text-body-soft sm:text-body-lg">
               Email sign-in, claim your{" "}
               <span className="font-semibold text-deep">@handle</span>, hold
               instant dollar balances. No crypto addresses, no gas fees, no seed
@@ -258,15 +261,17 @@ const STATS: {
 function Stats() {
   return (
     <section className="w-full bg-deep py-12 text-card">
-      <div className="mx-auto max-w-[1320px] px-5 md:px-12">
-        <dl className="grid grid-cols-2 gap-6 text-center md:grid-cols-4 md:text-left">
+      <div className="mx-auto max-w-[1320px] px-4 sm:px-5 md:px-12">
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-8 text-center md:grid-cols-4 md:gap-6 md:text-left">
           {STATS.map((stat, i) => (
             <Reveal key={stat.label} delay={i * 70}>
-              <dt className="text-label-caps uppercase tracking-wider text-spring">
+              <dt className="text-[10px] font-bold uppercase leading-[14px] tracking-wider text-spring sm:text-label-caps">
                 {stat.label}
               </dt>
               <dd
-                className={`tabular mt-1 font-display text-display-lg ${stat.lit ? "text-spring" : "text-card"}`}
+                className={`tabular mt-1 font-display text-[32px] font-extrabold leading-[36px] tracking-[-0.03em] sm:text-display-lg ${
+                  stat.lit ? "text-spring" : "text-card"
+                }`}
               >
                 {stat.value}
               </dd>
@@ -288,14 +293,16 @@ const FEATURES = [
     title: "Send by @handle",
     body: "Pay a name, not a 42-character hash. A single Monad state transition carries both handles, the atomic amount, and your note seamlessly.",
     foot: (
-      <div className="flex items-center justify-between rounded-2xl bg-wash-2 p-3">
-        <span className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-deep text-label-md text-spring">
+      <div className="flex items-center justify-between gap-2 rounded-2xl bg-wash-2 p-3">
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-deep text-label-md text-spring">
             @
           </span>
-          <span className="text-label-md text-deep">@kemi → @fola</span>
+          <span className="truncate text-label-md text-deep">
+            @kemi → @fola
+          </span>
         </span>
-        <span className="text-label-caps uppercase text-grass">
+        <span className="shrink-0 text-label-caps uppercase text-grass">
           Direct Route
         </span>
       </div>
@@ -336,11 +343,11 @@ const FEATURES = [
     title: "Claim Links",
     body: "Drop money behind a secret link for friends who don't even have a Kolo account yet. Fully reclaimable if unclaimed; auto-expires safely in 7 days.",
     foot: (
-      <div className="flex items-center justify-between rounded-2xl bg-wash-2 p-3">
+      <div className="flex items-center justify-between gap-2 rounded-2xl bg-wash-2 p-3">
         <span className="truncate text-body-sm font-semibold text-deep">
           kolo.app/c/x98a-44fe
         </span>
-        <span className="rounded-full bg-deep px-2 py-0.5 text-label-caps text-spring">
+        <span className="shrink-0 whitespace-nowrap rounded-full bg-deep px-2 py-0.5 text-label-caps text-spring">
           Reclaimable
         </span>
       </div>
@@ -352,8 +359,8 @@ const FEATURES = [
     title: "Circles (Ajo / Esusu)",
     body: "Community savings reimagined. Deposits dynamically scale with payout rotation position so nobody walks away ahead, and no member is ever expelled.",
     foot: (
-      <div className="flex items-center justify-between rounded-2xl bg-wash p-3">
-        <span className="flex -space-x-2">
+      <div className="flex items-center justify-between gap-2 rounded-2xl bg-wash p-3">
+        <span className="flex shrink-0 -space-x-2">
           {["A", "B", "C"].map((c, i) => (
             <span
               key={c}
@@ -369,7 +376,9 @@ const FEATURES = [
             </span>
           ))}
         </span>
-        <span className="text-label-md text-deep">5 Members • ₦500k Pot</span>
+        <span className="shrink-0 text-label-md text-deep">
+          5 Members • ₦500k Pot
+        </span>
       </div>
     ),
   },
@@ -396,11 +405,13 @@ const FEATURES = [
     title: "Pots (Shared Utility)",
     body: "Split recurrent subscriptions, shared apartment power bills, or internet. Multiple people fund one pot with strict per-person spending limits.",
     foot: (
-      <div className="flex items-center justify-between rounded-2xl bg-wash-2 p-3">
-        <span className="text-body-sm font-bold text-deep">
+      <div className="flex items-center justify-between gap-2 rounded-2xl bg-wash-2 p-3">
+        <span className="truncate text-body-sm font-bold text-deep">
           Starlink Internet Bill
         </span>
-        <span className="text-label-caps uppercase text-grass">Own share</span>
+        <span className="shrink-0 text-label-caps uppercase text-grass">
+          Own share
+        </span>
       </div>
     ),
   },
@@ -408,8 +419,11 @@ const FEATURES = [
 
 function Features() {
   return (
-    <section id="features" className="w-full scroll-mt-24 bg-canvas py-24">
-      <div className="mx-auto flex max-w-[1320px] flex-col gap-10 px-5 md:px-12">
+    <section
+      id="features"
+      className="w-full scroll-mt-20 bg-canvas py-16 md:py-24"
+    >
+      <div className="mx-auto flex max-w-[1320px] flex-col gap-8 px-4 sm:px-5 md:gap-10 md:px-12">
         <Reveal>
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div className="flex max-w-xl flex-col gap-1">
@@ -504,8 +518,11 @@ const ROWS = [
 
 function Comparison() {
   return (
-    <section id="how-it-works" className="w-full scroll-mt-24 bg-wash py-24">
-      <div className="mx-auto max-w-[1320px] px-5 md:px-12">
+    <section
+      id="how-it-works"
+      className="w-full scroll-mt-20 bg-wash py-16 md:py-24"
+    >
+      <div className="mx-auto max-w-[1320px] px-4 sm:px-5 md:px-12">
         <Reveal>
           <div className="mx-auto mb-10 flex max-w-2xl flex-col gap-2 text-center">
             <span className="text-label-caps uppercase tracking-widest text-grass">
@@ -523,12 +540,12 @@ function Comparison() {
 
         <Reveal>
           <div className="overflow-hidden rounded-3xl bg-card shadow-md">
-            <div className="grid grid-cols-12 gap-3 bg-wash-4 p-4 text-label-lg text-deep md:p-6">
+            <div className="hidden grid-cols-12 gap-3 bg-wash-4 p-4 text-label-lg text-deep md:grid md:p-6">
               <div className="col-span-12 md:col-span-4">Experience Layer</div>
-              <div className="col-span-6 text-body-soft md:col-span-4">
+              <div className="col-span-6 hidden text-body-soft md:col-span-4 md:block">
                 Traditional Web3
               </div>
-              <div className="col-span-6 flex items-center gap-1.5 text-grass md:col-span-4">
+              <div className="col-span-6 hidden items-center gap-1.5 text-grass md:col-span-4 md:flex">
                 <CheckCircle className="h-4 w-4" />
                 Kolo on Monad
               </div>
@@ -537,18 +554,30 @@ function Comparison() {
             {ROWS.map((row, i) => (
               <div
                 key={row.layer}
-                className={`grid grid-cols-12 items-center gap-3 p-4 transition-colors hover:bg-wash/40 md:p-6 ${
+                className={`grid grid-cols-12 items-center gap-2 p-4 transition-colors hover:bg-wash/40 md:gap-3 md:p-6 ${
                   i < ROWS.length - 1 ? "border-b border-wash-3" : ""
                 }`}
               >
                 <div className="col-span-12 font-display text-headline-sm text-deep md:col-span-4">
                   {row.layer}
                 </div>
-                <div className="col-span-6 flex items-start gap-2 text-body-md text-body-soft md:col-span-4">
-                  <span className="font-bold text-alert">×</span> {row.old}
+                <div className="col-span-12 flex items-start gap-2 text-body-md text-body-soft md:col-span-4">
+                  <span className="font-bold text-alert">×</span>
+                  <span>
+                    <span className="text-label-caps uppercase tracking-wider text-rule md:hidden">
+                      Traditional Web3{" "}
+                    </span>
+                    {row.old}
+                  </span>
                 </div>
-                <div className="col-span-6 flex items-start gap-2 text-body-md font-semibold text-deep md:col-span-4">
-                  <span className="font-bold text-grass">✓</span> {row.kolo}
+                <div className="col-span-12 flex items-start gap-2 text-body-md font-semibold text-deep md:col-span-4">
+                  <span className="font-bold text-grass">✓</span>
+                  <span>
+                    <span className="text-label-caps uppercase tracking-wider text-grass md:hidden">
+                      Kolo on Monad{" "}
+                    </span>
+                    {row.kolo}
+                  </span>
                 </div>
               </div>
             ))}
@@ -565,10 +594,13 @@ function Comparison() {
 
 function VoiceSection() {
   return (
-    <section id="voice" className="w-full scroll-mt-24 bg-canvas py-20">
-      <div className="mx-auto max-w-[1320px] px-5 md:px-12">
+    <section
+      id="voice"
+      className="w-full scroll-mt-20 bg-canvas py-16 md:py-20"
+    >
+      <div className="mx-auto max-w-[1320px] px-4 sm:px-5 md:px-12">
         <Reveal>
-          <div className="relative overflow-hidden rounded-3xl bg-deep p-8 text-card shadow-2xl md:p-14">
+          <div className="relative overflow-hidden rounded-3xl bg-deep p-5 text-card shadow-2xl sm:p-8 md:p-14">
             <div className="pointer-events-none absolute -bottom-20 -right-20 h-80 w-80 rounded-full bg-spring opacity-10 blur-3xl" />
             <VoiceDemo />
           </div>
@@ -598,15 +630,15 @@ const LIVE = [
 
 function Live() {
   return (
-    <section className="w-full overflow-hidden bg-wash-2 py-12">
-      <div className="mx-auto flex max-w-[1320px] flex-col gap-4 px-5 md:px-12">
-        <div className="flex items-center justify-between gap-3">
+    <section className="w-full overflow-hidden bg-wash-2 py-10 md:py-12">
+      <div className="mx-auto flex max-w-[1320px] flex-col gap-4 px-4 sm:px-5 md:px-12">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           <span className="text-label-caps uppercase tracking-wider text-body-soft">
             Live on Monad Testnet · chain {config.chain.id}
           </span>
           <Link
             href="/about"
-            className="flex shrink-0 items-center gap-1.5 text-label-md text-grass hover:underline"
+            className="-m-2 flex min-h-[40px] shrink-0 items-center gap-1.5 p-2 text-label-md text-grass hover:underline"
           >
             See all of it
             <ArrowRight className="h-3.5 w-3.5" />
@@ -623,10 +655,10 @@ function Live() {
 
 function FinalCTA() {
   return (
-    <section className="w-full bg-canvas py-24">
-      <div className="mx-auto max-w-[1320px] px-5 md:px-12">
+    <section className="w-full bg-canvas py-16 md:py-24">
+      <div className="mx-auto max-w-[1320px] px-4 sm:px-5 md:px-12">
         <Reveal>
-          <div className="relative flex flex-col items-center justify-between gap-6 overflow-hidden rounded-3xl bg-spring p-10 text-on-spring shadow-xl md:flex-row md:p-16">
+          <div className="relative flex flex-col items-center justify-between gap-6 overflow-hidden rounded-3xl bg-spring p-6 text-on-spring shadow-xl sm:p-10 md:flex-row md:p-16">
             <div className="z-10 flex max-w-xl flex-col gap-2">
               <span className="text-label-caps uppercase tracking-widest text-on-spring/70">
                 Early Monad Network Access
@@ -643,15 +675,17 @@ function FinalCTA() {
             <div className="z-10 flex w-full flex-col gap-3 sm:flex-row md:w-auto">
               <Link
                 href="/app"
-                className="rounded-full bg-deep px-8 py-4 text-center font-display text-headline-sm
-                           text-spring shadow-md transition-all hover:bg-deep-2 active:translate-y-0.5"
+                className="flex min-h-[56px] items-center justify-center rounded-full bg-deep px-8
+                           py-4 text-center font-display text-headline-sm text-spring shadow-md
+                           transition-all hover:bg-deep-2 active:translate-y-0.5"
               >
                 Reserve @handle Now
               </Link>
               <Link
                 href="/about"
-                className="rounded-full bg-card/80 px-8 py-4 text-center font-display text-headline-sm
-                           text-deep transition-all hover:bg-card active:translate-y-0.5"
+                className="flex min-h-[56px] items-center justify-center rounded-full bg-card/80 px-8
+                           py-4 text-center font-display text-headline-sm text-deep transition-all
+                           hover:bg-card active:translate-y-0.5"
               >
                 Read Docs
               </Link>
@@ -670,10 +704,10 @@ const REPO = "https://github.com/tantasui/kolo";
 function Footer() {
   return (
     <footer className="w-full bg-wash pb-12 pt-10">
-      <div className="mx-auto max-w-[1320px] px-5 md:px-12">
+      <div className="mx-auto max-w-[1320px] px-4 sm:px-5 md:px-12">
         <div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-12">
           <div className="flex flex-col gap-4 md:col-span-5">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/" className="-m-2 flex w-fit items-center gap-2 p-2">
               <KoloMark size={28} />
               <span className="font-display text-headline-sm tracking-tight text-deep">
                 Kolo
@@ -692,8 +726,8 @@ function Footer() {
             </span>
           </div>
 
-          <div className="flex flex-col gap-2 md:col-span-3">
-            <span className="text-label-caps uppercase tracking-wider text-body-soft">
+          <div className="flex flex-col md:col-span-3">
+            <span className="mb-2 text-label-caps uppercase tracking-wider text-body-soft">
               What you can do
             </span>
             {[
@@ -705,45 +739,45 @@ function Footer() {
               <a
                 key={label}
                 href={href}
-                className="text-body-sm text-body-soft transition-colors hover:text-body"
+                className="-mx-2 flex min-h-[40px] items-center rounded-lg px-2 text-body-sm text-body-soft transition-colors hover:text-body"
               >
                 {label}
               </a>
             ))}
           </div>
 
-          <div className="flex flex-col gap-2 md:col-span-4">
-            <span className="text-label-caps uppercase tracking-wider text-body-soft">
+          <div className="flex flex-col md:col-span-4">
+            <span className="mb-2 text-label-caps uppercase tracking-wider text-body-soft">
               For developers
             </span>
             <Link
               href="/about"
-              className="text-body-sm text-body-soft transition-colors hover:text-body"
+              className="-mx-2 flex min-h-[40px] items-center rounded-lg px-2 text-body-sm text-body-soft transition-colors hover:text-body"
             >
               How it works
             </Link>
             <a
               href={REPO}
-              className="flex items-center gap-1.5 text-body-sm text-body-soft transition-colors hover:text-body"
+              className="-mx-2 flex min-h-[40px] items-center gap-1.5 rounded-lg px-2 text-body-sm text-body-soft transition-colors hover:text-body"
             >
               <Terminal className="h-3.5 w-3.5" /> Repository
             </a>
             <a
               href={`${REPO}/tree/main/contracts`}
-              className="text-body-sm text-body-soft transition-colors hover:text-body"
+              className="-mx-2 flex min-h-[40px] items-center rounded-lg px-2 text-body-sm text-body-soft transition-colors hover:text-body"
             >
               Contracts and tests
             </a>
             <a
               href={`${REPO}/blob/main/web/DESIGN.md`}
-              className="text-body-sm text-body-soft transition-colors hover:text-body"
+              className="-mx-2 flex min-h-[40px] items-center rounded-lg px-2 text-body-sm text-body-soft transition-colors hover:text-body"
             >
               Design system
             </a>
           </div>
         </div>
 
-        <div className="flex flex-col items-center justify-between gap-3 border-t border-wash-4 pt-6 md:flex-row">
+        <div className="flex flex-col items-center justify-between gap-2 border-t border-wash-4 pt-6 text-center md:flex-row md:gap-3 md:text-left">
           <p className="text-body-sm text-body-soft">
             Built in the open. Money that moves like a message.
           </p>

@@ -48,7 +48,7 @@ export function VoiceDemo() {
           <br />
           <span className="text-spring">We handle the plumbing.</span>
         </h2>
-        <p className="max-w-lg text-body-lg text-deep-quiet">
+        <p className="max-w-lg text-body-md text-deep-quiet sm:text-body-lg">
           Tap any prompt below to watch the client grammar extract recipient,
           currency, and memo parameters instantly.
         </p>
@@ -60,8 +60,8 @@ export function VoiceDemo() {
               type="button"
               onClick={() => setHeard(prompt)}
               aria-pressed={heard === prompt}
-              className={`flex items-center gap-2 rounded-full px-4 py-2 text-label-md transition-all
-                          active:scale-95 ${
+              className={`flex min-h-[44px] items-center gap-2 rounded-full px-4 py-2 text-left
+                          text-label-md transition-all active:scale-95 ${
                             heard === prompt
                               ? "bg-spring text-on-spring"
                               : "bg-deep-2 text-card hover:bg-deep-2/70"
@@ -74,12 +74,12 @@ export function VoiceDemo() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 rounded-2xl bg-card p-6 text-body shadow-xl lg:col-span-5">
-        <div className="flex items-center justify-between border-b border-wash-3 pb-3">
+      <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 text-body shadow-xl sm:gap-4 sm:p-6 lg:col-span-5">
+        <div className="flex items-center justify-between gap-2 border-b border-wash-3 pb-3">
           <span className="text-label-caps uppercase text-body-soft">
             Parsed Transaction Payload
           </span>
-          <span className="flex items-center gap-1" aria-hidden>
+          <span className="flex shrink-0 items-center gap-1" aria-hidden>
             {[0, 120, 240].map((d) => (
               <span
                 key={d}
@@ -98,21 +98,21 @@ export function VoiceDemo() {
           ].map(([k, v]) => (
             <div
               key={k}
-              className="flex items-center justify-between rounded-xl bg-wash p-2.5"
+              className="flex items-center justify-between gap-2 rounded-xl bg-wash p-2.5"
             >
-              <dt className="text-body-sm text-body-soft">{k}</dt>
-              <dd className="tabular text-label-lg capitalize text-deep">
+              <dt className="shrink-0 text-body-sm text-body-soft">{k}</dt>
+              <dd className="tabular truncate text-right text-label-lg capitalize text-deep">
                 {v}
               </dd>
             </div>
           ))}
         </dl>
 
-        <div className="flex items-center justify-between rounded-xl bg-wash-2 p-2.5">
+        <div className="flex items-center justify-between gap-2 rounded-xl bg-wash-2 p-2.5">
           <span className="text-label-caps uppercase text-body-soft">
             Gas Subsidy
           </span>
-          <span className="text-label-md text-grass">
+          <span className="shrink-0 text-right text-label-md text-grass">
             100% Sponsored (0.00 MON)
           </span>
         </div>

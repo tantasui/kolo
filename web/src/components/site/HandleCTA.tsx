@@ -69,7 +69,7 @@ export function HandleCTA() {
 
   function go() {
     if (handle) rememberWantedHandle(handle);
-    router.push("/");
+    router.push("/app");
   }
 
   const blocked = state.kind === "invalid" || state.kind === "taken";
@@ -84,7 +84,7 @@ export function HandleCTA() {
         className="flex flex-col gap-2 rounded-xl2 border border-rule-soft bg-card p-2
                    transition focus-within:border-grass sm:flex-row sm:items-center sm:rounded-pill"
       >
-        <div className="flex min-w-0 flex-1 items-center gap-1 px-3">
+        <div className="flex min-w-0 flex-1 items-center gap-1 px-3 sm:px-3">
           <span
             aria-hidden
             className="font-mono text-[18px] font-semibold text-body-soft"
@@ -100,7 +100,7 @@ export function HandleCTA() {
             autoCorrect="off"
             spellCheck={false}
             maxLength={config.handle.maxLength + 4}
-            className="w-full min-w-0 bg-transparent py-2.5 text-[18px] text-deep outline-none
+            className="h-11 w-full min-w-0 bg-transparent text-[18px] text-deep outline-none
                        placeholder:text-body-soft"
           />
           <Status state={state} />
@@ -113,7 +113,7 @@ export function HandleCTA() {
                      text-[16px] font-semibold text-on-spring transition hover:bg-spring-dim
                      active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40"
         >
-          {handle ? "Claim Free" : "Claim Free"}
+          Claim Free
         </button>
       </form>
 
