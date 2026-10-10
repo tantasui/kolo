@@ -1,0 +1,95 @@
+<!doctype html>
+<!--
+  The header banner for the project's X account: 1500x500.
+
+  Not served by the site -- it is uploaded to X by hand -- but kept here so it
+  can be remade when the copy or the palette moves, rather than redrawn from
+  memory. Same Epilogue and Inter the pages load, same lime mark.
+
+    cd web
+    google-chrome --headless=new --disable-gpu --hide-scrollbars \
+      --force-device-scale-factor=1 --virtual-time-budget=12000 \
+      --window-size=1500,500 --screenshot=$HOME/Desktop/kolo-x-banner.png \
+      "file://$PWD/scripts/x-banner.html"
+
+  The profile picture overlaps the lower left, and phones crop the top and
+  bottom, so everything sits right of 430px and vertically centred.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@600;700;800&family=Inter:wght@400;500&display=block" rel="stylesheet">
+<style>
+  :root { --deep:#091C00; --spring:#ACF67C; --card:#FFFFFF; --quiet:#B3BFAE; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:1500px; height:500px; }
+  body {
+    background: var(--deep);
+    font-family: Inter, sans-serif; color: var(--card);
+    position: relative; overflow: hidden;
+  }
+  .glow-a {
+    position:absolute; width:720px; height:720px; border-radius:50%;
+    background:var(--spring); opacity:.12; filter:blur(150px);
+    left:-220px; top:-300px;
+  }
+  .glow-b {
+    position:absolute; width:620px; height:620px; border-radius:50%;
+    background:var(--spring); opacity:.10; filter:blur(150px);
+    right:-120px; bottom:-280px;
+  }
+  /* The mark again, huge and nearly invisible, bleeding off the right edge.
+     X puts nothing there, and it keeps the right half from reading as a void
+     on a wide screen. */
+  .watermark {
+    position:absolute; right:-130px; top:50%; transform:translateY(-50%);
+    width:620px; height:620px; opacity:.05;
+  }
+  /* The avatar overlaps the lower left of the header, and how far depends on
+     the client. Everything stays right of 430px and the band is centred
+     vertically, because mobile crops this card top and bottom. */
+  .frame {
+    position:relative; height:100%;
+    padding:0 90px 0 430px;
+    display:flex; flex-direction:column; justify-content:center; gap:20px;
+  }
+  h1 {
+    font-family:Epilogue, sans-serif; font-weight:800;
+    font-size:66px; line-height:1.04; letter-spacing:-.035em;
+  }
+  h1 em { font-style:normal; color:var(--spring); }
+  p { font-size:26px; line-height:1.4; color:var(--quiet); font-weight:400; }
+  .foot { display:flex; align-items:center; gap:18px; margin-top:8px; }
+  .url {
+    font-family:Epilogue, sans-serif; font-weight:700;
+    font-size:26px; color:var(--spring); letter-spacing:-.01em;
+  }
+  .dot { width:5px; height:5px; border-radius:50%; background:#3A5A2C; }
+  .chip { font-size:22px; color:#D7E4D0; font-weight:500; }
+</style>
+</head>
+<body>
+  <div class="glow-a"></div>
+  <div class="glow-b"></div>
+
+  <svg class="watermark" viewBox="0 0 40 40" fill="none">
+    <circle cx="20" cy="9.5" r="3.6" fill="#ACF67C"/>
+    <rect x="11" y="17.5" width="18" height="3.2" rx="1.6" fill="#ACF67C"/>
+    <path d="M12 25.5c1.9 2.6 4.7 4 8 4s6.1-1.4 8-4" stroke="#ACF67C" stroke-width="3" stroke-linecap="round"/>
+  </svg>
+
+  <div class="frame">
+    <h1>Money that moves<br><em>like a message.</em></h1>
+    <p>Send it to a name, not a number. Lands in seconds, never costs a thing.</p>
+    <div class="foot">
+      <span class="url">usekolo.finance</span>
+      <span class="dot"></span>
+      <span class="chip">Nothing to download</span>
+      <span class="dot"></span>
+      <span class="chip">Never a fee</span>
+    </div>
+  </div>
+</body>
+</html>
