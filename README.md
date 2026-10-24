@@ -460,6 +460,7 @@ All of these live in `web/.env.local` and are read in exactly one place,
 | `NEXT_PUBLIC_KOLO_POTS_ADDRESS` | Optional; defaults to the deployment below |
 | `NEXT_PUBLIC_KOLO_DEMO_PAYEE` | Optional; the mock service pots pay (`@kolo_premium`) |
 | `NEXT_PUBLIC_KOLO_DEPLOY_BLOCK` | Optional; bounds how far back the feed scans |
+| `NEXT_PUBLIC_KOLO_DEMO_ROUNDS` | Optional; set to `0` to hide the five-minute circle rounds, which are on by default for demos |
 
 Every contract address already defaults to the live deployment, so a fresh
 clone needs only the Privy and Pimlico values.
@@ -581,5 +582,5 @@ Monad Testnet (chain ID `10143`):
 Deployed at block `59479502`. These are the defaults in
 [`web/src/config.ts`](web/src/config.ts), so a fresh clone talks to them without
 deploying anything — you only need the Privy and Pimlico values. Set the
-`NEXT_PUBLIC_KOLO_*` / `NEXT_PUBLIC_TEST_USD_ADDRESS` env vars to point at your
+`NEXT_PUBLIC_KOLO_*` and `NEXT_PUBLIC_TOKEN_ADDRESS` env vars to point at your
 own deployment instead.
