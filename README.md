@@ -367,7 +367,7 @@ return.
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 18.17+ (the minimum for Next.js 14; Netlify builds on 20)
 - [Foundry](https://getfoundry.sh) v1.8+ (`curl -L https://foundry.paradigm.xyz | bash && foundryup`)
 - A [Privy](https://dashboard.privy.io) app
 - A [Pimlico](https://dashboard.pimlico.io) API key
