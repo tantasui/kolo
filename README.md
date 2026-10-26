@@ -38,8 +38,8 @@ Six things are built on that, each with its own contract on Monad Testnet.
 | Money rules | Checked on chain, not only in tests: a circle settled a missed round unattended and paid in full; a pot refused one member spending past their own share while another got every cent back (`npm run verify:pots`); a goal filled, was recorded as reached, and was withdrawn anyway (`npm run verify:goals`) |
 | Sponsored transactions | **Verified on Monad Testnet** — every operation sponsored, account balance 0 wei throughout (`npm run verify:sponsorship`) |
 | App | Live at [usekolo.finance](https://usekolo.finance): send, send by voice, claim links, circles, goals and pots, with type-check, lint and build clean |
-| Rounding | `npm run check:money` proves the naira rule over ~1.8m amounts, and fails if either rounding direction is flipped back |
-| Voice | `npm run check:voice` pins what the parser understands: 46 checks over the sentences people actually say |
+| Rounding | `npm run check:money` proves the naira rule over ~1.8m amounts, and fails if either rounding direction is flipped back. Needs Node 22.6+ |
+| Voice | `npm run check:voice` pins what the parser understands: 46 checks over the sentences people actually say. Needs Node 22.6+ |
 | Public pages | `/` explains Kolo to somebody who has never heard of it; `/about` is the same product for somebody who wants to check it. The app is at `/app` |
 | Not built yet | The mock service page a pot pays, so nothing in the app records a *use* yet — a pot's "used" column only moves from `verify:pots` |
 
